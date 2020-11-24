@@ -1,0 +1,94 @@
+{
+  "id": "${artifactId}-${version}",
+  "name": "copycat",
+  "provides": [
+    {
+      "id": "copycat-imports",
+      "version": "1.0",
+      "handlers" : [
+        {
+          "methods": [ "POST" ],
+          "pathPattern": "/copycat/imports",
+          "permissionsRequired": [ "copycat.imports.post" ]
+        }
+      ]
+    },
+    {
+      "id": "copycat-targetprofiles",
+      "version": "1.0",
+      "handlers" : [
+        {
+          "methods" : [ "POST" ],
+          "pathPattern" : "/copycat/target-profiles",
+          "permissionsRequired": [ "copycat.target-profiles.post" ]
+        },
+        {
+          "methods" : [ "GET" ],
+          "pathPattern" : "/copycat/target-profiles/{id}",
+          "permissionsRequired": [ "copycat.target-profiles.get" ]
+        },
+        {
+          "methods" : [ "PUT" ],
+          "pathPattern" : "/copycat/target-profiles/{id}",
+          "permissionsRequired": [ "copycat.target-profiles.put" ]
+        },
+        {
+          "methods" : [ "DELETE" ],
+          "pathPattern" : "/copycat/target-profiles/{id}",
+          "permissionsRequired": [ "copycat.target-profiles.delete" ]
+        }
+      ]
+    }
+  ],
+  "required" : [ ],
+  "permissionSets" : [
+    {
+      "permissionName" : "copycat.imports.post",
+      "displayName" : "copycat imports post",
+      "description" : "Copycat record"
+    },
+    {
+      "permissionName": "copycat.target-profiles.post",
+      "displayName": "Target profile POST",
+      "description": "Create copycat target profile"
+    },
+    {
+      "permissionName": "copycat.target-profiles.get",
+      "displayName": "Target profile GET",
+      "description": "Retrieve copycat target profile"
+    },
+    {
+      "permissionName": "copycat.target-profiles.put",
+      "displayName": "Target profile PUT",
+      "description": "Update copycat target profile"
+    },
+    {
+      "permissionName": "copycat.target-profiles.delete",
+      "displayName": "Target profile DELETE",
+      "description": "Delete copycat target profile"
+    }
+  ],
+  "launchDescriptor": {
+    "dockerImage": "${artifactId}:${version}",
+    "dockerPull": false,
+    "dockerArgs": {
+      "HostConfig": {
+        "Memory": 536870912,
+        "PortBindings": { "8081/tcp": [ { "HostPort": "%p" } ] }
+      }
+    },
+    "env": [
+      { "name": "JAVA_OPTIONS",
+        "value": "-XX:MaxRAMPercentage=66.0"
+      },
+      { "name": "DB_HOST", "value": "postgres" },
+      { "name": "DB_PORT", "value": "5432" },
+      { "name": "DB_USERNAME", "value": "folio_admin" },
+      { "name": "DB_PASSWORD", "value": "folio_admin" },
+      { "name": "DB_DATABASE", "value": "okapi_modules" },
+      { "name": "DB_QUERYTIMEOUT", "value": "60000" },
+      { "name": "DB_CHARSET", "value": "UTF-8" },
+      { "name": "DB_MAXPOOLSIZE", "value": "5" }
+    ]
+  }
+}

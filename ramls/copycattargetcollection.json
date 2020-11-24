@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "target profiles response",
+  "description": "copycat target profiles",
+  "type": "object",
+  "properties": {
+    "targetprofiles": {
+      "description": "List of target profiles",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "copycattargetprofile.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "targetprofiles",
+    "totalRecords"
+  ]
+}
+

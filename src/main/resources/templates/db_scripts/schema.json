@@ -1,0 +1,41 @@
+{
+  "scripts" : [ ],
+  "tables" : [
+    {
+      "tableName" : "targetprofile",
+      "withMetadata" : true,
+      "index": [
+        {
+          "fieldName": "url",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "authentication",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "externalIdQueryMap",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "importProfileId",
+          "tOps": "ADD"
+        }
+      ],
+      "ginIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
+      "fullTextIndex" : [
+        {
+          "fieldName" : "name",
+          "tOps" : "ADD"
+        }
+      ]
+    }
+  ]
+}

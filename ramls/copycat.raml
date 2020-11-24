@@ -1,0 +1,138 @@
+#%RAML 1.0
+title: copycat
+version: v0.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+types:
+  copyCatImports: !include copycatimports.json
+  copyCatTargetProfile: !include copycattargetprofile.json
+  copyCatTargetCollection: !include copycattargetcollection.json
+  error: !include raml-util/schemas/error.schema
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+
+/copycat:
+  /imports:
+    post:
+      description: Import record from external system
+      body:
+        application/json:
+          type: copyCatImports
+      responses:
+        204:
+          description: Imported OK
+        400:
+          description: Import error
+          body:
+            application/json:
+              type: errors
+        500:
+          description: Internal error
+          body:
+            text/plain:
+  /target-profiles:
+    post:
+      description: Create target profile
+      body:
+        application/json:
+          type: copyCatTargetProfile
+      responses:
+        201:
+          description: Created OK
+          headers:
+            Location:
+              description: URI of target profile
+          body:
+            application/json:
+              type: copyCatTargetProfile
+        400:
+          description: Error in usage
+          body:
+            text/plain:
+        500:
+          description: Internal error
+          body:
+            text/plain:
+    get:
+      is: [pageable,
+       searchable: {
+             description: "search target profiles",
+             example: "name = loc"}
+      ]
+      description: Get target profiles
+      responses:
+        200:
+          description: Get collection OK
+          body:
+            application/json:
+              type: copyCatTargetCollection
+        400:
+          description: Error in usage
+          body:
+            text/plain:
+        500:
+          description: Internal error
+          body:
+            text/plain:
+    /{id}:
+      get:
+        description: Get target profile
+        responses:
+          200:
+            description: retrieved OK
+            body:
+              application/json:
+                type: copyCatTargetProfile
+          400:
+            description: User error
+            body:
+              text/plain:
+          404:
+            description: Not found
+            body:
+              text/plain:
+          500:
+            description: Internal error
+            body:
+              text/plain:
+      put:
+        description: Update target profile
+        body:
+          application/json:
+            type: copyCatTargetProfile
+        responses:
+          204:
+            description: updated OK
+          400:
+            description: User error
+            body:
+              text/plain:
+          404:
+            description: Not found
+            body:
+              text/plain:
+          500:
+            description: Internal error
+            body:
+              text/plain:
+      delete:
+        description: Delete target profile
+        responses:
+          204:
+            description: deleted OK
+          400:
+            description: User error
+            body:
+              text/plain:
+          404:
+            description: Not found
+            body:
+              text/plain:
+          500:
+            description: Internal error
+            body:
+              text/plain:

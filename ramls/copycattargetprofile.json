@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "target profile",
+  "description": "copycat target profile",
+  "type": "object",
+  "properties": {
+    "id": {
+       "type": "string" 
+    },
+    "name": {
+       "type": "string" 
+    },
+    "url": {
+       "type": "string"
+    },
+    "authentication": {
+      "type": "string"
+    },
+    "externalIdQueryMap": {
+      "type": "string"
+    },
+    "internalIdEmbedPath": {
+       "type": "string"
+    },
+    "importPrfileId": {
+       "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [ "url", "name", "externalIdQuerymap" ]
+}
