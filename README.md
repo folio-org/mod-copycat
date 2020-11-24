@@ -7,7 +7,7 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
 ## Introduction
 
-[mod-copycat](https://github.com/folio-org/mod-copycat) is a Folio module
+[mod-copycat](https://github.com/folio-org/mod-copycat) is a FOLIO  module
 that assists in Copy cataloging. It imports records from remote systems
 using Z39.50.
 
