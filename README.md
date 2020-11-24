@@ -17,7 +17,7 @@ Other FOLIO Developer documentation is at [dev.folio.org](https://dev.folio.org/
 
 ### Issue tracker
 
-See project [MODCOPYCAT](https://issues.folio.org/browse/MODCOPYCAT)
+See project [MODCPCT](https://issues.folio.org/browse/MODCPCT)
 at the [FOLIO issue tracker](https://dev.folio.org/guidelines/issue-tracker).
 
 ### ModuleDescriptor
