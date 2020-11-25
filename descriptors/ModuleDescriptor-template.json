@@ -40,7 +40,7 @@
       ]
     }
   ],
-  "required" : [ ],
+  "requires" : [ ],
   "permissionSets" : [
     {
       "permissionName" : "copycat.imports.post",
