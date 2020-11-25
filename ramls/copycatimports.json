@@ -6,11 +6,11 @@
   "properties": {
     "externalIdentifier": {
        "description": "external identifier for the record",
-       "type": "string" 
+       "type": "string"
     },
     "internalIdentifier": {
        "description": "internal identifier for the record",
-       "type": "string" 
+       "type": "string"
     },
     "targetProfileId": {
        "description": "target profile to be used for importing",
