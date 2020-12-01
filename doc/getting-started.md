@@ -61,3 +61,6 @@ Import a record based on an external identifier (OCLC number):
 
 XXX to be written -- use snapshot-backend-core
 
+See https://github.com/folio-org/folio-ansible/blob/master/doc/index.md#running-backend-modules-on-your-host-system
+and https://github.com/folio-org/mod-graphql/blob/master/doc/developing-with-a-vagrant-box.md
+
