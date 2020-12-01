@@ -5,25 +5,32 @@
   "type": "object",
   "properties": {
     "id": {
-       "type": "string"
+       "type": "string",
+       "description": "unique identifier and primary key"
     },
     "name": {
-       "type": "string"
+       "type": "string",
+       "description": "Human-readable name"
     },
     "url": {
-       "type": "string"
+       "type": "string",
+       "description": "Location of remote service to obtain records from"
     },
     "authentication": {
-      "type": "string"
+      "type": "string",
+      "description": "Authentication credentials to use for the remote service"
     },
     "externalIdQueryMap": {
-      "type": "string"
+      "type": "string",
+      "description": "Specifies which field at the remote service should be searched with the value of `externalIdentifier` when an import request is POSTed"
     },
     "internalIdEmbedPath": {
-       "type": "string"
+       "type": "string",
+       "description": "XXX I don't know what this is"
     },
     "importPrfileId": {
-       "type": "string"
+       "type": "string",
+       "description": "XXX I don't know what this is"
     }
   },
   "additionalProperties": false,
