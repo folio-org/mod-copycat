@@ -25,6 +25,10 @@ at the [FOLIO issue tracker](https://dev.folio.org/guidelines/issue-tracker).
 See the built `target/ModuleDescriptor.json` for the interfaces that this module
 requires and provides, the permissions, and the additional module metadata.
 
+### Getting started
+
+See [_Building, running, initializing and using mod-copycat_](doc/getting-started.md).
+
 ### API documentation
 
 This module's [API documentation](https://dev.folio.org/reference/api/#mod-copycat).
