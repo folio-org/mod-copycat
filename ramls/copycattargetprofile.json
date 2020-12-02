@@ -5,25 +5,32 @@
   "type": "object",
   "properties": {
     "id": {
-       "type": "string"
+       "type": "string",
+       "description": "unique identifier and primary key"
     },
     "name": {
-       "type": "string"
+       "type": "string",
+       "description": "Human-readable name"
     },
     "url": {
-       "type": "string"
+       "type": "string",
+       "description": "Location of remote service to obtain records from"
     },
     "authentication": {
-      "type": "string"
+      "type": "string",
+      "description": "Authentication credentials to use for the remote service"
     },
     "externalIdQueryMap": {
-      "type": "string"
+      "type": "string",
+      "description": "Specifies which field at the remote service should be searched with the value of `externalIdentifier` when an import request is POSTed. Could be specified as a YAZ prefix-query string, e.g. '@attr 1=12 ${identifier}'"
     },
     "internalIdEmbedPath": {
-       "type": "string"
+       "type": "string",
+       "description": "Specifies where the external identifier is to be embedded in the MARC record, e.g. '999__$f' to place it in field 999, indicator double space (absent) and subfield f"
     },
     "importPrfileId": {
-       "type": "string"
+       "type": "string",
+       "description": "Identifier of a FOLIO MARC-importing profile that specifies how to map MARC fields to FOLIO inventory"
     }
   },
   "additionalProperties": false,
