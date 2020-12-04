@@ -39,22 +39,27 @@
         {
           "methods" : [ "POST" ],
           "pathPattern" : "/copycat/target-profiles",
-          "permissionsRequired": [ "copycat.target-profiles.post" ]
+          "permissionsRequired": [ "copycat.target-profiles.item.post" ]
+        },
+        {
+          "methods" : [ "GET" ],
+          "pathPattern" : "/copycat/target-profiles",
+          "permissionsRequired": [ "copycat.target-profiles.collection.get" ]
         },
         {
           "methods" : [ "GET" ],
           "pathPattern" : "/copycat/target-profiles/{id}",
-          "permissionsRequired": [ "copycat.target-profiles.get" ]
+          "permissionsRequired": [ "copycat.target-profiles.item.get" ]
         },
         {
           "methods" : [ "PUT" ],
           "pathPattern" : "/copycat/target-profiles/{id}",
-          "permissionsRequired": [ "copycat.target-profiles.put" ]
+          "permissionsRequired": [ "copycat.target-profiles.item.put" ]
         },
         {
           "methods" : [ "DELETE" ],
           "pathPattern" : "/copycat/target-profiles/{id}",
-          "permissionsRequired": [ "copycat.target-profiles.delete" ]
+          "permissionsRequired": [ "copycat.target-profiles.item.delete" ]
         }
       ]
     }
