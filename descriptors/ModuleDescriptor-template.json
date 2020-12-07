@@ -39,22 +39,27 @@
         {
           "methods" : [ "POST" ],
           "pathPattern" : "/copycat/target-profiles",
-          "permissionsRequired": [ "copycat.target-profiles.post" ]
+          "permissionsRequired": [ "copycat.target-profiles.item.post" ]
+        },
+        {
+          "methods" : [ "GET" ],
+          "pathPattern" : "/copycat/target-profiles",
+          "permissionsRequired": [ "copycat.target-profiles.collection.get" ]
         },
         {
           "methods" : [ "GET" ],
           "pathPattern" : "/copycat/target-profiles/{id}",
-          "permissionsRequired": [ "copycat.target-profiles.get" ]
+          "permissionsRequired": [ "copycat.target-profiles.item.get" ]
         },
         {
           "methods" : [ "PUT" ],
           "pathPattern" : "/copycat/target-profiles/{id}",
-          "permissionsRequired": [ "copycat.target-profiles.put" ]
+          "permissionsRequired": [ "copycat.target-profiles.item.put" ]
         },
         {
           "methods" : [ "DELETE" ],
           "pathPattern" : "/copycat/target-profiles/{id}",
-          "permissionsRequired": [ "copycat.target-profiles.delete" ]
+          "permissionsRequired": [ "copycat.target-profiles.item.delete" ]
         }
       ]
     }
@@ -67,22 +72,27 @@
       "description" : "Copycat record"
     },
     {
-      "permissionName": "copycat.target-profiles.post",
+      "permissionName": "copycat.target-profiles.item.post",
       "displayName": "Target profile POST",
       "description": "Create copycat target profile"
     },
     {
-      "permissionName": "copycat.target-profiles.get",
+      "permissionName": "copycat.target-profiles.collection.get",
+      "displayName": "Target profile GET collection",
+      "description": "Retrieve copycat target profiles"
+    },
+    {
+      "permissionName": "copycat.target-profiles.item.get",
       "displayName": "Target profile GET",
       "description": "Retrieve copycat target profile"
     },
     {
-      "permissionName": "copycat.target-profiles.put",
+      "permissionName": "copycat.target-profiles.item.put",
       "displayName": "Target profile PUT",
       "description": "Update copycat target profile"
     },
     {
-      "permissionName": "copycat.target-profiles.delete",
+      "permissionName": "copycat.target-profiles.item.delete",
       "displayName": "Target profile DELETE",
       "description": "Delete copycat target profile"
     }
