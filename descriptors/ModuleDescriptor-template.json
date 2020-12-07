@@ -78,7 +78,7 @@
     },
     {
       "permissionName": "copycat.target-profiles.collection.get",
-      "displayName": "Target profile GET collectionT",
+      "displayName": "Target profile GET collection",
       "description": "Retrieve copycat target profiles"
     },
     {
