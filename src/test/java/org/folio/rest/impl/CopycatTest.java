@@ -18,6 +18,7 @@ import org.folio.rest.jaxrs.resource.Copycat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.yaz4j.Connection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -161,6 +162,41 @@ public class CopycatTest {
           .isEqualTo("Server z3950.indexdata.com:211/marc:0 timed out handling our request");
       context.completeNow();
     }));
+  }
+
+  @Test
+  void getMarcBadCredentials(Vertx vertx, VertxTestContext context) {
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+        .withName("OLUCWorldCat")
+        .withAuthentication("foo bar")
+        .withUrl("zcat.oclc.org/OLUCWorldCat")
+        .withExternalIdQueryMap("@attr 1=7 $identifier");
+
+    CopycatAPI.getMARC(copyCatTargetProfile, "0679429220", 15).onComplete(context.failing(cause -> {
+      assertThat(cause.getMessage())
+          .isEqualTo("Server zcat.oclc.org/OLUCWorldCat:0 rejected our init request");
+      context.completeNow();
+    }));
+  }
+
+  static void testAuth(String auth, String user, String group, String password) {
+    Connection conn = new Connection("localhost", 210);
+
+    CopycatAPI.setAuthOptions(conn, auth);
+    assertThat(conn.option("user")).isEqualTo(user);
+    assertThat(conn.option("group")).isEqualTo(group);
+    assertThat(conn.option("password")).isEqualTo(password);
+    conn.close();
+  }
+
+  @Test
+  void testSetAuthOptions() {
+    testAuth(null, null, null, null);
+    testAuth(" ", "", null, null);
+    testAuth(" a ", "a", null, null);
+    testAuth("a/b", "a/b", null, null);
+    testAuth(" a  b ", "a", null, "b");
+    testAuth(" a  b c ", "a", "b", "c");
   }
 
   @Test

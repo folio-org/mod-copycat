@@ -55,6 +55,18 @@ public class CopycatAPI implements Copycat {
     return new PrefixQuery(pqf);
   }
 
+  static void setAuthOptions(Connection conn, String auth) {
+    if (auth != null) {
+      String[] s = auth.trim().split("\\s+");
+      conn.option("user", s[0]);
+      if (s.length == 2) {
+        conn.option("password", s[1]);
+      } else if (s.length == 3) {
+        conn.option("group", s[1]);
+        conn.option("password", s[2]);
+      }
+    }
+  }
   /**
    * Search for identifier and return record.
    * @param profile Target Profile
@@ -65,6 +77,7 @@ public class CopycatAPI implements Copycat {
   static Future<byte[]> getMARC(CopyCatTargetProfile profile, String externalId, int timeout) {
     Connection conn = new Connection(profile.getUrl(), 0);
     conn.option("timeout", Integer.toString(timeout));
+    setAuthOptions(conn, profile.getAuthentication());
     Query query = constructQuery(profile, externalId);
     try {
       conn.connect();
@@ -81,7 +94,7 @@ public class CopycatAPI implements Copycat {
     }
   }
 
-  static Future<byte[]> getMARC(CopyCatTargetProfile profile, String externalId, Context vertxContext) {
+  private static Future<byte[]> getMARC(CopyCatTargetProfile profile, String externalId, Context vertxContext) {
     return Future.future(promise0 -> vertxContext.owner().<byte[]>executeBlocking(promise1 ->
             getMARC(profile, externalId, 15).onComplete(record -> promise1.handle(record))
         , result -> promise0.handle(result)));
@@ -96,17 +109,15 @@ public class CopycatAPI implements Copycat {
     PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
     Future.<JsonObject>future(promise -> postgresClient.getById(PROFILE_TABLE, targetProfileId, promise))
         .compose(res -> {
-          final CopyCatTargetProfile targetProfile = res.mapTo(CopyCatTargetProfile.class);
+          CopyCatTargetProfile targetProfile = res.mapTo(CopyCatTargetProfile.class);
           return getMARC(targetProfile, entity.getExternalIdentifier(), vertxContext);
         })
         .onSuccess(record ->
             asyncResultHandler.handle(Future.succeededFuture(PostCopycatImportsResponse.respond204()))
         )
-        .onFailure(cause -> {
-          log.error("{}", cause.getMessage(), cause);
-          asyncResultHandler.handle(Future.succeededFuture(PostCopycatImportsResponse.respond400WithApplicationJson(createErrors(cause)))
-          );
-        });
+        .onFailure(cause ->
+            asyncResultHandler.handle(Future.succeededFuture(PostCopycatImportsResponse.respond400WithApplicationJson(createErrors(cause))))
+        );
   }
 
   @Validate
