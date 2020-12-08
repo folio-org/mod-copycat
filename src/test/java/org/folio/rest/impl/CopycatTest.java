@@ -99,7 +99,7 @@ public class CopycatTest {
         .withTargetProfileId("target-profile-id")
         .withExternalIdentifier("external-id");
     api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> {
-      assertThat(res.getStatus()).isEqualTo(500);
+      assertThat(res.getStatus()).isEqualTo(204);
       context.completeNow();
     }), vertx.getOrCreateContext());
   }
