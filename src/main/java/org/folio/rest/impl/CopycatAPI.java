@@ -41,7 +41,7 @@ public class CopycatAPI implements Copycat {
   }
 
   private static final String PROFILE_TABLE = "targetprofile";
-  private static Logger log = LogManager.getLogger();
+  private static Logger log = LogManager.getLogger(CopycatAPI.class);
 
   /**
    * Construct yaz4j Query based on external identifier and query mappping.
