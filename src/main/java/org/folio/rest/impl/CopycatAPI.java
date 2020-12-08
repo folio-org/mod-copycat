@@ -4,6 +4,11 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
+import javax.ws.rs.core.Response;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
@@ -14,50 +19,94 @@ import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.resource.Copycat;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClient;
 import org.yaz4j.Connection;
 import org.yaz4j.PrefixQuery;
 import org.yaz4j.Query;
+import org.yaz4j.Record;
 import org.yaz4j.ResultSet;
 import org.yaz4j.exception.ZoomException;
 
-import javax.ws.rs.core.Response;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 public class CopycatAPI implements Copycat {
+
+  static Errors createErrors(String message) {
+    List<Error> errors = new LinkedList<>();
+    errors.add(new Error().withMessage(message));
+    return new Errors().withErrors(errors);
+  }
+
+  static Errors createErrors(Throwable throwable) {
+    log.warn("Error {}", throwable.getMessage(), throwable);
+    return createErrors(throwable.getMessage());
+  }
 
   private static final String PROFILE_TABLE = "targetprofile";
   private static Logger log = LogManager.getLogger();
+
+  /**
+   * Construct yaz4j Query based on external identifier and query mappping.
+   * @param profile
+   * @param externalId
+   * @return Query
+   */
+  static Query constructQuery(CopyCatTargetProfile profile, String externalId) {
+    // assuming the externalId does not have whitespace or include {}"\\ characters
+    String pqf = profile.getExternalIdQueryMap().replace("$identifier", externalId);
+    return new PrefixQuery(pqf);
+  }
+
+  /**
+   * Search for identifier and return record.
+   * @param profile Target Profile
+   * @param externalId
+   * @param timeout timeout in seconds before giving up
+   * @return record content
+   */
+  static Future<byte[]> getMARC(CopyCatTargetProfile profile, String externalId, int timeout) {
+    Connection conn = new Connection(profile.getUrl(), 0);
+    conn.option("timeout", Integer.toString(timeout));
+    Query query = constructQuery(profile, externalId);
+    try {
+      conn.connect();
+      ResultSet search = conn.search(query);
+      if (search.getHitCount() == 0) {
+        return Future.failedFuture("No record found");
+      }
+      Record record = search.getRecord(0);
+      return Future.succeededFuture(record.get("render"));
+    } catch (ZoomException e) {
+      return Future.failedFuture(e);
+    } finally {
+      conn.close();
+    }
+  }
+
+  static Future<byte[]> getMARC(CopyCatTargetProfile profile, String externalId, Context vertxContext) {
+    return Future.future(promise0 -> vertxContext.owner().<byte[]>executeBlocking(promise1 ->
+            getMARC(profile, externalId, 15).onComplete(record -> promise1.handle(record))
+        , result -> promise0.handle(result)));
+  }
+
   @Validate
   @Override
   public void postCopycatImports(CopyCatImports entity, Map<String, String> okapiHeaders,
                                  Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    Connection conn = new Connection("z3950.indexdata.com/marc", 0);
-    Query query = new PrefixQuery("780306m19009999ohu");
-    try {
-      conn.connect();
-      ResultSet search = conn.search(query);
-      if (search.getHitCount() == 0) {
-        List<Error> errors = new LinkedList<>();
-        errors.add(new Error().withMessage("No record found"));
-        asyncResultHandler.handle(Future.succeededFuture(
-            PostCopycatImportsResponse.respond400WithApplicationJson(new Errors().withErrors(errors))));
-        return;
-      }
-      asyncResultHandler.handle(Future.succeededFuture(PostCopycatImportsResponse.respond204()));
-    } catch (ZoomException e) {
-      e.printStackTrace();
-      List<Error> errors = new LinkedList<>();
-      log.warn("Error {}", e.getMessage());
-      errors.add(new Error().withMessage(e.getMessage()));
-      asyncResultHandler.handle(Future.succeededFuture(
-          PostCopycatImportsResponse.respond400WithApplicationJson(new Errors().withErrors(errors))));
-      return;
-    } finally {
-      conn.close();
-    }
+    String targetProfileId = entity.getTargetProfileId();
+    PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
+    Future.<JsonObject>future(promise -> postgresClient.getById(PROFILE_TABLE, targetProfileId, promise))
+        .compose(res -> {
+          final CopyCatTargetProfile targetProfile = res.mapTo(CopyCatTargetProfile.class);
+          return getMARC(targetProfile, entity.getExternalIdentifier(), vertxContext);
+        })
+        .onSuccess(record ->
+            asyncResultHandler.handle(Future.succeededFuture(PostCopycatImportsResponse.respond204()))
+        )
+        .onFailure(cause -> {
+          log.error("{}", cause.getMessage(), cause);
+          asyncResultHandler.handle(Future.succeededFuture(PostCopycatImportsResponse.respond400WithApplicationJson(createErrors(cause)))
+          );
+        });
   }
 
   @Validate

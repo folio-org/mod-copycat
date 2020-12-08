@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.CopyCatImports;
 import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
 import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.resource.Copycat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,17 +91,97 @@ public class CopycatTest {
   }
 
   @Test
-  void testImportProfile(Vertx vertx, VertxTestContext context) {
+  void testImportProfileOK(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatAPI();
 
     Map<String, String> headers = new HashMap<>();
     headers.put("X-Okapi-Tenant", tenant);
-    CopyCatImports copyCatImports = new CopyCatImports()
-        .withTargetProfileId("target-profile-id")
-        .withExternalIdentifier("external-id");
-    api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> {
-      assertThat(res.getStatus()).isEqualTo(204);
-      context.completeNow();
-    }), vertx.getOrCreateContext());
+    Context vertxContext = vertx.getOrCreateContext();
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+        .withName("index data")
+        .withUrl("z3950.indexdata.com/marc")
+        .withExternalIdQueryMap("$identifier");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withExternalIdentifier("780306m19009999ohu"); // gets 1 record
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> {
+        assertThat(res.getStatus()).isEqualTo(204);
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 ->
+          context.completeNow()
+        ), vertxContext);
+      }), vertxContext);
+    }), vertxContext);
   }
+
+  @Test
+  void testImportProfileZeroHits(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatAPI();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put("X-Okapi-Tenant", tenant);
+    Context vertxContext = vertx.getOrCreateContext();
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+        .withName("index data")
+        .withUrl("z3950.indexdata.com/marc")
+        .withExternalIdQueryMap("$identifier");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withExternalIdentifier("1234"); // gets 0 record(s)
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().size()).isEqualTo(1);
+        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("No record found");
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 ->
+            context.completeNow()
+        ), vertxContext);
+      }), vertxContext);
+    }), vertxContext);
+  }
+
+  @Test
+  void getMarcBadTarget(Vertx vertx, VertxTestContext context) {
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+        .withName("index data")
+        .withUrl("z3950.indexdata.com:211/marc") // bad port
+        .withExternalIdQueryMap("$identifier");
+
+    CopycatAPI.getMARC(copyCatTargetProfile, "1234", 3).onComplete(context.failing(cause -> {
+      assertThat(cause.getMessage())
+          .isEqualTo("Server z3950.indexdata.com:211/marc:0 timed out handling our request");
+      context.completeNow();
+    }));
+  }
+
+  @Test
+  void testImportProfileNonExistingTargetProfile(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatAPI();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put("X-Okapi-Tenant", tenant);
+    Context vertxContext = vertx.getOrCreateContext();
+
+    String targetProfileId = "1234";
+    CopyCatImports copyCatImports = new CopyCatImports()
+        .withTargetProfileId(targetProfileId)
+        .withExternalIdentifier("does not matter");
+    api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> {
+      assertThat(res.getStatus()).isEqualTo(400);
+      Errors errors = (Errors) res.getEntity();
+      assertThat(errors.getErrors().size()).isEqualTo(1);
+      context.completeNow();
+    }), vertxContext);
+  }
+
+
 }

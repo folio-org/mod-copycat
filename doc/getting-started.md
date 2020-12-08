@@ -1,7 +1,31 @@
-# Building, running, initializing and using mod-copycat
+ Building, running, initializing and using mod-copycat
 
-## To build
+## Prerequisites
 
+You need
+[yaz4j](https://github.com/indexdata/yaz4j)
+and
+[yaz](https://www.indexdata.com/yaz)
+before you can compile and install mod-copycat.
+
+	term1$ sudo apt install yaz
+	term1$ git clone https://github.com/indexdata/yaz4j.git
+	term1$ cd yaz4j
+
+The install below whould install `yaz4j-1.6-SNAPSHOT.jar` in your Maven repository.
+
+	term1$ mvn -B install
+
+This also produces a native DLL/shared object file.. This needs to be available when
+using the yaz4j jar. Google for `java.library.path` to see where it could be
+installed on your platform. On Ubuntu/Debian amd64 architecture, it suffices to
+copy like this:
+
+	term1$ sudo cp unix/target/libyaz4j.so /usr/lib/x86_64-linux-gnu/
+
+## To build mod-copycat
+
+	term1$ cd mod-copycat
 	term1$ mvn install
 
 ## To run
