@@ -1,5 +1,20 @@
 # Building, running, initializing and using mod-copycat
 
+Mike Taylor, Index Data ApS.
+mike@indexdata.com
+
+11 December 2020.
+
+
+<!-- md2toc -l 2 getting-started.md -->
+* [To build](#to-build)
+* [To run](#to-run)
+* [To initialize](#to-initialize)
+* [To use](#to-use)
+* [Integrating into a FOLIO-backend Vagrant box](#integrating-into-a-folio-backend-vagrant-box)
+
+
+
 ## To build
 
 	term1$ mvn install
