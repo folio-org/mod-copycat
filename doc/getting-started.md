@@ -12,6 +12,7 @@ mike@indexdata.com
 * [To initialize](#to-initialize)
 * [To use](#to-use)
 * [Integrating into a FOLIO-backend Vagrant box](#integrating-into-a-folio-backend-vagrant-box)
+* [To unassociate, undeploy and remove a running module](#to-unassociate-undeploy-and-remove-a-running-module)
 
 
 
@@ -97,4 +98,16 @@ Now login and you will be able to access mod-copycat via Okapi. Use the `X-Okapi
 
 	curl -w '\n' -D - -X POST -d '{"username":"diku_admin","password":"********"}' -H "Content-type: application/json" -H "Accept: application/json" -H "x-okapi-tenant: diku" http://localhost:9130/authn/login
 	curl -w '\n' -H "X-Okapi-Tenant: diku" -H "X-Okapi-Token: XXXXXXXX" -H "Accept: */*" -H "Content-Type: application/json" http://localhost:9130/copycat/target-profiles
+
+## To unassociate, undeploy and remove a running module
+
+This may be necessary so that the module can be re-added in order to force new or changed permissions to be recognised. The process has several steps, since the module must first be unassociated from the tenant and then undeployed before it can be removed:
+
+	curl http://localhost:9130/_/proxy/tenants/diku/modules | grep mod-copycat
+	# From the output, extract the module-ID for the next step
+	curl -X DELETE http://localhost:9130/_/proxy/tenants/diku/modules/mod-copycat-1.0.0-SNAPSHOT
+	curl http://localhost:9130/_/discovery/modules | grep -i copycat
+	# From the output, find the deployment UUID for the next step
+	curl -X DELETE http://localhost:9130/_/discovery/modules/mod-copycat-1.0.0-SNAPSHOT/15272446-17ba-41b8-b78b-b67df95bbeef
+	curl -X DELETE http://localhost:9130/_/proxy/modules/mod-copycat-1.0.0-SNAPSHOT
 
