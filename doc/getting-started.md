@@ -13,6 +13,7 @@ mike@indexdata.com
 * [To use](#to-use)
 * [Integrating into a FOLIO-backend Vagrant box](#integrating-into-a-folio-backend-vagrant-box)
 * [To unassociate, undeploy and remove a running module](#to-unassociate-undeploy-and-remove-a-running-module)
+* [Adding permissions on the UI side](#adding-permissions-on-the-ui-side)
 
 
 
@@ -110,4 +111,13 @@ This may be necessary so that the module can be re-added in order to force new o
 	# From the output, find the deployment UUID for the next step
 	curl -X DELETE http://localhost:9130/_/discovery/modules/mod-copycat-1.0.0-SNAPSHOT/15272446-17ba-41b8-b78b-b67df95bbeef
 	curl -X DELETE http://localhost:9130/_/proxy/modules/mod-copycat-1.0.0-SNAPSHOT
+
+## Adding permissions on the UI side
+
+This is most easily done using the UI module's `yarn install`ed the Stripes CLI. Updating the module descriptor is straightforward, but it is then necessary to disable and re-enable the module for a tenant before that tenant can see the new permission definitions. Frustratingly, at the time of writing a bug in `stripes` means that it does not presently cache the Okapi URL or tenant name, so these need to be repeatedly provided on the command line:
+
+	yarn stripes mod update --okapi http://localhost:9130
+	yarn stripes mod disable --okapi http://localhost:9130 --tenant diku
+	yarn stripes mod enable --okapi http://localhost:9130 --tenant diku
+	echo ui-inventory.settings.single-record-import | yarn stripes perm assign --user diku_admin --okapi http://localhost:9130 --tenant diku
 
