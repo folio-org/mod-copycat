@@ -10,6 +10,7 @@ before you can compile and install mod-copycat.
 
 	term1$ sudo apt install yaz
 	term1$ git clone https://github.com/indexdata/yaz4j.git
+	term1$ git checkout d7cd6967d297c92c179d9896b0150f7509f789f8
 	term1$ cd yaz4j
 
 The install below whould install `yaz4j-1.6-SNAPSHOT.jar` in your Maven repository.
