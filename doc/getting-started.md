@@ -6,6 +6,7 @@ mike@indexdata.com
 16 December 2020.
 
 <!-- md2toc -l 2 getting-started.md -->
+* [Prerequisites](#prerequisites)
 * [To build](#to-build)
 * [To run](#to-run)
 * [To initialize](#to-initialize)
@@ -14,13 +15,12 @@ mike@indexdata.com
 * [To unassociate, undeploy and remove a running module](#to-unassociate-undeploy-and-remove-a-running-module)
 * [Adding permissions on the UI side](#adding-permissions-on-the-ui-side)
 
-
-## To build
+## Prerequisites
 
 You need
 [yaz4j](https://github.com/indexdata/yaz4j)
 and
-[yaz](https://www.indexdata.com/yaz)
+[YAZ](https://www.indexdata.com/yaz)
 before you can compile and install mod-copycat.
 
 	term1$ sudo apt install yaz
@@ -39,7 +39,7 @@ copy like this:
 
 	term1$ sudo cp unix/target/libyaz4j.so /usr/lib/x86_64-linux-gnu/
 
-## To build mod-copycat
+## To build
 
 	term1$ cd mod-copycat
 	term1$ mvn install
