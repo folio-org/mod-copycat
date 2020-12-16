@@ -5,7 +5,7 @@ USER root
 RUN apk add --no-cache swig openjdk11 maven \
 	bison gnutls-dev libxslt-dev libxml2-dev make build-base git
 
-# Compile yaz
+# Compile yaz (there's no apk package for it)
 USER folio
 RUN curl -s http://ftp.indexdata.dk/pub/yaz/yaz-5.30.3.tar.gz |tar xzf -
 RUN cd yaz-5.30.3 && ./configure --disable-static --enable-shared && make
