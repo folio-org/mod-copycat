@@ -5,17 +5,21 @@ USER root
 RUN apk add --no-cache swig openjdk11 maven \
 	bison gnutls-dev libxslt-dev libxml2-dev make build-base git
 
+# Compile yaz
 USER folio
 RUN curl -s http://ftp.indexdata.dk/pub/yaz/yaz-5.30.3.tar.gz |tar xzf -
 RUN cd yaz-5.30.3 && ./configure --disable-static --enable-shared && make
 
+# Install yaz
 USER root
 RUN cd yaz-5.30.3 && make install
 
+# Compile yaz4j
 USER folio
 RUN git clone https://github.com/indexdata/yaz4j.git
 RUN cd yaz4j && git checkout d7cd6967d297c92c179d9896b0150f7509f789f8 && mvn compile
 
+# install yaz4j
 USER root
 RUN cp yaz4j/unix/target/libyaz4j.so /usr/lib/
 
