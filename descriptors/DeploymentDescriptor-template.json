@@ -2,6 +2,6 @@
   "srvcId": "${artifactId}-${version}",
   "nodeId": "localhost",
   "descriptor": {
-    "exec": "java -Dport=%p -jar ../mod-copycat/target/mod-copycat-fat.jar -Dhttp.port=%p"
+    "exec": "java -jar ../mod-copycat/target/mod-copycat-fat.jar -Dhttp.port=%p"
   }
 }
