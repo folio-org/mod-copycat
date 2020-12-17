@@ -33,7 +33,7 @@
        "description": "Identifier of a FOLIO MARC-importing profile that specifies how to map MARC fields to FOLIO inventory"
     },
     "targetOptions" : {
-       "type":"object"
+       "type":"object",
        "description": "ZOOM options. https://software.indexdata.com/yaz/doc/zoom.html#zoom-connections and https://software.indexdata.com/yaz/doc/zoom.resultsets.html#zoom.resultset.options"
     }
   },
