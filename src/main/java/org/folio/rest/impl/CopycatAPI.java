@@ -4,8 +4,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import javax.ws.rs.core.Response;
 import java.util.LinkedList;
@@ -13,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.copycat.JsonMarc;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.CopyCatImports;
 import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
@@ -112,49 +111,14 @@ public class CopycatAPI implements Copycat {
     }
   }
 
-  private static Future<byte[]> getMARC(CopyCatTargetProfile profile, String externalId, Context vertxContext) {
-    return Future.future(promise0 -> vertxContext.owner().<byte[]>executeBlocking(promise1 ->
-            getMARC(profile, externalId, "json").onComplete(record -> promise1.handle(record))
-        , result -> promise0.handle(result)));
+  static Future<JsonObject> getMARCJsonObject(CopyCatTargetProfile profile, String externalId) {
+    return getMARC(profile, externalId, "json").map(buf -> new JsonObject(new String(buf)));
   }
 
-  static void embedPath(JsonObject marc, String marcPath, String value) {
-    JsonArray ar = marc.getJsonArray("fields");
-
-    final String tagPattern = marcPath.substring(0, 3);
-    String indicatorPattern = marcPath.substring(3, 5);
-    indicatorPattern = indicatorPattern.replace('_', ' ');
-
-    int di = marcPath.indexOf('$');
-    if (di == -1) {
-      throw new IllegalArgumentException("Missing $ in marcPath");
-    }
-    final String subFieldPattern = marcPath.substring(di + 1);
-    for (int i = 0; i < ar.size(); i++) {
-      JsonObject entry = ar.getJsonObject(i);
-      JsonObject jsonField1 = entry.getJsonObject(tagPattern);
-      if (jsonField1 != null) {
-        boolean found = true;
-        for (int j = 0; j < indicatorPattern.length(); j++) {
-          if (!indicatorPattern.substring(j, j + 1).equals(jsonField1.getString("ind" + Integer.toString(j + 1)))) {
-            found = false;
-          }
-        }
-        if (found) {
-          JsonArray subAr = jsonField1.getJsonArray("subfields");
-          subAr.add(new JsonObject().put(subFieldPattern, value));
-          return;
-        }
-      }
-    }
-    JsonObject jsonField = new JsonObject();
-    for (int j = 0; j < indicatorPattern.length(); j++) {
-      jsonField.put("ind" + Integer.toString(j + 1), indicatorPattern.substring(j, j + 1));
-    }
-    JsonArray subAr = new JsonArray();
-    jsonField.put("subfields", subAr);
-    subAr.add(new JsonObject().put(subFieldPattern, value));
-    ar.add(new JsonObject().put(tagPattern, jsonField));
+  private static Future<JsonObject> getMARC(CopyCatTargetProfile profile, String externalId, Context vertxContext) {
+    return Future.future(promise0 -> vertxContext.owner().<JsonObject>executeBlocking(promise1 ->
+            getMARCJsonObject(profile, externalId).onComplete(record -> promise1.handle(record))
+        , result -> promise0.handle(result)));
   }
 
   @Validate
@@ -167,7 +131,17 @@ public class CopycatAPI implements Copycat {
     Future.<JsonObject>future(promise -> postgresClient.getById(PROFILE_TABLE, targetProfileId, promise))
         .compose(res -> {
           CopyCatTargetProfile targetProfile = res.mapTo(CopyCatTargetProfile.class);
-          return getMARC(targetProfile, entity.getExternalIdentifier(), vertxContext);
+          return getMARC(targetProfile, entity.getExternalIdentifier(), vertxContext)
+              .compose(marc -> {
+                if (entity.getInternalIdentifier() != null) {
+                  String pattern = targetProfile.getInternalIdEmbedPath();
+                  if (pattern == null) {
+                    return Future.failedFuture("Missing internalIdEmbedPath in target profile");
+                  }
+                  JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
+                }
+                return Future.succeededFuture(marc);
+              });
         })
         .onSuccess(record ->
             asyncResultHandler.handle(Future.succeededFuture(PostCopycatImportsResponse.respond204()))
