@@ -156,11 +156,34 @@ public class RecordImporterTest {
     String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
     JsonObject marc = new JsonObject(file);
 
-    mock.setCImportStatus(201);
+    mock.setImportStatus(201);
     Future<Void> future = importer.begin()
         .compose(x -> importer.post(marc));
     future.onComplete(context.failing(cause -> context.verify(() -> {
-      mock.setCImportStatus(204);
+      mock.setImportStatus(204);
+      assertThat(cause.getMessage()).contains("returned 201");
+      context.completeNow();
+    })));
+  }
+
+  @Test
+  void testBadStatusPutProfile(Vertx vertx, VertxTestContext context) throws IOException {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put("X-Okapi-Url", "http://localhost:" + port);
+    headers.put("X-Okapi-Tenant", "testlib");
+    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+
+    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
+    JsonObject marc = new JsonObject(file);
+
+    mock.setPutProfileStatus(201);
+    Future<Void> future = importer.begin()
+        .compose(x -> importer.post(marc));
+    future.onComplete(context.failing(cause -> context.verify(() -> {
+      mock.setPutProfileStatus(200);
       assertThat(cause.getMessage()).contains("returned 201");
       context.completeNow();
     })));

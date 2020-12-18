@@ -3,9 +3,7 @@ package org.folio.rest.impl;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -23,6 +21,7 @@ public class ImporterMock {
   private static final Logger log = LogManager.getLogger(CopycatAPI.class);
   private int createStatus = 201;
   private int importStatus = 204;
+  private int putProfileStatus = 200;
 
   Set<String> jobs = new TreeSet<>();
 
@@ -34,8 +33,12 @@ public class ImporterMock {
     createStatus = code;
   }
 
-  public void setCImportStatus(int code) {
+  public void setImportStatus(int code) {
     importStatus = code;
+  }
+
+  public void setPutProfileStatus(int code) {
+    putProfileStatus = code;
   }
 
   public void createJob(RoutingContext ctx) {
@@ -60,9 +63,36 @@ public class ImporterMock {
     ctx.response().end(responseBody.encode());
   }
 
+  public void putProfile(RoutingContext ctx) {
+    JsonObject requestBody;
+    try {
+      String path = ctx.request().path();
+      String [] comp = path.split("/");
+      String id = comp[3];
+      if (!jobs.contains(id)) {
+        ctx.response().setStatusCode(404);
+        ctx.response().end("Job not found " + id);
+        return;
+      }
+      requestBody = ctx.getBodyAsJson();
+      if (!requestBody.containsKey("id")) {
+        ctx.response().setStatusCode(400);
+        ctx.response().end("Missing id");
+        return;
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      ctx.response().setStatusCode(500);
+      ctx.response().end(e.getMessage());
+      return;
+    }
+    ctx.response().setStatusCode(putProfileStatus);
+    ctx.response().putHeader("Application", "application/json");
+    ctx.response().end(requestBody.encode());
+  }
+
   public void importJob(RoutingContext ctx) {
     try {
-      // /change-manager/jobExecutions/{jobId}/records
       String path = ctx.request().path();
       String [] comp = path.split("/");
       String id = comp[3];
@@ -96,6 +126,10 @@ public class ImporterMock {
     router.postWithRegex("/change-manager/jobExecutions.*").handler(BodyHandler.create());
     router.post("/change-manager/jobExecutions").handler(this::createJob);
     router.postWithRegex("/change-manager/jobExecutions/.*").handler(this::importJob);
+
+    router.putWithRegex("/change-manager/jobExecutions/.*").handler(BodyHandler.create());
+    router.putWithRegex("/change-manager/jobExecutions/.*").handler(this::putProfile);
+
     Promise<Void> promise = Promise.promise();
     vertx.createHttpServer()
         .requestHandler(router)

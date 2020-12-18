@@ -90,8 +90,39 @@ public class RecordImporter {
   public Future<Void> begin() {
     return createJob().compose(id -> {
       jobId = id;
-      return Future.succeededFuture();
+      return putJobProfile();
     });
+  }
+
+  Future<Void> putJobProfile() {
+    String abs = okapiUrl + "/change-manager/jobExecutions/" + jobId + "/jobProfile";
+    HttpRequest<Buffer> request = client.putAbs(abs);
+    request.headers().addAll(okapiHeaders);
+    request.putHeader("Accept", "*/*");
+    request.putHeader("Content-Type", "application/json");
+
+    JsonObject jobProfile = new JsonObject();
+    jobProfile.put("id", "d0ebb7b0-2f0f-11eb-adc1-0242ac120002");
+    jobProfile.put("name", "CLI Create MARC Bibs and Instances");
+    jobProfile.put("dataType", "MARC");
+
+    // With Vert.x 4 this may be simpler
+    Promise<Void> promise = Promise.promise();
+    request.sendJsonObject(jobProfile, res -> {
+      if (res.failed()) {
+        log.error(res.cause().getMessage(), res.cause());
+        promise.fail(res.cause());
+        return;
+      }
+      HttpResponse<Buffer> result = res.result();
+      if (result.statusCode() != 200) {
+        log.error("{} returned {}", abs, result.statusCode());
+        promise.fail(abs  + " returned " + result.statusCode() + " (expected 200):" + result.bodyAsString());
+        return;
+      }
+      promise.complete();
+    });
+    return promise.future();
   }
 
   Future<Void> post(JsonObject record, boolean last) {
