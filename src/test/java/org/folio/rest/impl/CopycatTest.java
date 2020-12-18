@@ -11,8 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.CopyCatImports;
 import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
 import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
@@ -39,8 +37,6 @@ public class CopycatTest {
   private static final String EXTERNAL_ID_INDEXDATA = "780306m19009999ohu";
   private static final int mockPort = 9231;
   private static ImporterMock mock;
-
-  Logger log = LogManager.getLogger();
 
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext context) {
