@@ -51,6 +51,8 @@ public class RecordImporter {
     String abs = okapiUrl + "/change-manager/jobExecutions";
     HttpRequest<Buffer> request = client.postAbs(abs);
     request.headers().addAll(okapiHeaders);
+    request.putHeader("Accept", "*/*");
+    request.putHeader("Content-Type", "application/json");
     JsonObject jobProfileInfo = new JsonObject();
     jobProfileInfo.put("id", "c8f98545-898c-4f48-a494-3ab6736a3243");
     jobProfileInfo.put("name", "Default job profile");
@@ -96,6 +98,8 @@ public class RecordImporter {
     String abs = okapiUrl + "/change-manager/jobExecutions/" + jobId + "/records";
     HttpRequest<Buffer> request = client.postAbs(abs);
     request.headers().addAll(okapiHeaders);
+    request.putHeader("Accept", "*/*");
+    request.putHeader("Content-Type", "application/json");
 
     JsonObject recordsMetadata = new JsonObject();
     recordsMetadata.put("last", last);
