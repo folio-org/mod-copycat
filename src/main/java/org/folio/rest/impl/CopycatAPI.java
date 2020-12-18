@@ -12,6 +12,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.copycat.JsonMarc;
+import org.folio.copycat.RecordImporter;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.CopyCatImports;
 import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
@@ -140,7 +141,10 @@ public class CopycatAPI implements Copycat {
                   }
                   JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
                 }
-                return Future.succeededFuture(marc);
+                RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
+                return importer.begin()
+                    .compose(x -> importer.post(marc))
+                    .compose(x -> importer.end());
               });
         })
         .onSuccess(record ->

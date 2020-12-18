@@ -9,6 +9,8 @@ import io.vertx.junit5.VertxTestContext;
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.CopyCatImports;
@@ -17,6 +19,8 @@ import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.TargetOptions;
 import org.folio.rest.jaxrs.resource.Copycat;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,11 +37,24 @@ public class CopycatTest {
   private static final String URL_WORLDCAT = "zcat.oclc.org/OLUCWorldCat";
   private static final String EXTERNAL_ID_WORLDCAT = "0679429220";
   private static final String EXTERNAL_ID_INDEXDATA = "780306m19009999ohu";
+  private static final int mockPort = 9231;
+  private static ImporterMock mock;
 
   Logger log = LogManager.getLogger();
 
+  @BeforeAll
+  static void beforeAll(Vertx vertx, VertxTestContext context) {
+    mock = new ImporterMock(vertx);
+    mock.start(mockPort).onComplete(context.succeeding(res -> context.completeNow()));
+  }
+
+  @AfterAll
+  static void afterAll(Vertx vertx, VertxTestContext context) {
+    mock.stop().onComplete(context.succeeding(res -> context.completeNow()));
+  }
+
   @BeforeEach
-  void beforeClass(Vertx vertx, VertxTestContext context) {
+  void beforeEach(Vertx vertx, VertxTestContext context) {
     tenantInit(vertx, context).onComplete(context.succeeding(res -> context.completeNow()));
   }
 
@@ -45,6 +62,7 @@ public class CopycatTest {
     TenantAPI tenantAPI = new TenantAPI();
     Map<String, String> headers = new HashMap<>();
     headers.put("X-Okapi-Tenant", tenant);
+    headers.put("X-Okapi-Url", "http://localhost:" + mockPort);
     return Future.<Response>future(promise ->
         tenantAPI.postTenant(null, headers, promise, vertx.getOrCreateContext())).mapEmpty();
   }
@@ -103,6 +121,9 @@ public class CopycatTest {
 
     Map<String, String> headers = new HashMap<>();
     headers.put("X-Okapi-Tenant", tenant);
+    headers.put("X-Okapi-Url", "http://localhost:" + mockPort);
+    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
+
     Context vertxContext = vertx.getOrCreateContext();
 
     CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
@@ -126,11 +147,75 @@ public class CopycatTest {
   }
 
   @Test
+  void testImportProfileMissingUserId(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatAPI();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put("X-Okapi-Tenant", tenant);
+    headers.put("X-Okapi-Url", "http://localhost:" + mockPort);
+    Context vertxContext = vertx.getOrCreateContext();
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().get(0).getMessage()).contains("returned 500");
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 ->
+            context.completeNow()
+        ), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
+  void testImportProfileMissingOkapiUrl(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatAPI();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put("X-Okapi-Tenant", tenant);
+    Context vertxContext = vertx.getOrCreateContext();
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().get(0).getMessage()).contains("Invalid url");
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 ->
+            context.completeNow()
+        ), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+
+  @Test
   void testImportProfileWithInternalIdentifier(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatAPI();
 
     Map<String, String> headers = new HashMap<>();
     headers.put("X-Okapi-Tenant", tenant);
+    headers.put("X-Okapi-Url", "http://localhost:" + mockPort);
+    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
 
     CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
@@ -161,6 +246,8 @@ public class CopycatTest {
 
     Map<String, String> headers = new HashMap<>();
     headers.put("X-Okapi-Tenant", tenant);
+    headers.put("X-Okapi-Url", "http://localhost:" + mockPort);
+    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
 
     CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
@@ -192,6 +279,8 @@ public class CopycatTest {
 
     Map<String, String> headers = new HashMap<>();
     headers.put("X-Okapi-Tenant", tenant);
+    headers.put("X-Okapi-Url", "http://localhost:" + mockPort);
+    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
 
     CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
