@@ -28,7 +28,13 @@
         {
           "methods": [ "POST" ],
           "pathPattern": "/copycat/imports",
-          "permissionsRequired": [ "copycat.imports.post" ]
+          "permissionsRequired": [ "copycat.imports.post" ],
+          "modulePermissions" : [
+            "change-manager.jobexecutions.post",
+            "change-manager.jobexecutions.get",
+            "change-manager.jobexecutions.put",
+            "change-manager.records.post"
+          ]
         }
       ]
     },
@@ -64,7 +70,16 @@
       ]
     }
   ],
-  "requires" : [ ],
+  "requires" : [
+    {
+      "id" : "source-manager-job-executions",
+      "version" : "1.0"
+    },
+    {
+      "id" : "source-manager-records",
+      "version" : "1.0"
+    }
+  ],
   "permissionSets" : [
     {
       "permissionName" : "copycat.imports.post",
