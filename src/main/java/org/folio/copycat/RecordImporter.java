@@ -9,10 +9,12 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Responsible for importing records.
@@ -27,12 +29,27 @@ import java.util.Map;
  */
 public class RecordImporter {
 
+  private static final int WEBCLIENT_CONNECT_TIMEOUT = 10;
+  private static final int WEBCLIENT_IDLE_TIMEOUT = 20;
+
   private static Logger log = LogManager.getLogger(RecordImporter.class);
   private final WebClient client;
   private final Map<String, String> okapiHeaders;
   private final String okapiUrl;
   private final String userId;
   private String jobId;
+
+  public RecordImporter(Map<String, String> okapiHeaders, Context context, WebClientOptions options) {
+    if (options == null) {
+      options = new WebClientOptions();
+      options.setConnectTimeout(WEBCLIENT_CONNECT_TIMEOUT);
+      options.setIdleTimeout(WEBCLIENT_IDLE_TIMEOUT);
+    }
+    client = WebClient.create(context.owner(), options);
+    this.okapiUrl = okapiHeaders.get("X-Okapi-Url");
+    this.userId = okapiHeaders.get("X-Okapi-User-Id");
+    this.okapiHeaders = okapiHeaders;
+  }
 
   /**
    * Constructor for importing (can NOT be shared between users/tenants).
@@ -41,10 +58,7 @@ public class RecordImporter {
    * @param context Vert.x context
    */
   public RecordImporter(Map<String, String> okapiHeaders, Context context) {
-    client = WebClient.create(context.owner());
-    this.okapiUrl = okapiHeaders.get("X-Okapi-Url");
-    this.userId = okapiHeaders.get("X-Okapi-User-Id");
-    this.okapiHeaders = okapiHeaders;
+    this(okapiHeaders, context, null);
   }
 
   Future<String> createJob() {

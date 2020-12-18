@@ -22,6 +22,7 @@ public class ImporterMock {
   private int createStatus = 201;
   private int importStatus = 204;
   private int putProfileStatus = 200;
+  private int waitMs = 1;
 
   Set<String> jobs = new TreeSet<>();
 
@@ -35,6 +36,10 @@ public class ImporterMock {
 
   public void setImportStatus(int code) {
     importStatus = code;
+  }
+
+  public void setWaitMs(int ms) {
+    waitMs = ms;
   }
 
   public void setPutProfileStatus(int code) {
@@ -58,9 +63,11 @@ public class ImporterMock {
     jobs.add(id);
     responseBody.put("parentJobExecutionId", id);
 
-    ctx.response().putHeader("Content-Type", "application/json");
-    ctx.response().setStatusCode(createStatus);
-    ctx.response().end(responseBody.encode());
+    vertx.setTimer(waitMs, res -> {
+      ctx.response().putHeader("Content-Type", "application/json");
+      ctx.response().setStatusCode(createStatus);
+      ctx.response().end(responseBody.encode());
+    });
   }
 
   public void putProfile(RoutingContext ctx) {

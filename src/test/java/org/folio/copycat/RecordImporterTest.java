@@ -3,6 +3,7 @@ package org.folio.copycat;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -185,6 +187,27 @@ public class RecordImporterTest {
     future.onComplete(context.failing(cause -> context.verify(() -> {
       mock.setPutProfileStatus(200);
       assertThat(cause.getMessage()).contains("returned 201");
+      context.completeNow();
+    })));
+  }
+
+  @Test
+  void testImporterTimeout(Vertx vertx, VertxTestContext context) throws IOException {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put("X-Okapi-Url", "http://localhost:" + port);
+    headers.put("X-Okapi-Tenant", "testlib");
+    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
+
+    WebClientOptions options = new WebClientOptions();
+    options.setIdleTimeout(1);
+    options.setIdleTimeoutUnit(TimeUnit.MILLISECONDS);
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext(), options);
+
+    mock.setWaitMs(10);
+    importer.begin().onComplete(context.failing(cause -> context.verify(() -> {
+      mock.setWaitMs(1);
+      assertThat(cause.getMessage()).contains("Connection was closed");
       context.completeNow();
     })));
   }
