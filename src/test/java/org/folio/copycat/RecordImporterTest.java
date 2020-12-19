@@ -93,6 +93,23 @@ public class RecordImporterTest {
   }
 
   @Test
+  void testBadUrlPutProfile(Vertx vertx, VertxTestContext context) throws IOException {
+    Map<String, String> headers = new HashMap<>();
+    int port = 9231; // where mock is running
+
+    headers.put("X-Okapi-Url", "http://localhost:" + (port + 1)); // nothing running
+    headers.put("X-Okapi-Tenant", "testlib");
+    headers.put("X-Okapi-User-Id",  UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+
+    importer.putJobProfile().onComplete(context.failing(cause -> context.verify(() -> {
+      assertThat(cause.getMessage()).contains("Connection refused");
+      context.completeNow();
+    })));
+  }
+
+  @Test
   void testBadUrlPost(Vertx vertx, VertxTestContext context) throws IOException {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
