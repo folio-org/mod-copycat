@@ -22,7 +22,7 @@
     },
     "externalIdQueryMap": {
       "type": "string",
-      "description": "Specifies which field at the remote service should be searched with the value of `externalIdentifier` when an import request is POSTed. Could be specified as a YAZ prefix-query string, e.g. '@attr 1=12 ${identifier}'"
+      "description": "Specifies which field at the remote service should be searched with the value of `externalIdentifier` when an import request is POSTed. Could be specified as a YAZ prefix-query string, e.g. '@attr 1=12 $identifier'"
     },
     "internalIdEmbedPath": {
        "type": "string",
