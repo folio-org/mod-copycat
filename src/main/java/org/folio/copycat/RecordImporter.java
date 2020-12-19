@@ -15,7 +15,6 @@ import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.XOkapiHeaders;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Responsible for importing records.
@@ -47,13 +46,13 @@ public class RecordImporter {
       options.setIdleTimeout(WEBCLIENT_IDLE_TIMEOUT);
     }
     client = WebClient.create(context.owner(), options);
-    this.okapiUrl = okapiHeaders.get("X-Okapi-Url");
+    this.okapiUrl = okapiHeaders.get(XOkapiHeaders.URL);
     if (this.okapiUrl == null) {
-      throw new IllegalArgumentException("Missing X-Okapi-Url header");
+      throw new IllegalArgumentException("Missing " + XOkapiHeaders.URL + " header");
     }
-    this.userId = okapiHeaders.get("X-Okapi-User-Id");
+    this.userId = okapiHeaders.get(XOkapiHeaders.USER_ID);
     if (this.userId == null) {
-      throw new IllegalArgumentException("Missing X-Okapi-User-Id header");
+      throw new IllegalArgumentException("Missing " + XOkapiHeaders.USER_ID + " header");
     }
     this.okapiHeaders = okapiHeaders;
   }

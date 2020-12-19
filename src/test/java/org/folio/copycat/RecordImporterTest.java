@@ -8,6 +8,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.impl.ImporterMock;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -43,9 +44,9 @@ public class RecordImporterTest {
   void testOK(Vertx vertx, VertxTestContext context) throws IOException {
     Map<String, String> headers = new HashMap<>();
 
-    headers.put("X-Okapi-Url", "http://localhost:" + port);
-    headers.put("X-Okapi-Tenant", "testlib");
-    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
@@ -63,9 +64,9 @@ public class RecordImporterTest {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
-    headers.put("X-Okapi-Url", "http://localhost:" + port);
-    headers.put("X-Okapi-Tenant", "testlib");
-    headers.put("X-Okapi-User-Id", "1234");
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, "1234");
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
@@ -80,9 +81,9 @@ public class RecordImporterTest {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
-    headers.put("X-Okapi-Url", "http://localhost:" + (port + 1)); // nothing running
-    headers.put("X-Okapi-Tenant", "testlib");
-    headers.put("X-Okapi-User-Id",  UUID.randomUUID().toString());
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + (port + 1)); // nothing running
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID,  UUID.randomUUID().toString());
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
@@ -97,9 +98,9 @@ public class RecordImporterTest {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
-    headers.put("X-Okapi-Url", "http://localhost:" + (port + 1)); // nothing running
-    headers.put("X-Okapi-Tenant", "testlib");
-    headers.put("X-Okapi-User-Id",  UUID.randomUUID().toString());
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + (port + 1)); // nothing running
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID,  UUID.randomUUID().toString());
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
@@ -114,9 +115,9 @@ public class RecordImporterTest {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
-    headers.put("X-Okapi-Url", "http://localhost:" + (port + 1)); // nothing running
-    headers.put("X-Okapi-Tenant", "testlib");
-    headers.put("X-Okapi-User-Id",  UUID.randomUUID().toString());
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + (port + 1)); // nothing running
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID,  UUID.randomUUID().toString());
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
@@ -131,9 +132,9 @@ public class RecordImporterTest {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
-    headers.put("X-Okapi-Url", "http://localhost:" + (port + 1)); // nothing running
-    headers.put("X-Okapi-Tenant", "testlib");
-    headers.put("X-Okapi-User-Id",  UUID.randomUUID().toString());
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + (port + 1)); // nothing running
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID,  UUID.randomUUID().toString());
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
@@ -148,9 +149,9 @@ public class RecordImporterTest {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
-    headers.put("X-Okapi-Url", "http://localhost:" + port);
-    headers.put("X-Okapi-Tenant", "testlib");
-    headers.put("X-Okapi-User-Id",  UUID.randomUUID().toString());
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID,  UUID.randomUUID().toString());
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
@@ -166,9 +167,9 @@ public class RecordImporterTest {
   void testBadStatusImport(Vertx vertx, VertxTestContext context) throws IOException {
     Map<String, String> headers = new HashMap<>();
 
-    headers.put("X-Okapi-Url", "http://localhost:" + port);
-    headers.put("X-Okapi-Tenant", "testlib");
-    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
@@ -189,9 +190,9 @@ public class RecordImporterTest {
   void testBadStatusPutProfile(Vertx vertx, VertxTestContext context) throws IOException {
     Map<String, String> headers = new HashMap<>();
 
-    headers.put("X-Okapi-Url", "http://localhost:" + port);
-    headers.put("X-Okapi-Tenant", "testlib");
-    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
@@ -212,9 +213,9 @@ public class RecordImporterTest {
   void testImporterTimeout(Vertx vertx, VertxTestContext context) throws IOException {
     Map<String, String> headers = new HashMap<>();
 
-    headers.put("X-Okapi-Url", "http://localhost:" + port);
-    headers.put("X-Okapi-Tenant", "testlib");
-    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     WebClientOptions options = new WebClientOptions();
     options.setIdleTimeout(1);
