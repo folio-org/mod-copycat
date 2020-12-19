@@ -38,5 +38,5 @@
     }
   },
   "additionalProperties": false,
-  "required": [ "url", "name", "externalIdQuerymap" ]
+  "required": [ "url", "name", "externalIdQueryMap" ]
 }

@@ -12,6 +12,7 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.XOkapiHeaders;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +48,13 @@ public class RecordImporter {
     }
     client = WebClient.create(context.owner(), options);
     this.okapiUrl = okapiHeaders.get("X-Okapi-Url");
+    if (this.okapiUrl == null) {
+      throw new IllegalArgumentException("Missing X-Okapi-Url header");
+    }
     this.userId = okapiHeaders.get("X-Okapi-User-Id");
+    if (this.userId == null) {
+      throw new IllegalArgumentException("Missing X-Okapi-User-Id header");
+    }
     this.okapiHeaders = okapiHeaders;
   }
 

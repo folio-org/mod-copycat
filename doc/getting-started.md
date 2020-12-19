@@ -70,7 +70,7 @@ Apparently this is nothing to worry about.
 
 Create a target profile:
 
-	term2$ curl  -d'{"url":"z3950.indexdata.com/marc", "name":"ID MARC test"}' -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/target-profiles
+	term2$ curl  -d'{"url":"z3950.indexdata.com/marc", "name":"ID MARC test", "externalIdQueryMap" : "@attr 1=1016 $identifier"}' -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/target-profiles
 	{
 	  "id" : "6a69ab96-51af-4827-bb7d-7a9cf2f1a8cf",
 	  "name" : "ID MARC test",
@@ -85,17 +85,24 @@ List all target profiles:
 	  "targetprofiles" : [ {
 	    "id" : "6a69ab96-51af-4827-bb7d-7a9cf2f1a8cf",
 	    "name" : "ID MARC test",
-	    "url" : "z3950.indexdata.com/marc"
+	    "url" : "z3950.indexdata.com/marc",
+            "externalIdQueryMap" : "@attr 1=1016 $identifier"
 	  } ],
 	  "totalRecords" : 1
 	}
 	term2$ 
 
-Import a record based on an external identifier (OCLC number):
+Import a record based on an external identifier (could be OCLC number, ISBN, other):
 
-	term2$ curl -d'{"externalIdentifier":"isbn123", "targetProfileId":"1d0489ab-3989-4f0b-b535-725bebf21373"}'   -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/imports
-	Not implemented
-	term2$ 
+	term2$ curl -d'{"externalIdentifier":"780306m19009999ohu", "targetProfileId":"1d0489ab-3989-4f0b-b535-725bebf21373"}'   -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/imports
+	{
+	  "errors" : [ {
+	  "message" : "Missing X-Okapi-Url header",
+	  "parameters" : [ ]
+	  } ]
+	}
+
+In order to complete this operation mod-copycat must be able to contact Okapi and in turn mod-source-record-manager to complete the operation.
 
 ## Integrating into a FOLIO-backend Vagrant box
 

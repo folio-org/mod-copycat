@@ -104,11 +104,11 @@ public class CopycatAPI implements Copycat {
         return Future.failedFuture("No record found");
       }
       Record record = search.getRecord(0);
+      conn.close();
       return Future.succeededFuture(record.get(type));
     } catch (ZoomException e) {
-      return Future.failedFuture(e);
-    } finally {
       conn.close();
+      return Future.failedFuture(e);
     }
   }
 
@@ -131,6 +131,9 @@ public class CopycatAPI implements Copycat {
     PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
     Future.<JsonObject>future(promise -> postgresClient.getById(PROFILE_TABLE, targetProfileId, promise))
         .compose(res -> {
+          if (res == null) {
+            return Future.failedFuture("No such targetProfileId " + targetProfileId);
+          }
           CopyCatTargetProfile targetProfile = res.mapTo(CopyCatTargetProfile.class);
           return getMARC(targetProfile, entity.getExternalIdentifier(), vertxContext)
               .compose(marc -> {

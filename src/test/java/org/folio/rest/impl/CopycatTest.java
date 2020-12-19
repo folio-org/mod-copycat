@@ -112,6 +112,29 @@ public class CopycatTest {
   }
 
   @Test
+  void testImportProfileNoTargetProfile(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatAPI();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put("X-Okapi-Tenant", tenant);
+    headers.put("X-Okapi-Url", "http://localhost:" + mockPort);
+    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    String targetProfileId = UUID.randomUUID().toString();
+    CopyCatImports copyCatImports = new CopyCatImports()
+        .withTargetProfileId(targetProfileId)
+        .withExternalIdentifier(EXTERNAL_ID_INDEXDATA);
+    api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+      assertThat(res.getStatus()).isEqualTo(400);
+      Errors errors = (Errors) res.getEntity();
+      assertThat(errors.getErrors().get(0).getMessage()).contains("No such targetProfileId " + targetProfileId);
+      context.completeNow();
+    })), vertxContext);
+  }
+
+  @Test
   void testImportProfileOK(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatAPI();
 
@@ -143,6 +166,39 @@ public class CopycatTest {
   }
 
   @Test
+  void testImportProfileBadOkapiUrl(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatAPI();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put("X-Okapi-Tenant", tenant);
+    headers.put("X-Okapi-Url", "http://localhost:" + (mockPort + 1)); // nothing here
+    headers.put("X-Okapi-User-Id", UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().get(0).getMessage()).contains("Connection refused");
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
   void testImportProfileMissingUserId(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatAPI();
 
@@ -165,7 +221,7 @@ public class CopycatTest {
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
-        assertThat(errors.getErrors().get(0).getMessage()).contains("returned 500");
+        assertThat(errors.getErrors().get(0).getMessage()).contains("Missing X-Okapi-User-Id header");
         api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 ->
             context.completeNow()
         ), vertxContext);
@@ -195,7 +251,7 @@ public class CopycatTest {
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
-        assertThat(errors.getErrors().get(0).getMessage()).contains("Invalid url");
+        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("Missing X-Okapi-Url header");
         api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 ->
             context.completeNow()
         ), vertxContext);
@@ -203,6 +259,36 @@ public class CopycatTest {
     })), vertxContext);
   }
 
+  @Test
+  void testImportProfileMissingOkapiUserId(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatAPI();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put("X-Okapi-Tenant", tenant);
+    headers.put("X-Okapi-Url", "http://localhost:" + mockPort);
+    Context vertxContext = vertx.getOrCreateContext();
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("Missing X-Okapi-User-Id header");
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 ->
+            context.completeNow()
+        ), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
 
   @Test
   void testImportProfileWithInternalIdentifier(Vertx vertx, VertxTestContext context) {
