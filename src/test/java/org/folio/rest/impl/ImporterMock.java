@@ -18,7 +18,7 @@ import java.util.UUID;
 public class ImporterMock {
   private final Vertx vertx;
   private HttpServer server;
-  private static final Logger log = LogManager.getLogger(CopycatAPI.class);
+  private static final Logger log = LogManager.getLogger(CopycatImpl.class);
   private int createStatus = 201;
   private int importStatus = 204;
   private int putProfileStatus = 200;

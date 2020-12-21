@@ -10,22 +10,20 @@ import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.XOkapiHeaders;
 
-import java.util.Map;
-
 /**
- * Responsible for importing records.
- *
- * Uses mod-record-source-manager for importing.
- *
- * https://github.com/folio-org/mod-source-record-manager
- * https://github.com/folio-org/mod-source-record-manager/blob/master/descriptors/ModuleDescriptor-template.json
- * https://github.com/folio-org/mod-source-record-manager/blob/master/ramls/change-manager.raml
- * https://github.com/folio-org/data-import-raml-storage/blob/master/schemas/dto/initJobExecutionsRqDto.json
- * https://github.com/folio-org/mod-source-record-manager/blob/master/README.md#data-import-workflow
+ * Responsible for importing records. Uses mod-record-source-manager for importing.
+ * <ul>
+ * <li></li><a href="https://github.com/folio-org/mod-source-record-manager">mod-record-source-manager</a></li>
+ * <li></li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/descriptors/ModuleDescriptor-template.json">Descriptor</a></li>
+ * <li></li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/ramls/change-manager.raml">RAML</a></li>
+ * <li></li><a href="https://github.com/folio-org/data-import-raml-storage/blob/master/schemas/dto/">schemas</a></li>
+ * <li></li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/README.md#data-import-workflow">workflow</a></li>
+ * </ul>
  */
 public class RecordImporter {
 
@@ -39,7 +37,15 @@ public class RecordImporter {
   private final String userId;
   private String jobId;
 
-  public RecordImporter(Map<String, String> okapiHeaders, Context context, WebClientOptions options) {
+  /**
+   * Constructor for importing (can NOT be shared between users/tenants).
+   * @param okapiHeaders Okapi headers
+   * @param context Vert.x. context
+   * @param options Options for WebClient used for logic
+   */
+  public RecordImporter(Map<String, String> okapiHeaders, Context context,
+                        WebClientOptions options) {
+
     if (options == null) {
       options = new WebClientOptions();
       options.setConnectTimeout(WEBCLIENT_CONNECT_TIMEOUT);
@@ -59,10 +65,10 @@ public class RecordImporter {
 
   /**
    * Constructor for importing (can NOT be shared between users/tenants).
-   *
    * @param okapiHeaders essential headers for importing
    * @param context Vert.x context
    */
+
   public RecordImporter(Map<String, String> okapiHeaders, Context context) {
     this(okapiHeaders, context, null);
   }
@@ -94,7 +100,8 @@ public class RecordImporter {
       HttpResponse<Buffer> result = res.result();
       if (result.statusCode() != 201) {
         log.error("{} returned {}", abs, result.statusCode());
-        promise.fail(abs + " returned " + result.statusCode() + " (expected 201):" + result.bodyAsString());
+        promise.fail(abs + " returned " + result.statusCode()
+            + " (expected 201):" + result.bodyAsString());
         return;
       }
       promise.complete(result.bodyAsJsonObject().getString("parentJobExecutionId"));
@@ -137,7 +144,8 @@ public class RecordImporter {
       HttpResponse<Buffer> result = res.result();
       if (result.statusCode() != 200) {
         log.error("{} returned {}", abs, result.statusCode());
-        promise.fail(abs  + " returned " + result.statusCode() + " (expected 200):" + result.bodyAsString());
+        promise.fail(abs  + " returned " + result.statusCode()
+            + " (expected 200):" + result.bodyAsString());
         return;
       }
       promise.complete();
@@ -176,7 +184,8 @@ public class RecordImporter {
       HttpResponse<Buffer> result = res.result();
       if (result.statusCode() != 204) {
         log.error("{} returned {}", abs, result.statusCode());
-        promise.fail(abs  + " returned " + result.statusCode() + " (expected 204):" + result.bodyAsString());
+        promise.fail(abs  + " returned " + result.statusCode()
+            + " (expected 204):" + result.bodyAsString());
         return;
       }
       promise.complete();

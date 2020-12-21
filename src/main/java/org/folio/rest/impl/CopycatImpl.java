@@ -5,10 +5,10 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import javax.ws.rs.core.Response;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.copycat.JsonMarc;
@@ -20,7 +20,6 @@ import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.TargetOptions;
-import org.folio.rest.jaxrs.resource.Copycat;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.yaz4j.Connection;
@@ -30,7 +29,7 @@ import org.yaz4j.Record;
 import org.yaz4j.ResultSet;
 import org.yaz4j.exception.ZoomException;
 
-public class CopycatAPI implements Copycat {
+public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
 
   static Errors createErrors(String message) {
     List<Error> errors = new LinkedList<>();
@@ -44,13 +43,13 @@ public class CopycatAPI implements Copycat {
   }
 
   private static final String PROFILE_TABLE = "targetprofile";
-  private static Logger log = LogManager.getLogger(CopycatAPI.class);
+  private static Logger log = LogManager.getLogger(CopycatImpl.class);
 
   /**
-   * Construct yaz4j Query based on external identifier and query mappping.
-   * @param profile
-   * @param externalId
-   * @return Query
+   * Construct yaz4j Query based on external identifier and query mapping.
+   * @param profile target profile
+   * @param externalId Identifier to use within query
+   * @return Query RPN Query pattern with $identifier being replaced.
    */
   static Query constructQuery(CopyCatTargetProfile profile, String externalId) {
     // assuming the externalId does not have whitespace or include {}"\\ characters
@@ -70,14 +69,17 @@ public class CopycatAPI implements Copycat {
       }
     }
   }
+
   /**
-   * Search for identifier and return record.
+   * Search and retrieve record.
    * @param profile Target Profile
-   * @param externalId
-   * @param type render type
+   * @param externalId record identifier such as ISBN number, OCLC number.
+   * @param type render type ("json", "xml", "raw") . See
+   *             <a href="https://software.indexdata.com/yaz/doc/zoom.records.html">ZOOM_record_get</a>
    * @return record content
    */
-  static Future<byte[]> getMARC(CopyCatTargetProfile profile, String externalId, String type) {
+  static Future<byte[]> getRecordAsJsonObject(CopyCatTargetProfile profile, String externalId,
+                                              String type) {
     Connection conn = new Connection(profile.getUrl(), 0);
     conn.option("timeout", "15");
     conn.option("preferredRecordSyntax", "usmarc");
@@ -112,30 +114,35 @@ public class CopycatAPI implements Copycat {
     }
   }
 
-  static Future<JsonObject> getMARCJsonObject(CopyCatTargetProfile profile, String externalId) {
-    return getMARC(profile, externalId, "json").map(buf -> new JsonObject(new String(buf)));
+  static Future<JsonObject> getRecordAsJsonObject(CopyCatTargetProfile profile, String externalId) {
+    return getRecordAsJsonObject(profile, externalId, "json")
+        .map(buf -> new JsonObject(new String(buf)));
   }
 
-  private static Future<JsonObject> getMARC(CopyCatTargetProfile profile, String externalId, Context vertxContext) {
+  static Future<JsonObject> getRecordAsJsonObject(CopyCatTargetProfile profile, String externalId,
+                                                  Context vertxContext) {
+    // execute in separate thread, because getRecordAsJsonObject is a blocking function.
     return Future.future(promise0 -> vertxContext.owner().<JsonObject>executeBlocking(promise1 ->
-            getMARCJsonObject(profile, externalId).onComplete(record -> promise1.handle(record))
-        , result -> promise0.handle(result)));
+            getRecordAsJsonObject(profile, externalId)
+                .onComplete(record -> promise1.handle(record)), result -> promise0.handle(result)));
   }
 
   @Validate
   @Override
   public void postCopycatImports(CopyCatImports entity, Map<String, String> okapiHeaders,
-                                 Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+                                 Handler<AsyncResult<Response>> asyncResultHandler,
+                                 Context vertxContext) {
 
     String targetProfileId = entity.getTargetProfileId();
     PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
-    Future.<JsonObject>future(promise -> postgresClient.getById(PROFILE_TABLE, targetProfileId, promise))
+    Future.<JsonObject>future(
+        promise -> postgresClient.getById(PROFILE_TABLE, targetProfileId, promise))
         .compose(res -> {
           if (res == null) {
             return Future.failedFuture("No such targetProfileId " + targetProfileId);
           }
           CopyCatTargetProfile targetProfile = res.mapTo(CopyCatTargetProfile.class);
-          return getMARC(targetProfile, entity.getExternalIdentifier(), vertxContext)
+          return getRecordAsJsonObject(targetProfile, entity.getExternalIdentifier(), vertxContext)
               .compose(marc -> {
                 if (entity.getInternalIdentifier() != null) {
                   String pattern = targetProfile.getInternalIdEmbedPath();
@@ -151,41 +158,55 @@ public class CopycatAPI implements Copycat {
               });
         })
         .onSuccess(record ->
-            asyncResultHandler.handle(Future.succeededFuture(PostCopycatImportsResponse.respond204()))
+            asyncResultHandler.handle(
+                Future.succeededFuture(PostCopycatImportsResponse.respond204()))
         )
         .onFailure(cause ->
-            asyncResultHandler.handle(Future.succeededFuture(PostCopycatImportsResponse.respond400WithApplicationJson(createErrors(cause))))
+            asyncResultHandler.handle(
+                Future.succeededFuture(
+                    PostCopycatImportsResponse.respond400WithApplicationJson(createErrors(cause))))
         );
   }
 
   @Validate
   @Override
-  public void postCopycatTargetProfiles(CopyCatTargetProfile entity, Map<String, String> okapiHeaders,
-                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postCopycatTargetProfiles(CopyCatTargetProfile entity,
+                                        Map<String, String> okapiHeaders,
+                                        Handler<AsyncResult<Response>> asyncResultHandler,
+                                        Context vertxContext) {
     PgUtil.post(PROFILE_TABLE, entity, okapiHeaders, vertxContext,
         PostCopycatTargetProfilesResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void getCopycatTargetProfiles(int offset, int limit, String query, Map<String, String> okapiHeaders,
-                                       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    PgUtil.get(PROFILE_TABLE, CopyCatTargetProfile.class, CopyCatTargetCollection.class, query, offset, limit,
-        okapiHeaders, vertxContext, GetCopycatTargetProfilesResponse.class, asyncResultHandler);
+  public void getCopycatTargetProfiles(int offset, int limit, String query,
+                                       Map<String, String> okapiHeaders,
+                                       Handler<AsyncResult<Response>> asyncResultHandler,
+                                       Context vertxContext) {
+
+    PgUtil.get(PROFILE_TABLE, CopyCatTargetProfile.class, CopyCatTargetCollection.class,
+        query, offset, limit,  okapiHeaders, vertxContext, GetCopycatTargetProfilesResponse.class,
+        asyncResultHandler);
   }
 
   @Validate
   @Override
   public void getCopycatTargetProfilesById(String id, Map<String, String> okapiHeaders,
-                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+                                           Handler<AsyncResult<Response>> asyncResultHandler,
+                                           Context vertxContext) {
+
     PgUtil.getById(PROFILE_TABLE, CopyCatTargetProfile.class, id, okapiHeaders, vertxContext,
         GetCopycatTargetProfilesByIdResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void putCopycatTargetProfilesById(String id, CopyCatTargetProfile entity, Map<String, String> okapiHeaders,
-                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putCopycatTargetProfilesById(String id, CopyCatTargetProfile entity,
+                                           Map<String, String> okapiHeaders,
+                                           Handler<AsyncResult<Response>> asyncResultHandler,
+                                           Context vertxContext) {
+
     PgUtil.put(PROFILE_TABLE, entity, id, okapiHeaders, vertxContext,
         PutCopycatTargetProfilesByIdResponse.class, asyncResultHandler);
   }
@@ -193,7 +214,9 @@ public class CopycatAPI implements Copycat {
   @Validate
   @Override
   public void deleteCopycatTargetProfilesById(String id, Map<String, String> okapiHeaders,
-                                              Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+                                              Handler<AsyncResult<Response>> asyncResultHandler,
+                                              Context vertxContext) {
+
     PgUtil.deleteById(PROFILE_TABLE, id, okapiHeaders, vertxContext,
         DeleteCopycatTargetProfilesByIdResponse.class, asyncResultHandler);
   }

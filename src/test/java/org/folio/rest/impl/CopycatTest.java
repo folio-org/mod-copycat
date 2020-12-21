@@ -61,7 +61,7 @@ public class CopycatTest {
 
   @Test
   void testEmptyProfile(Vertx vertx, VertxTestContext context) {
-    Copycat api = new CopycatAPI();
+    Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
@@ -75,7 +75,7 @@ public class CopycatTest {
 
   @Test
   void testAddProfile(Vertx vertx, VertxTestContext context) {
-    Copycat api = new CopycatAPI();
+    Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
@@ -109,7 +109,7 @@ public class CopycatTest {
 
   @Test
   void testImportProfileNoTargetProfile(Vertx vertx, VertxTestContext context) {
-    Copycat api = new CopycatAPI();
+    Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
@@ -132,7 +132,7 @@ public class CopycatTest {
 
   @Test
   void testImportProfileOK(Vertx vertx, VertxTestContext context) {
-    Copycat api = new CopycatAPI();
+    Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
@@ -163,7 +163,7 @@ public class CopycatTest {
 
   @Test
   void testImportProfileBadOkapiUrl(Vertx vertx, VertxTestContext context) {
-    Copycat api = new CopycatAPI();
+    Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
@@ -196,7 +196,7 @@ public class CopycatTest {
 
   @Test
   void testImportProfileMissingUserId(Vertx vertx, VertxTestContext context) {
-    Copycat api = new CopycatAPI();
+    Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
@@ -227,7 +227,7 @@ public class CopycatTest {
 
   @Test
   void testImportProfileMissingOkapiUrl(Vertx vertx, VertxTestContext context) {
-    Copycat api = new CopycatAPI();
+    Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
@@ -257,7 +257,7 @@ public class CopycatTest {
 
   @Test
   void testImportProfileWithInternalIdentifier(Vertx vertx, VertxTestContext context) {
-    Copycat api = new CopycatAPI();
+    Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
@@ -289,7 +289,7 @@ public class CopycatTest {
 
   @Test
   void testImportProfileMissingInternalIdEmbedPath(Vertx vertx, VertxTestContext context) {
-    Copycat api = new CopycatAPI();
+    Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
@@ -322,7 +322,7 @@ public class CopycatTest {
 
   @Test
   void testImportProfileZeroHits(Vertx vertx, VertxTestContext context) {
-    Copycat api = new CopycatAPI();
+    Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
@@ -360,7 +360,7 @@ public class CopycatTest {
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
 
-    CopycatAPI.getMARC(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "json")
+    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "json")
         .onComplete(context.succeeding(res -> context.verify(() -> {
           JsonObject marc = new JsonObject(new String(res));
           assertThat(marc.getJsonArray("fields").getJsonObject(3)
@@ -377,7 +377,7 @@ public class CopycatTest {
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
 
-    CopycatAPI.getMARC(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
+    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
         .onComplete(context.succeeding(res -> context.verify(() -> {
           String line = new String(res);
           assertThat(line).contains("008 " + EXTERNAL_ID_INDEXDATA);
@@ -395,7 +395,7 @@ public class CopycatTest {
             .withAdditionalProperty("preferredRecordSyntax", "sutrs")
             .withAdditionalProperty("timeout", 10));
 
-    CopycatAPI.getMARC(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
+    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
         .onComplete(context.succeeding(res -> context.verify(() -> {
           String sutrs = new String(res);
           assertThat(sutrs).contains("008: " + EXTERNAL_ID_INDEXDATA);
@@ -412,7 +412,7 @@ public class CopycatTest {
         .withTargetOptions(new TargetOptions()
             .withAdditionalProperty("structure", Boolean.TRUE));
 
-    CopycatAPI.getMARC(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
+    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage()).isEqualTo("Illegal options type for key structure: class java.lang.Boolean");
           context.completeNow();
@@ -428,7 +428,7 @@ public class CopycatTest {
         .withTargetOptions(new TargetOptions()
             .withAdditionalProperty("timeout", 1)); // low timeout so we it's not taking too long
 
-    CopycatAPI.getMARC(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "json")
+    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "json")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage())
               .isEqualTo("Server " + URL_BAD_TARGET + ":0 timed out handling our request");
@@ -444,7 +444,7 @@ public class CopycatTest {
         .withUrl(URL_WORLDCAT)
         .withExternalIdQueryMap("@attr 1=7 $identifier");
 
-    CopycatAPI.getMARC(copyCatTargetProfile, EXTERNAL_ID_WORLDCAT, "json")
+    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_WORLDCAT, "json")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage())
               .isEqualTo("Server " + URL_WORLDCAT + ":0 rejected our init request");
@@ -455,7 +455,7 @@ public class CopycatTest {
   static void testAuth(String auth, String user, String group, String password) {
     Connection conn = new Connection("localhost", 210);
 
-    CopycatAPI.setAuthOptions(conn, auth);
+    CopycatImpl.setAuthOptions(conn, auth);
     assertThat(conn.option("user")).isEqualTo(user);
     assertThat(conn.option("group")).isEqualTo(group);
     assertThat(conn.option("password")).isEqualTo(password);
@@ -474,7 +474,7 @@ public class CopycatTest {
 
   @Test
   void testImportProfileNonExistingTargetProfile(Vertx vertx, VertxTestContext context) {
-    Copycat api = new CopycatAPI();
+    Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);

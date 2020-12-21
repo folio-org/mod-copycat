@@ -5,9 +5,14 @@ import io.vertx.core.json.JsonObject;
 
 public class JsonMarc {
 
+  /**
+   * Embed value (typically identifer) in a MARC field.
+   * @param marc JSON MARC
+   * @param marcPath Where to embed.
+   * @param value string to embed.
+   * @throws IllegalArgumentException for bad syntax of marcPath
+   */
   public static void embedPath(JsonObject marc, String marcPath, String value) {
-    JsonArray ar = marc.getJsonArray("fields");
-
     if (marcPath.length() != 7) {
       throw new IllegalArgumentException("pattern must be exactly 7 characters (3+2+$+subfield");
     }
@@ -18,6 +23,7 @@ public class JsonMarc {
     String indicatorPattern = marcPath.substring(3, 5);
     indicatorPattern = indicatorPattern.replace('_', ' ');
     final String subFieldPattern = marcPath.substring(6);
+    JsonArray ar = marc.getJsonArray("fields");
     int i;
     for (i = 0; i < ar.size(); i++) {
       JsonObject entry = ar.getJsonObject(i);
