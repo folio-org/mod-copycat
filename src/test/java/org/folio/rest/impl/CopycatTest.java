@@ -16,13 +16,11 @@ import org.folio.rest.jaxrs.model.CopyCatImports;
 import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
 import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.TargetOptions;
 import org.folio.rest.jaxrs.resource.Copycat;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.yaz4j.Connection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,9 +29,6 @@ public class CopycatTest {
   static final String tenant = "testlib";
 
   private static final String URL_INDEXDATA = "z3950.indexdata.com/marc";
-  private static final String URL_BAD_TARGET = "z3950.indexdata.com:211/marc";
-  private static final String URL_WORLDCAT = "zcat.oclc.org/OLUCWorldCat";
-  private static final String EXTERNAL_ID_WORLDCAT = "0679429220";
   private static final String EXTERNAL_ID_INDEXDATA = "780306m19009999ohu";
   private static final int mockPort = 9231;
   private static ImporterMock mock;
@@ -351,125 +346,6 @@ public class CopycatTest {
         ), vertxContext);
       })), vertxContext);
     })), vertxContext);
-  }
-
-  @Test
-  void getJsonMarcOK(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
-        .withName("index data")
-        .withUrl(URL_INDEXDATA)
-        .withExternalIdQueryMap("$identifier");
-
-    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "json")
-        .onComplete(context.succeeding(res -> context.verify(() -> {
-          JsonObject marc = new JsonObject(new String(res));
-          assertThat(marc.getJsonArray("fields").getJsonObject(3)
-              .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
-
-          context.completeNow();
-        })));
-  }
-
-  @Test
-  void getLineMarcOK(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
-        .withName("index data")
-        .withUrl(URL_INDEXDATA)
-        .withExternalIdQueryMap("$identifier");
-
-    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
-        .onComplete(context.succeeding(res -> context.verify(() -> {
-          String line = new String(res);
-          assertThat(line).contains("008 " + EXTERNAL_ID_INDEXDATA);
-          context.completeNow();
-        })));
-  }
-
-  @Test
-  void getSutrsOK(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
-        .withName("index data")
-        .withUrl(URL_INDEXDATA)
-        .withExternalIdQueryMap("$identifier")
-        .withTargetOptions(new TargetOptions()
-            .withAdditionalProperty("preferredRecordSyntax", "sutrs")
-            .withAdditionalProperty("timeout", 10));
-
-    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
-        .onComplete(context.succeeding(res -> context.verify(() -> {
-          String sutrs = new String(res);
-          assertThat(sutrs).contains("008: " + EXTERNAL_ID_INDEXDATA);
-          context.completeNow();
-        })));
-  }
-
-  @Test
-  void getBadTargetOption(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
-        .withName("index data")
-        .withUrl(URL_INDEXDATA)
-        .withExternalIdQueryMap("$identifier")
-        .withTargetOptions(new TargetOptions()
-            .withAdditionalProperty("structure", Boolean.TRUE));
-
-    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
-        .onComplete(context.failing(cause -> context.verify(() -> {
-          assertThat(cause.getMessage()).isEqualTo("Illegal options type for key structure: class java.lang.Boolean");
-          context.completeNow();
-        })));
-  }
-
-  @Test
-  void getMarcBadTarget(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
-        .withName("index data")
-        .withUrl(URL_BAD_TARGET)
-        .withExternalIdQueryMap("$identifier")
-        .withTargetOptions(new TargetOptions()
-            .withAdditionalProperty("timeout", 1)); // low timeout so we it's not taking too long
-
-    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "json")
-        .onComplete(context.failing(cause -> context.verify(() -> {
-          assertThat(cause.getMessage())
-              .isEqualTo("Server " + URL_BAD_TARGET + ":0 timed out handling our request");
-          context.completeNow();
-        })));
-  }
-
-  @Test
-  void getMarcBadCredentials(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
-        .withName("OLUCWorldCat")
-        .withAuthentication("foo bar")
-        .withUrl(URL_WORLDCAT)
-        .withExternalIdQueryMap("@attr 1=7 $identifier");
-
-    CopycatImpl.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_WORLDCAT, "json")
-        .onComplete(context.failing(cause -> context.verify(() -> {
-          assertThat(cause.getMessage())
-              .isEqualTo("Server " + URL_WORLDCAT + ":0 rejected our init request");
-          context.completeNow();
-        })));
-  }
-
-  static void testAuth(String auth, String user, String group, String password) {
-    Connection conn = new Connection("localhost", 210);
-
-    CopycatImpl.setAuthOptions(conn, auth);
-    assertThat(conn.option("user")).isEqualTo(user);
-    assertThat(conn.option("group")).isEqualTo(group);
-    assertThat(conn.option("password")).isEqualTo(password);
-    conn.close();
-  }
-
-  @Test
-  void testSetAuthOptions() {
-    testAuth(null, null, null, null);
-    testAuth(" ", "", null, null);
-    testAuth(" a ", "a", null, null);
-    testAuth("a/b", "a/b", null, null);
-    testAuth(" a  b ", "a", null, "b");
-    testAuth(" a  b c ", "a", "b", "c");
   }
 
   @Test
