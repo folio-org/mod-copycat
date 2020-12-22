@@ -2,12 +2,10 @@ package org.folio.copycat;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import java.util.Map;
@@ -89,24 +87,14 @@ public class RecordImporter {
     initJob.put("sourceType", "ONLINE");
     initJob.put("jobProfileInfo", jobProfileInfo);
     log.info("createJob with {}", initJob.encode());
-    // With Vert.x 4 this may be simpler
-    Promise<String> promise = Promise.promise();
-    request.sendJsonObject(initJob, res -> {
-      if (res.failed()) {
-        log.error(res.cause().getMessage(), res.cause());
-        promise.fail(res.cause());
-        return;
-      }
-      HttpResponse<Buffer> result = res.result();
+    return request.sendJsonObject(initJob).compose(result -> {
       if (result.statusCode() != 201) {
         log.error("{} returned {}", abs, result.statusCode());
-        promise.fail(abs + " returned " + result.statusCode()
+        return Future.failedFuture(abs + " returned " + result.statusCode()
             + " (expected 201):" + result.bodyAsString());
-        return;
       }
-      promise.complete(result.bodyAsJsonObject().getString("parentJobExecutionId"));
+      return Future.succeededFuture(result.bodyAsJsonObject().getString("parentJobExecutionId"));
     });
-    return promise.future();
   }
 
   /**
@@ -133,24 +121,14 @@ public class RecordImporter {
     jobProfile.put("name", "CLI Create MARC Bibs and Instances");
     jobProfile.put("dataType", "MARC");
 
-    // With Vert.x 4 this may be simpler
-    Promise<Void> promise = Promise.promise();
-    request.sendJsonObject(jobProfile, res -> {
-      if (res.failed()) {
-        log.error(res.cause().getMessage(), res.cause());
-        promise.fail(res.cause());
-        return;
-      }
-      HttpResponse<Buffer> result = res.result();
+    return request.sendJsonObject(jobProfile).compose(result -> {
       if (result.statusCode() != 200) {
         log.error("{} returned {}", abs, result.statusCode());
-        promise.fail(abs  + " returned " + result.statusCode()
+        return Future.failedFuture(abs  + " returned " + result.statusCode()
             + " (expected 200):" + result.bodyAsString());
-        return;
       }
-      promise.complete();
+      return Future.succeededFuture();
     });
-    return promise.future();
   }
 
   Future<Void> post(JsonObject record, boolean last) {
@@ -173,24 +151,14 @@ public class RecordImporter {
     JsonObject rawRecordsDto = new JsonObject();
     rawRecordsDto.put("recordsMetadata", recordsMetadata);
     rawRecordsDto.put("initialRecords", initialRecords);
-    // With Vert.x 4 this may be simpler
-    Promise<Void> promise = Promise.promise();
-    request.sendJsonObject(rawRecordsDto, res -> {
-      if (res.failed()) {
-        log.error(res.cause().getMessage(), res.cause());
-        promise.fail(res.cause());
-        return;
-      }
-      HttpResponse<Buffer> result = res.result();
+    return request.sendJsonObject(rawRecordsDto).compose(result -> {
       if (result.statusCode() != 204) {
         log.error("{} returned {}", abs, result.statusCode());
-        promise.fail(abs  + " returned " + result.statusCode()
+        return Future.failedFuture(abs  + " returned " + result.statusCode()
             + " (expected 204):" + result.bodyAsString());
-        return;
       }
-      promise.complete();
+      return Future.succeededFuture();
     });
-    return promise.future();
   }
 
 

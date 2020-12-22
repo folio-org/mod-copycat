@@ -74,6 +74,7 @@ public class RecordRetriever {
     Query query = constructQuery(profile, externalId);
     try {
       conn.connect();
+      log.info("Search {} {}", profile.getUrl(), query);
       ResultSet search = conn.search(query);
       if (search.getHitCount() == 0) {
         return Future.failedFuture("No record found");
@@ -106,6 +107,5 @@ public class RecordRetriever {
         getRecordAsJsonObject(profile, externalId)
             .onComplete(record -> promise1.handle(record)), result -> promise0.handle(result)));
   }
-
 
 }

@@ -2,20 +2,19 @@ package org.folio.rest.impl;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.CopyCatImports;
 import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
 import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.jaxrs.resource.Copycat;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -50,8 +49,17 @@ public class CopycatTest {
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
-    return Future.<Response>future(promise ->
-        tenantAPI.postTenant(null, headers, promise, vertx.getOrCreateContext())).mapEmpty();
+    Promise<Void> promise = Promise.promise();
+    tenantAPI.postTenant(null, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      TenantJob job1 = (TenantJob) res1.getEntity();
+      tenantAPI.getTenantByOperationId(job1.getId(), 10000, headers, context.succeeding(res2 -> context.verify(() -> {
+        TenantJob job2 = (TenantJob) res2.getEntity();
+        assertThat(job2.getComplete()).isTrue();
+        promise.complete();
+      })), vertx.getOrCreateContext());
+    })), vertx.getOrCreateContext());
+    return promise.future();
   }
 
   @Test

@@ -20,15 +20,8 @@ import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
 import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.TargetOptions;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.yaz4j.Connection;
-import org.yaz4j.PrefixQuery;
-import org.yaz4j.Query;
-import org.yaz4j.Record;
-import org.yaz4j.ResultSet;
-import org.yaz4j.exception.ZoomException;
 
 public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
 
