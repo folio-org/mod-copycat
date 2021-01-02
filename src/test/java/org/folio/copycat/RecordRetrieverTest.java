@@ -6,6 +6,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
 import org.folio.rest.jaxrs.model.TargetOptions;
+import org.folio.rest.testing.UtilityClassTester;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.yaz4j.Connection;
@@ -19,6 +20,11 @@ public class RecordRetrieverTest {
   private static final String URL_WORLDCAT = "zcat.oclc.org/OLUCWorldCat";
   private static final String EXTERNAL_ID_WORLDCAT = "0679429220";
   private static final String EXTERNAL_ID_INDEXDATA = "780306m19009999ohu";
+
+  @Test
+  void constructor() {
+    UtilityClassTester.assertUtilityClass(RecordRetriever.class);
+  }
 
   @Test
   void getJsonMarcOK(Vertx vertx, VertxTestContext context) {

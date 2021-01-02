@@ -3,7 +3,10 @@ package org.folio.copycat;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class JsonMarc {
+public final class JsonMarc {
+  private JsonMarc() {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Embed value (typically identifer) in a MARC field.

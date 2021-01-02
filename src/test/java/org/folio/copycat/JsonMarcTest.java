@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import java.io.IOException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.testing.UtilityClassTester;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,6 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class JsonMarcTest {
   private static Logger log = LogManager.getLogger(JsonMarcTest.class);
+
+  @Test
+  void constructor() {
+    UtilityClassTester.assertUtilityClass(JsonMarc.class);
+  }
 
   @Test
   void testEmbedPathBadPattern() throws IOException {

@@ -15,8 +15,12 @@ import org.yaz4j.Record;
 import org.yaz4j.ResultSet;
 import org.yaz4j.exception.ZoomException;
 
-public class RecordRetriever {
+public final class RecordRetriever {
   private static Logger log = LogManager.getLogger(RecordRetriever.class);
+
+  private RecordRetriever() {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Construct yaz4j Query based on external identifier and query mapping.
