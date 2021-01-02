@@ -104,7 +104,7 @@ public class RecordRetrieverTest {
     RecordRetriever.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "json")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage())
-              .isEqualTo("Server " + URL_BAD_TARGET + ":0 timed out handling our request");
+              .isEqualTo("Server " + URL_BAD_TARGET + " timed out handling our request");
           context.completeNow();
         })));
   }
@@ -120,7 +120,7 @@ public class RecordRetrieverTest {
     RecordRetriever.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_WORLDCAT, "json")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage())
-              .isEqualTo("Server " + URL_WORLDCAT + ":0 rejected our init request");
+              .isEqualTo("Server " + URL_WORLDCAT + " rejected our init request");
           context.completeNow();
         })));
   }
