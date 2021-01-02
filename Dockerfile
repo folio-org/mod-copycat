@@ -17,7 +17,7 @@ RUN cd yaz-5.30.3 && make install
 # Compile yaz4j
 USER folio
 RUN git clone https://github.com/indexdata/yaz4j.git
-RUN cd yaz4j && git checkout 94fce06ccfd8be70902cc009500754ccebc9a2f2 && mvn compile
+RUN cd yaz4j && git checkout v1.6.0 && mvn compile
 
 # install yaz4j
 USER root
