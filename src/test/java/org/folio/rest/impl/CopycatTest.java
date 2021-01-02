@@ -51,7 +51,7 @@ class CopycatTest {
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     Promise<Void> promise = Promise.promise();
     tenantAPI.postTenant(null, headers, context.succeeding(res1 -> context.verify(() -> {
-      assertThat(res1.getStatus()).isEqualTo(201);
+      assertThat(res1.getStatus()).isZero();
       TenantJob job1 = (TenantJob) res1.getEntity();
       tenantAPI.getTenantByOperationId(job1.getId(), 10000, headers, context.succeeding(res2 -> context.verify(() -> {
         TenantJob job2 = (TenantJob) res2.getEntity();
