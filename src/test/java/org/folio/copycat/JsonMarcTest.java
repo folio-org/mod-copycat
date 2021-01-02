@@ -38,7 +38,7 @@ public class JsonMarcTest {
     JsonArray fields = marc.getJsonArray("fields");
     assertThat(fields.getJsonObject(0).encode()).isEqualTo(
         "{\"000\":{\"ind1\":\"a\",\"ind2\":\"b\",\"subfields\":[{\"a\":\"id1\"}]}}");
-    assertThat(fields.getJsonObject(1).containsKey("001"));
+    assertThat(fields.getJsonObject(1).fieldNames()).contains("001");
   }
 
   @Test
@@ -47,10 +47,10 @@ public class JsonMarcTest {
     JsonObject marc = new JsonObject(file);
     JsonMarc.embedPath(marc, "650ab$a", "1234");
     JsonArray fields = marc.getJsonArray("fields");
-    assertThat(fields.getJsonObject(fields.size() - 5).containsKey("650"));
+    assertThat(fields.getJsonObject(fields.size() - 5).fieldNames()).contains("630");
     assertThat(fields.getJsonObject(fields.size() - 4).encode()).isEqualTo(
         "{\"650\":{\"ind1\":\"a\",\"ind2\":\"b\",\"subfields\":[{\"a\":\"1234\"}]}}");
-    assertThat(fields.getJsonObject(fields.size() - 3).containsKey("700"));
+    assertThat(fields.getJsonObject(fields.size() - 3).fieldNames()).contains("700");
   }
 
   @Test

@@ -37,6 +37,7 @@ public class RecordImporterTest {
 
   @AfterAll
   static void afterAll(Vertx vertx, VertxTestContext context) {
+    log.debug("Vertx {}", vertx);
     mock.stop().onComplete(context.succeeding(res -> context.completeNow()));
   }
 
@@ -210,7 +211,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testImporterTimeout(Vertx vertx, VertxTestContext context) throws IOException {
+  void testImporterTimeout(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
