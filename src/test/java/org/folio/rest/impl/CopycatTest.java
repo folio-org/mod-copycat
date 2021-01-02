@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(VertxExtension.class)
-public class CopycatTest {
+class CopycatTest {
   static final String tenant = "testlib";
 
   private static final String URL_INDEXDATA = "z3950.indexdata.com/marc";
