@@ -25,21 +25,20 @@ before you can compile and install mod-copycat.
 
 	term1$ sudo apt install yaz
 	term1$ git clone https://github.com/indexdata/yaz4j.git
-	term1$ git checkout d7cd6967d297c92c179d9896b0150f7509f789f8
+	term1$ git checkout v1.6.0
 	term1$ cd yaz4j
 
-The install below whould install `yaz4j-1.6-SNAPSHOT.jar` in your Maven repository.
+Running
 
-	term1$ mvn -B install
+	term1$ mvn -B -Pbundle install
 
-This also produces a native DLL/shared object file.. This needs to be available when
-using the yaz4j jar. Google for `java.library.path` to see where it could be
-installed on your platform. On Ubuntu/Debian amd64 architecture, it suffices to
-copy like this:
+installs `yaz4j-1.6.0-SNAPSHOT.jar` in local Maven repository.
 
-	term1$ sudo cp unix/target/libyaz4j.so /usr/lib/x86_64-linux-gnu/
-
-## To build
+The jar file, because we used the `bundle` profile, includes a
+shared object. If running on same platform as we compile, that's fine.
+If not, you'll have to ship a shared object separately and install
+it in the path. The shared object is installed `target/native`
+in all cases (whether bundle is specified or not).
 
 	term1$ cd mod-copycat
 	term1$ mvn install
@@ -55,16 +54,6 @@ In another terminal:
 	term2$ curl -d'{"module_to":"foo"}' -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/_/tenant
 	[]
 	term2$ 
-
-While this is happening, expect to see worrying warnings on the server side:
-
-	WARNING: An illegal reflective access operation has occurred
-	WARNING: Illegal reflective access by org.postgresql.jdbc.TimestampUtils (file:/Users/mike/git/folio/other/mod-copycat/target/mod-copycat-fat.jar) to field java.util.TimeZone.defaultTimeZone
-	WARNING: Please consider reporting this to the maintainers of org.postgresql.jdbc.TimestampUtils
-	WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
-	WARNING: All illegal access operations will be denied in a future release
-
-Apparently this is nothing to worry about.
 
 ## To use
 
