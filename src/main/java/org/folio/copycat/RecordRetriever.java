@@ -24,7 +24,8 @@ public class RecordRetriever {
    * @param externalId Identifier to use within query
    * @return Query RPN Query pattern with $identifier being replaced.
    */
-  static Query constructQuery(CopyCatTargetProfile profile, String externalId) {
+  static Query constructQuery(CopyCatTargetProfile profile, String externalId)
+      throws ZoomException {
     // assuming the externalId does not have whitespace or include {}"\\ characters
     String pqf = profile.getExternalIdQueryMap().replace("$identifier", externalId);
     return new PrefixQuery(pqf);
@@ -71,20 +72,20 @@ public class RecordRetriever {
         }
       }
     }
-    Query query = constructQuery(profile, externalId);
     try {
+      Query query = constructQuery(profile, externalId);
       conn.connect();
-      log.info("Search {} {}", profile.getUrl(), query);
+      log.info("Search {} {}", profile.getUrl(), externalId);
       ResultSet search = conn.search(query);
-      if (search.getHitCount() == 0) {
+      Record record = search.getRecord(0);
+      if (record == null) {
         return Future.failedFuture("No record found");
       }
-      Record record = search.getRecord(0);
-      conn.close();
       return Future.succeededFuture(record.get(type));
     } catch (ZoomException e) {
-      conn.close();
       return Future.failedFuture(e);
+    } finally {
+      conn.close();
     }
   }
 
