@@ -3,10 +3,10 @@
 Mike Taylor, Index Data ApS.
 mike@indexdata.com
 
-11 December 2020.
-
+16 December 2020.
 
 <!-- md2toc -l 2 getting-started.md -->
+* [Prerequisites](#prerequisites)
 * [To build](#to-build)
 * [To run](#to-run)
 * [To initialize](#to-initialize)
@@ -15,10 +15,32 @@ mike@indexdata.com
 * [To unassociate, undeploy and remove a running module](#to-unassociate-undeploy-and-remove-a-running-module)
 * [Adding permissions on the UI side](#adding-permissions-on-the-ui-side)
 
+## Prerequisites
 
+You need
+[yaz4j](https://github.com/indexdata/yaz4j)
+and
+[YAZ](https://www.indexdata.com/yaz)
+before you can compile and install mod-copycat.
 
-## To build
+	term1$ sudo apt install yaz
+	term1$ git clone https://github.com/indexdata/yaz4j.git
+	term1$ git checkout v1.6.0
+	term1$ cd yaz4j
 
+Running
+
+	term1$ mvn -B -Pbundle install
+
+installs `yaz4j-1.6.0-SNAPSHOT.jar` in local Maven repository.
+
+The jar file, because we used the `bundle` profile, includes a
+shared object. If running on same platform as we compile, that's fine.
+If not, you'll have to ship a shared object separately and install
+it in the path. The shared object is installed `target/native`
+in all cases (whether bundle is specified or not).
+
+	term1$ cd mod-copycat
 	term1$ mvn install
 
 ## To run
@@ -33,21 +55,11 @@ In another terminal:
 	[]
 	term2$ 
 
-While this is happening, expect to see worrying warnings on the server side:
-
-	WARNING: An illegal reflective access operation has occurred
-	WARNING: Illegal reflective access by org.postgresql.jdbc.TimestampUtils (file:/Users/mike/git/folio/other/mod-copycat/target/mod-copycat-fat.jar) to field java.util.TimeZone.defaultTimeZone
-	WARNING: Please consider reporting this to the maintainers of org.postgresql.jdbc.TimestampUtils
-	WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
-	WARNING: All illegal access operations will be denied in a future release
-
-Apparently this is nothing to worry about.
-
 ## To use
 
 Create a target profile:
 
-	term2$ curl  -d'{"url":"z3950.indexdata.com/marc", "name":"ID MARC test"}' -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/target-profiles
+	term2$ curl  -d'{"url":"z3950.indexdata.com/marc", "name":"ID MARC test", "externalIdQueryMap" : "@attr 1=1016 $identifier"}' -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/target-profiles
 	{
 	  "id" : "6a69ab96-51af-4827-bb7d-7a9cf2f1a8cf",
 	  "name" : "ID MARC test",
@@ -62,17 +74,24 @@ List all target profiles:
 	  "targetprofiles" : [ {
 	    "id" : "6a69ab96-51af-4827-bb7d-7a9cf2f1a8cf",
 	    "name" : "ID MARC test",
-	    "url" : "z3950.indexdata.com/marc"
+	    "url" : "z3950.indexdata.com/marc",
+            "externalIdQueryMap" : "@attr 1=1016 $identifier"
 	  } ],
 	  "totalRecords" : 1
 	}
 	term2$ 
 
-Import a record based on an external identifier (OCLC number):
+Import a record based on an external identifier (could be OCLC number, ISBN, other):
 
-	term2$ curl -d'{"externalIdentifier":"isbn123", "targetProfileId":"1d0489ab-3989-4f0b-b535-725bebf21373"}'   -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/imports
-	Not implemented
-	term2$ 
+	term2$ curl -d'{"externalIdentifier":"780306m19009999ohu", "targetProfileId":"1d0489ab-3989-4f0b-b535-725bebf21373"}'   -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/imports
+	{
+	  "errors" : [ {
+	  "message" : "Missing X-Okapi-Url header",
+	  "parameters" : [ ]
+	  } ]
+	}
+
+In order to complete this operation mod-copycat must be able to contact Okapi and in turn mod-source-record-manager to complete the operation.
 
 ## Integrating into a FOLIO-backend Vagrant box
 

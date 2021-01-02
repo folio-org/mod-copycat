@@ -15,6 +15,12 @@
       <name>FOLIO Maven repository</name>
       <url>https://repository.folio.org/repository/maven-folio</url>
     </repository>
+
+    <repository>
+      <id>indexdata</id>
+      <name>Index Data</name>
+      <url>http://maven.indexdata.com/</url>
+    </repository>
   </repositories>
 
   <dependencyManagement>
@@ -40,6 +46,11 @@
   </dependencyManagement>
 
   <dependencies>
+    <dependency>
+      <groupId>org.yaz4j</groupId>
+      <artifactId>yaz4j</artifactId>
+      <version>1.6.0</version>
+    </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest</artifactId>
@@ -88,12 +99,12 @@
   </dependencies>
 
   <properties>
-    <vertx.version>3.9.4</vertx.version>
+    <vertx.version>4.0.0</vertx.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>31.1.5</raml-module-builder-version>
+    <raml-module-builder-version>32.0.0</raml-module-builder-version>
     <generate_routing_context></generate_routing_context>
     <argLine />
   </properties>
@@ -375,6 +386,7 @@
                   <manifestEntries>
                     <Main-Class>org.folio.rest.RestLauncher</Main-Class>
                     <Main-Verticle>org.folio.rest.RestVerticle</Main-Verticle>
+                    <Multi-Release>true</Multi-Release>
                   </manifestEntries>
                 </transformer>
               </transformers>
@@ -388,6 +400,32 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M4</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.1.1</version>
+        <configuration>
+          <configLocation>checkstyle/folio_checks.xml</configLocation>
+          <encoding>UTF-8</encoding>
+          <violationSeverity>warning</violationSeverity>
+          <consoleOutput>false</consoleOutput>
+          <failsOnError>true</failsOnError>
+          <failOnViolation>true</failOnViolation>
+          <linkXRef>false</linkXRef>
+          <sourceDirectories>
+            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+          </sourceDirectories>
+        </configuration>
+        <executions>
+          <execution>
+            <id>check</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
