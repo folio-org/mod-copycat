@@ -3,8 +3,6 @@
 Mike Taylor, Index Data ApS.
 mike@indexdata.com
 
-8 January 2021.
-
 <!-- md2toc -l 2 getting-started.md -->
 * [Prerequisites](#prerequisites)
 * [To build](#to-build)
