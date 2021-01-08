@@ -7,8 +7,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-
 import java.io.IOException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -18,7 +18,6 @@ import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
 import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Record;
-import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.jaxrs.resource.Copycat;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -156,6 +155,72 @@ class CopycatTest {
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(204);
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
+  void testImportProfileMissingTargetUrl(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+        .withName("index data")
+        .withExternalIdQueryMap("$identifier");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withExternalIdentifier(EXTERNAL_ID_INDEXDATA);
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().size()).isEqualTo(1);
+        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("url missing in target profile");
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
+  void testImportProfileMissingTargetExternalIdQueryMap(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA);
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withExternalIdentifier(EXTERNAL_ID_INDEXDATA);
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().size()).isEqualTo(1);
+        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("externalIdQueryMap missing in target profile");
         api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
@@ -376,7 +441,7 @@ class CopycatTest {
   }
 
   @Test
-  void testImportProfileRecordOK(Vertx vertx, VertxTestContext context) throws IOException {
+  void testImportProfileRecordJsonOK(Vertx vertx, VertxTestContext context) throws IOException {
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
@@ -400,6 +465,137 @@ class CopycatTest {
           .withRecord(record);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(204);
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
+  void testImportProfileRecordJsonBadContent(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    Record record = new Record().withAdditionalProperty("json", "x");
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withRecord(record);
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().size()).isEqualTo(1);
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
+  void testImportProfileRecordMarcOK(Vertx vertx, VertxTestContext context) throws IOException {
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    byte[] bytes = getClass().getClassLoader().getResourceAsStream("marc1.marc").readAllBytes();
+    String base64String = Base64.getEncoder().encodeToString(bytes);
+
+    Record record = new Record().withAdditionalProperty("marc", base64String);
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withRecord(record);
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(204);
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
+  void testImportProfileRecordMarcBase64Error(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    Record record = new Record().withAdditionalProperty("marc", "ab");
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withRecord(record);
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().size()).isEqualTo(1);
+        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("Premature end of file encountered");
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
+  void testImportProfileRecordMarcEmpty(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    Record record = new Record().withAdditionalProperty("marc", "");
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withRecord(record);
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().size()).isEqualTo(1);
+        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("Incomplete/missing MARC record");
         api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
@@ -441,7 +637,5 @@ class CopycatTest {
       })), vertxContext);
     })), vertxContext);
   }
-
-
 
 }

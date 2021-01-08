@@ -58,6 +58,12 @@ public final class RecordRetriever {
    */
   static Future<byte[]> getRecordAsJsonObject(CopyCatTargetProfile profile, String externalId,
                                               String type) {
+    if (profile.getUrl() == null) {
+      return Future.failedFuture("url missing in target profile");
+    }
+    if (profile.getExternalIdQueryMap() == null) {
+      return Future.failedFuture("externalIdQueryMap missing in target profile");
+    }
     Connection conn = new Connection(profile.getUrl(), 0);
     conn.option("timeout", "15");
     conn.option("preferredRecordSyntax", "usmarc");

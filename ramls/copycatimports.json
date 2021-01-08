@@ -16,7 +16,20 @@
       "description": "target profile to be used for importing",
       "type": "string"
     },
-    "record": { "type" : "object" }
+    "record": {
+      "description" : "local record",
+      "type" : "object",
+      "properties" : {
+         "json" : {
+           "description" : "record object within json property",
+           "type" : "object"
+          },
+         "marc" : {
+           "description" : "base64 encoded ISO2709 MARC",
+           "type" : "string"
+         }
+      }
+    }
   },
   "additionalProperties": false,
   "required": [ "targetProfileId" ]

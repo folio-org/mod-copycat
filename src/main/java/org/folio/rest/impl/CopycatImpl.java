@@ -5,6 +5,9 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +23,12 @@ import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
 import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Json;
 import org.folio.rest.jaxrs.model.Record;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.marc4j.MarcJsonWriter;
+import org.marc4j.MarcStreamReader;
 
 public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
 
@@ -40,15 +46,37 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
   private static final String PROFILE_TABLE = "targetprofile";
   private static Logger log = LogManager.getLogger(CopycatImpl.class);
 
-  Future<JsonObject> getLocalRecord(Record record) {
-    JsonObject jsonObject = new JsonObject(record.getAdditionalProperties());
-    JsonObject json = jsonObject.getJsonObject("json");
-    if (json != null) {
-      log.info("local JSON record {}", () -> json.encodePrettily());
-      return Future.succeededFuture(json);
+  static Future<JsonObject> getLocalRecord(Record record) {
+
+    try {
+      final JsonObject jsonObject = new JsonObject(record.getAdditionalProperties());
+      final JsonObject json = jsonObject.getJsonObject("json");
+      if (json != null) {
+        log.info("local JSON record {}", () -> json.encodePrettily());
+        return Future.succeededFuture(json);
+      }
+      final String base64String = jsonObject.getString("marc");
+      if (base64String != null) {
+        byte[] bytes = Base64.getDecoder().decode(base64String);
+        ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
+        MarcStreamReader reader = new MarcStreamReader(stream);
+        if (!reader.hasNext()) {
+          return Future.failedFuture("Incomplete/missing MARC record");
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        MarcJsonWriter writer = new MarcJsonWriter(out, MarcJsonWriter.MARC_IN_JSON);
+        writer.write(reader.next());
+        JsonObject json2 = new JsonObject(out.toString());
+        log.info("converted MARC record {}", () -> json2.encodePrettily());
+        writer.close();
+        return Future.succeededFuture(json2);
+      }
+      return Future.failedFuture("No known record types in payload, got "
+          + String.join(", ", jsonObject.fieldNames()));
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      return Future.failedFuture(e);
     }
-    return Future.failedFuture("No known record types in payload, got " +
-        String.join(", ", jsonObject.fieldNames()));
   }
 
   @Validate
@@ -67,7 +95,8 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
           }
           CopyCatTargetProfile targetProfile = res.mapTo(CopyCatTargetProfile.class);
           Record record = entity.getRecord();
-          Future<JsonObject> fut = record != null ? getLocalRecord(record)
+          Future<JsonObject> fut = record != null
+              ? getLocalRecord(record)
               :  RecordRetriever.getRecordAsJsonObject(targetProfile,
               entity.getExternalIdentifier(), vertxContext);
           return fut.compose(marc -> {
