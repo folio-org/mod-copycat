@@ -38,5 +38,6 @@
     }
   },
   "additionalProperties": false,
-  "required": [ "url", "name", "externalIdQueryMap" ]
+  "required": [ "name" ]
+
 }

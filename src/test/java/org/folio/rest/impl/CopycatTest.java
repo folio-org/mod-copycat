@@ -4,8 +4,11 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -14,6 +17,7 @@ import org.folio.rest.jaxrs.model.CopyCatImports;
 import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
 import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Record;
 import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.jaxrs.resource.Copycat;
 import org.junit.jupiter.api.AfterAll;
@@ -370,5 +374,74 @@ class CopycatTest {
       context.completeNow();
     })), vertxContext);
   }
+
+  @Test
+  void testImportProfileRecordOK(Vertx vertx, VertxTestContext context) throws IOException {
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
+    JsonObject jsonRecord = new JsonObject(file);
+    Record record = new Record().withAdditionalProperty("json", jsonRecord);
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withRecord(record);
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(204);
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
+  void testImportProfileRecordBadType(Vertx vertx, VertxTestContext context) throws IOException {
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
+    JsonObject jsonRecord = new JsonObject(file);
+    Record record = new Record().withAdditionalProperty("badType", jsonRecord);
+
+    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
+    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withTargetProfileId(targetProfileId)
+          .withRecord(record);
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().size()).isEqualTo(1);
+        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("No known record types in payload, got badType");
+        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+
 
 }

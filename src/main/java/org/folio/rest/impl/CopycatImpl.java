@@ -20,6 +20,7 @@ import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
 import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Record;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 
@@ -39,6 +40,17 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
   private static final String PROFILE_TABLE = "targetprofile";
   private static Logger log = LogManager.getLogger(CopycatImpl.class);
 
+  Future<JsonObject> getLocalRecord(Record record) {
+    JsonObject jsonObject = new JsonObject(record.getAdditionalProperties());
+    JsonObject json = jsonObject.getJsonObject("json");
+    if (json != null) {
+      log.info("local JSON record {}", () -> json.encodePrettily());
+      return Future.succeededFuture(json);
+    }
+    return Future.failedFuture("No known record types in payload, got " +
+        String.join(", ", jsonObject.fieldNames()));
+  }
+
   @Validate
   @Override
   public void postCopycatImports(CopyCatImports entity, Map<String, String> okapiHeaders,
@@ -54,21 +66,23 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
             return Future.failedFuture("No such targetProfileId " + targetProfileId);
           }
           CopyCatTargetProfile targetProfile = res.mapTo(CopyCatTargetProfile.class);
-          return RecordRetriever.getRecordAsJsonObject(targetProfile,
-              entity.getExternalIdentifier(), vertxContext)
-              .compose(marc -> {
-                if (entity.getInternalIdentifier() != null) {
-                  String pattern = targetProfile.getInternalIdEmbedPath();
-                  if (pattern == null) {
-                    return Future.failedFuture("Missing internalIdEmbedPath in target profile");
-                  }
-                  JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
-                }
-                RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
-                return importer.begin()
-                    .compose(x -> importer.post(marc))
-                    .compose(x -> importer.end());
-              });
+          Record record = entity.getRecord();
+          Future<JsonObject> fut = record != null ? getLocalRecord(record)
+              :  RecordRetriever.getRecordAsJsonObject(targetProfile,
+              entity.getExternalIdentifier(), vertxContext);
+          return fut.compose(marc -> {
+            if (entity.getInternalIdentifier() != null) {
+              String pattern = targetProfile.getInternalIdEmbedPath();
+              if (pattern == null) {
+                return Future.failedFuture("Missing internalIdEmbedPath in target profile");
+              }
+              JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
+            }
+            RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
+            return importer.begin()
+                .compose(x -> importer.post(marc))
+                .compose(x -> importer.end());
+          });
         })
         .onSuccess(record ->
             asyncResultHandler.handle(
