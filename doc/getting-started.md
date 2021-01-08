@@ -3,7 +3,7 @@
 Mike Taylor, Index Data ApS.
 mike@indexdata.com
 
-16 December 2020.
+8 January 2021.
 
 <!-- md2toc -l 2 getting-started.md -->
 * [Prerequisites](#prerequisites)
@@ -21,26 +21,23 @@ You need
 [yaz4j](https://github.com/indexdata/yaz4j)
 and
 [YAZ](https://www.indexdata.com/yaz)
-before you can compile and install mod-copycat.
+before you can compile and install mod-copycat. In the directory next to your mod-copycat checkout, install as follows:
 
-	term1$ sudo apt install yaz
+	term1$ sudo apt install yaz libyaz-dev swig
 	term1$ git clone https://github.com/indexdata/yaz4j.git
-	term1$ git checkout v1.6.0
 	term1$ cd yaz4j
-
-Running
-
+	term1$ git checkout v1.6.0
 	term1$ mvn -B -Pbundle install
 
-installs `yaz4j-1.6.0-SNAPSHOT.jar` in local Maven repository.
+This installs `yaz4j-1.6.0-SNAPSHOT.jar` into the local Maven repository.
 
-The jar file, because we used the `bundle` profile, includes a
-shared object. If running on same platform as we compile, that's fine.
-If not, you'll have to ship a shared object separately and install
-it in the path. The shared object is installed `target/native`
-in all cases (whether bundle is specified or not).
+Because we used the `bundle` profile, the jar file includes a shared object. If running on same platform as we compile, that's fine. If not, you'll have to ship a shared object separately and install it in the path. The shared object is installed in `target/native` in all cases (whether bundle is specified or not).
 
-	term1$ cd mod-copycat
+## To build
+
+Once the yaz4j library is available, mod-copycat itself can be built:
+
+	term1$ cd ../mod-copycat
 	term1$ mvn install
 
 ## To run
