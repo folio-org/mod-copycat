@@ -28,7 +28,7 @@
        "type": "string",
        "description": "Specifies where the external identifier is to be embedded in the MARC record, e.g. '999__$f' to place it in field 999, indicator double space (absent) and subfield f"
     },
-    "importProfileId": {
+    "jobProfileId": {
        "type": "string",
        "description": "Identifier of a FOLIO MARC-importing profile that specifies how to map MARC fields to FOLIO inventory"
     },

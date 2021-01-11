@@ -6,6 +6,11 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.XOkapiHeaders;
@@ -14,12 +19,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,10 +53,36 @@ public class RecordImporterTest {
     String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
     JsonObject marc = new JsonObject(file);
 
-    Future<Void> future = importer.begin()
+    Future<Void> future = importer.begin(null)
         .compose(x -> importer.post(marc))
         .compose(x -> importer.end());
-    future.onComplete(context.succeeding(x -> context.completeNow()));
+    future.onComplete(context.succeeding(x -> {
+      assertThat(mock.getLastJobProfileJobId()).isEqualTo(RecordImporter.DEFAULT_JOB_PROFILE_ID);
+      context.completeNow();
+    }));
+  }
+
+  @Test
+  void testOKJobProfileId(Vertx vertx, VertxTestContext context) throws IOException {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+
+    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
+    JsonObject marc = new JsonObject(file);
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<Void> future = importer.begin(jobProfileId)
+        .compose(x -> importer.post(marc))
+        .compose(x -> importer.end());
+    future.onComplete(context.succeeding(x -> {
+      assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
+      context.completeNow();
+    }));
   }
 
   @Test
@@ -71,7 +96,7 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    importer.begin().onComplete(context.failing(cause -> context.verify(() -> {
+    importer.begin(null).onComplete(context.failing(cause -> context.verify(() -> {
       assertThat(cause.getMessage()).contains("Invalid UUID string: 1234");
       context.completeNow();
     })));
@@ -88,7 +113,7 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    importer.begin().onComplete(context.failing(cause -> context.verify(() -> {
+    importer.begin(null).onComplete(context.failing(cause -> context.verify(() -> {
       assertThat(cause.getMessage()).contains("Connection refused");
       context.completeNow();
     })));
@@ -157,7 +182,7 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
     mock.setCreateStatus(204);
-    importer.begin().onComplete(context.failing(cause -> context.verify(() -> {
+    importer.begin(null).onComplete(context.failing(cause -> context.verify(() -> {
       mock.setCreateStatus(201);
       assertThat(cause.getMessage()).contains("returned 204");
       context.completeNow();
@@ -178,7 +203,7 @@ public class RecordImporterTest {
     JsonObject marc = new JsonObject(file);
 
     mock.setImportStatus(201);
-    Future<Void> future = importer.begin()
+    Future<Void> future = importer.begin(null)
         .compose(x -> importer.post(marc));
     future.onComplete(context.failing(cause -> context.verify(() -> {
       mock.setImportStatus(204);
@@ -201,7 +226,7 @@ public class RecordImporterTest {
     JsonObject marc = new JsonObject(file);
 
     mock.setPutProfileStatus(201);
-    Future<Void> future = importer.begin()
+    Future<Void> future = importer.begin(null)
         .compose(x -> importer.post(marc));
     future.onComplete(context.failing(cause -> context.verify(() -> {
       mock.setPutProfileStatus(200);
@@ -224,7 +249,7 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext(), options);
 
     mock.setWaitMs(10);
-    importer.begin().onComplete(context.failing(cause -> context.verify(() -> {
+    importer.begin(null).onComplete(context.failing(cause -> context.verify(() -> {
       mock.setWaitMs(1);
       assertThat(cause.getMessage()).contains("Connection was closed");
       context.completeNow();

@@ -108,7 +108,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
             }
             RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
-            return importer.begin()
+            return importer.begin(targetProfile.getJobProfileId())
                 .compose(x -> importer.post(marc))
                 .compose(x -> importer.end());
           });
