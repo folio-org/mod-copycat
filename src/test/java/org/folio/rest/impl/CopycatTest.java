@@ -13,9 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.folio.okapi.common.XOkapiHeaders;
+import org.folio.rest.jaxrs.model.CopyCatCollection;
 import org.folio.rest.jaxrs.model.CopyCatImports;
-import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
-import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
+import org.folio.rest.jaxrs.model.CopyCatProfile;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Record;
 import org.folio.rest.jaxrs.resource.Copycat;
@@ -67,8 +67,8 @@ class CopycatTest {
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
 
-    api.getCopycatTargetProfiles(0, 0, null, headers, context.succeeding(res -> context.verify(() -> {
-      CopyCatTargetCollection col = (CopyCatTargetCollection) res.getEntity();
+    api.getCopycatProfiles(0, 0, null, headers, context.succeeding(res -> context.verify(() -> {
+      CopyCatCollection col = (CopyCatCollection) res.getEntity();
       assertThat(col.getTotalRecords()).isZero();
       context.completeNow();
     })), vertx.getOrCreateContext());
@@ -81,24 +81,24 @@ class CopycatTest {
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copycatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("@attr 1=12 $identifier");
     Context vertxContext = vertx.getOrCreateContext();
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    api.postCopycatProfiles(copycatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String id = responseProfile.getId();
-      api.getCopycatTargetProfiles(0, 0, null, headers, context.succeeding(res2 -> context.verify(() -> {
+      api.getCopycatProfiles(0, 0, null, headers, context.succeeding(res2 -> context.verify(() -> {
         assertThat(res2.getStatus()).isEqualTo(200);
-        CopyCatTargetCollection col = (CopyCatTargetCollection) res2.getEntity();
+        CopyCatCollection col = (CopyCatCollection) res2.getEntity();
         assertThat(col.getTotalRecords()).isEqualTo(1);
-        api.getCopycatTargetProfilesById(id, headers, context.succeeding(res3 -> context.verify(() -> {
+        api.getCopycatProfilesById(id, headers, context.succeeding(res3 -> context.verify(() -> {
           assertThat(res3.getStatus()).isEqualTo(200);
-          api.putCopycatTargetProfilesById(id, copyCatTargetProfile, headers, context.succeeding(res4 -> context.verify(() -> {
+          api.putCopycatProfilesById(id, copycatProfile, headers, context.succeeding(res4 -> context.verify(() -> {
             assertThat(res4.getStatus()).isEqualTo(204);
-            api.deleteCopycatTargetProfilesById(id, headers, context.succeeding(res5 -> context.verify(() -> {
+            api.deleteCopycatProfilesById(id, headers, context.succeeding(res5 -> context.verify(() -> {
               assertThat(res5.getStatus()).isEqualTo(204);
               context.completeNow();
             })), vertxContext);
@@ -109,7 +109,7 @@ class CopycatTest {
   }
 
   @Test
-  void testImportProfileNoTargetProfile(Vertx vertx, VertxTestContext context) {
+  void testImportProfileNoProfile(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
@@ -119,14 +119,14 @@ class CopycatTest {
 
     Context vertxContext = vertx.getOrCreateContext();
 
-    String targetProfileId = UUID.randomUUID().toString();
+    String profileId = UUID.randomUUID().toString();
     CopyCatImports copyCatImports = new CopyCatImports()
-        .withTargetProfileId(targetProfileId)
+        .withProfileId(profileId)
         .withExternalIdentifier(EXTERNAL_ID_INDEXDATA);
     api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
       assertThat(res.getStatus()).isEqualTo(400);
       Errors errors = (Errors) res.getEntity();
-      assertThat(errors.getErrors().get(0).getMessage()).contains("No such targetProfileId " + targetProfileId);
+      assertThat(errors.getErrors().get(0).getMessage()).contains("No such profileId " + profileId);
       context.completeNow();
     })), vertxContext);
   }
@@ -142,20 +142,20 @@ class CopycatTest {
 
     Context vertxContext = vertx.getOrCreateContext();
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(204);
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
       })), vertxContext);
@@ -173,22 +173,22 @@ class CopycatTest {
 
     Context vertxContext = vertx.getOrCreateContext();
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withExternalIdQueryMap("$identifier");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().size()).isEqualTo(1);
         assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("url missing in target profile");
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
       })), vertxContext);
@@ -196,7 +196,7 @@ class CopycatTest {
   }
 
   @Test
-  void testImportProfileMissingTargetExternalIdQueryMap(Vertx vertx, VertxTestContext context) {
+  void testImportProfileMissingExternalIdQueryMap(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new HashMap<>();
@@ -206,22 +206,22 @@ class CopycatTest {
 
     Context vertxContext = vertx.getOrCreateContext();
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA);
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().size()).isEqualTo(1);
         assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("externalIdQueryMap missing in target profile");
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
       })), vertxContext);
@@ -239,22 +239,22 @@ class CopycatTest {
 
     Context vertxContext = vertx.getOrCreateContext();
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().get(0).getMessage()).contains("Connection refused");
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
       })), vertxContext);
@@ -270,22 +270,22 @@ class CopycatTest {
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     Context vertxContext = vertx.getOrCreateContext();
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("Missing " + XOkapiHeaders.USER_ID + " header");
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 ->
             context.completeNow()
         ), vertxContext);
       })), vertxContext);
@@ -300,22 +300,22 @@ class CopycatTest {
     headers.put(XOkapiHeaders.TENANT, tenant);
     Context vertxContext = vertx.getOrCreateContext();
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("Missing " + XOkapiHeaders.URL + " header");
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 ->
             context.completeNow()
         ), vertxContext);
       })), vertxContext);
@@ -332,22 +332,22 @@ class CopycatTest {
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier")
         .withInternalIdEmbedPath("999ff$i");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withInternalIdentifier("1234")
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(204);
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
       })), vertxContext);
@@ -364,23 +364,23 @@ class CopycatTest {
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withInternalIdentifier("1234")
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("Missing internalIdEmbedPath in target profile");
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 ->
             context.completeNow()
         ), vertxContext);
       })), vertxContext);
@@ -397,23 +397,23 @@ class CopycatTest {
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withExternalIdentifier("1234"); // gets 0 record(s)
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().size()).isEqualTo(1);
         assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("No record found");
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 ->
             context.completeNow()
         ), vertxContext);
       })), vertxContext);
@@ -428,9 +428,9 @@ class CopycatTest {
     headers.put(XOkapiHeaders.TENANT, tenant);
     Context vertxContext = vertx.getOrCreateContext();
 
-    String targetProfileId = "1234";
+    String profileId = "1234";
     CopyCatImports copyCatImports = new CopyCatImports()
-        .withTargetProfileId(targetProfileId)
+        .withProfileId(profileId)
         .withExternalIdentifier("does not matter");
     api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
       assertThat(res.getStatus()).isEqualTo(400);
@@ -455,17 +455,17 @@ class CopycatTest {
     JsonObject jsonRecord = new JsonObject(file);
     Record record = new Record().withAdditionalProperty("json", jsonRecord);
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    CopyCatProfile copyCatProfile = new CopyCatProfile().withName("local");
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withRecord(record);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(204);
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
       })), vertxContext);
@@ -485,19 +485,19 @@ class CopycatTest {
 
     Record record = new Record().withAdditionalProperty("json", "x");
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    CopyCatProfile copyCatTargetProfile = new CopyCatProfile().withName("local");
+    api.postCopycatProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withRecord(record);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().size()).isEqualTo(1);
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
       })), vertxContext);
@@ -520,17 +520,17 @@ class CopycatTest {
 
     Record record = new Record().withAdditionalProperty("marc", base64String);
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    CopyCatProfile copyCatProfile = new CopyCatProfile().withName("local");
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withRecord(record);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(204);
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
       })), vertxContext);
@@ -550,20 +550,20 @@ class CopycatTest {
 
     Record record = new Record().withAdditionalProperty("marc", "ab");
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    CopyCatProfile copyCatProfile = new CopyCatProfile().withName("local");
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withRecord(record);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().size()).isEqualTo(1);
         assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("Premature end of file encountered");
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
       })), vertxContext);
@@ -583,20 +583,20 @@ class CopycatTest {
 
     Record record = new Record().withAdditionalProperty("marc", "");
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    CopyCatProfile copyCatProfile = new CopyCatProfile().withName("local");
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withRecord(record);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().size()).isEqualTo(1);
         assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("Incomplete/missing MARC record");
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
       })), vertxContext);
@@ -618,20 +618,20 @@ class CopycatTest {
     JsonObject jsonRecord = new JsonObject(file);
     Record record = new Record().withAdditionalProperty("badType", jsonRecord);
 
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile().withName("local");
-    api.postCopycatTargetProfiles(copyCatTargetProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+    CopyCatProfile copyCatProfile = new CopyCatProfile().withName("local");
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
-      CopyCatTargetProfile responseProfile = (CopyCatTargetProfile) res1.getEntity();
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
-          .withTargetProfileId(targetProfileId)
+          .withProfileId(targetProfileId)
           .withRecord(record);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().size()).isEqualTo(1);
         assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("No known record types in payload, got badType");
-        api.deleteCopycatTargetProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
       })), vertxContext);

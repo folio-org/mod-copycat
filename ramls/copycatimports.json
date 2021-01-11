@@ -12,8 +12,8 @@
       "description": "internal identifier for the record",
       "type": "string"
     },
-    "targetProfileId": {
-      "description": "target profile to be used for importing",
+    "profileId": {
+      "description": "profile to be used for importing",
       "type": "string"
     },
     "record": {
@@ -32,5 +32,5 @@
     }
   },
   "additionalProperties": false,
-  "required": [ "targetProfileId" ]
+  "required": [ "profileId" ]
 }

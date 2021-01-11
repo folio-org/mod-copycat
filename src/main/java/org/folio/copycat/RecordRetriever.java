@@ -6,7 +6,7 @@ import io.vertx.core.json.JsonObject;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
+import org.folio.rest.jaxrs.model.CopyCatProfile;
 import org.folio.rest.jaxrs.model.TargetOptions;
 import org.yaz4j.Connection;
 import org.yaz4j.PrefixQuery;
@@ -28,7 +28,7 @@ public final class RecordRetriever {
    * @param externalId Identifier to use within query
    * @return Query RPN Query pattern with $identifier being replaced.
    */
-  static Query constructQuery(CopyCatTargetProfile profile, String externalId)
+  static Query constructQuery(CopyCatProfile profile, String externalId)
       throws ZoomException {
     // assuming the externalId does not have whitespace or include {}"\\ characters
     String pqf = profile.getExternalIdQueryMap().replace("$identifier", externalId);
@@ -56,7 +56,7 @@ public final class RecordRetriever {
    *             <a href="https://software.indexdata.com/yaz/doc/zoom.records.html">ZOOM_record_get</a>
    * @return record content
    */
-  static Future<byte[]> getRecordAsJsonObject(CopyCatTargetProfile profile, String externalId,
+  static Future<byte[]> getRecordAsJsonObject(CopyCatProfile profile, String externalId,
                                               String type) {
     if (profile.getUrl() == null) {
       return Future.failedFuture("url missing in target profile");
@@ -99,7 +99,7 @@ public final class RecordRetriever {
     }
   }
 
-  static Future<JsonObject> getRecordAsJsonObject(CopyCatTargetProfile profile, String externalId) {
+  static Future<JsonObject> getRecordAsJsonObject(CopyCatProfile profile, String externalId) {
     return getRecordAsJsonObject(profile, externalId, "json")
         .map(buf -> new JsonObject(new String(buf)));
   }
@@ -111,7 +111,7 @@ public final class RecordRetriever {
    * @param vertxContext Vert.x context
    * @return async result with record (failure if no record is found)
    */
-  public static Future<JsonObject> getRecordAsJsonObject(CopyCatTargetProfile profile,
+  public static Future<JsonObject> getRecordAsJsonObject(CopyCatProfile profile,
                                                          String externalId, Context vertxContext) {
     // execute in separate thread, because getRecordAsJsonObject is a blocking function.
     return Future.future(promise0 -> vertxContext.owner().<JsonObject>executeBlocking(promise1 ->

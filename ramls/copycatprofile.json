@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "target profile",
-  "description": "copycat target profile",
+  "title": "copycat profile",
+  "description": "copycat import profile",
   "type": "object",
   "properties": {
     "id": {

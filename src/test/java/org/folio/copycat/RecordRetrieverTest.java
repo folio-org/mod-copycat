@@ -4,7 +4,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
+import org.folio.rest.jaxrs.model.CopyCatProfile;
 import org.folio.rest.jaxrs.model.TargetOptions;
 import org.folio.rest.testing.UtilityClassTester;
 import org.junit.jupiter.api.Test;
@@ -28,12 +28,12 @@ public class RecordRetrieverTest {
 
   @Test
   void getJsonMarcOK(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
 
-    RecordRetriever.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "json")
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json")
         .onComplete(context.succeeding(res -> context.verify(() -> {
           JsonObject marc = new JsonObject(new String(res));
           assertThat(marc.getJsonArray("fields").getJsonObject(3)
@@ -45,12 +45,12 @@ public class RecordRetrieverTest {
 
   @Test
   void getLineMarcOK(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
 
-    RecordRetriever.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
         .onComplete(context.succeeding(res -> context.verify(() -> {
           String line = new String(res);
           assertThat(line).contains("008 " + EXTERNAL_ID_INDEXDATA);
@@ -60,7 +60,7 @@ public class RecordRetrieverTest {
 
   @Test
   void getSutrsOK(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier")
@@ -68,7 +68,7 @@ public class RecordRetrieverTest {
             .withAdditionalProperty("preferredRecordSyntax", "sutrs")
             .withAdditionalProperty("timeout", 10));
 
-    RecordRetriever.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
         .onComplete(context.succeeding(res -> context.verify(() -> {
           String sutrs = new String(res);
           assertThat(sutrs).contains("008: " + EXTERNAL_ID_INDEXDATA);
@@ -77,15 +77,15 @@ public class RecordRetrieverTest {
   }
 
   @Test
-  void getBadTargetOption(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+  void getBadOption(Vertx vertx, VertxTestContext context) {
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier")
         .withTargetOptions(new TargetOptions()
             .withAdditionalProperty("structure", Boolean.TRUE));
 
-    RecordRetriever.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "render")
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage()).isEqualTo("Illegal options type for key structure: class java.lang.Boolean");
           context.completeNow();
@@ -94,14 +94,14 @@ public class RecordRetrieverTest {
 
   @Test
   void getMarcBadTarget(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_BAD_TARGET)
         .withExternalIdQueryMap("$identifier")
         .withTargetOptions(new TargetOptions()
             .withAdditionalProperty("timeout", 1)); // low timeout so we it's not taking too long
 
-    RecordRetriever.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_INDEXDATA, "json")
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage())
               .isEqualTo("Server " + URL_BAD_TARGET + " timed out handling our request");
@@ -111,13 +111,13 @@ public class RecordRetrieverTest {
 
   @Test
   void getMarcBadCredentials(Vertx vertx, VertxTestContext context) {
-    CopyCatTargetProfile copyCatTargetProfile = new CopyCatTargetProfile()
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("OLUCWorldCat")
         .withAuthentication("foo bar")
         .withUrl(URL_WORLDCAT)
         .withExternalIdQueryMap("@attr 1=7 $identifier");
 
-    RecordRetriever.getRecordAsJsonObject(copyCatTargetProfile, EXTERNAL_ID_WORLDCAT, "json")
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_WORLDCAT, "json")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage())
               .isEqualTo("Server " + URL_WORLDCAT + " rejected our init request");

@@ -18,12 +18,11 @@ import org.folio.copycat.JsonMarc;
 import org.folio.copycat.RecordImporter;
 import org.folio.copycat.RecordRetriever;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.CopyCatCollection;
 import org.folio.rest.jaxrs.model.CopyCatImports;
-import org.folio.rest.jaxrs.model.CopyCatTargetCollection;
-import org.folio.rest.jaxrs.model.CopyCatTargetProfile;
+import org.folio.rest.jaxrs.model.CopyCatProfile;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Json;
 import org.folio.rest.jaxrs.model.Record;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -43,7 +42,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
     return createErrors(throwable.getMessage());
   }
 
-  private static final String PROFILE_TABLE = "targetprofile";
+  private static final String PROFILE_TABLE = "profile";
   private static Logger log = LogManager.getLogger(CopycatImpl.class);
 
   static Future<JsonObject> getLocalRecord(Record record) {
@@ -85,15 +84,15 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
                                  Handler<AsyncResult<Response>> asyncResultHandler,
                                  Context vertxContext) {
 
-    String targetProfileId = entity.getTargetProfileId();
+    String profileId = entity.getProfileId();
     PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
     Future.<JsonObject>future(
-        promise -> postgresClient.getById(PROFILE_TABLE, targetProfileId, promise))
+        promise -> postgresClient.getById(PROFILE_TABLE, profileId, promise))
         .compose(res -> {
           if (res == null) {
-            return Future.failedFuture("No such targetProfileId " + targetProfileId);
+            return Future.failedFuture("No such profileId " + profileId);
           }
-          CopyCatTargetProfile targetProfile = res.mapTo(CopyCatTargetProfile.class);
+          CopyCatProfile targetProfile = res.mapTo(CopyCatProfile.class);
           Record record = entity.getRecord();
           Future<JsonObject> fut = record != null
               ? getLocalRecord(record)
@@ -126,54 +125,54 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
 
   @Validate
   @Override
-  public void postCopycatTargetProfiles(CopyCatTargetProfile entity,
-                                        Map<String, String> okapiHeaders,
-                                        Handler<AsyncResult<Response>> asyncResultHandler,
-                                        Context vertxContext) {
+  public void postCopycatProfiles(CopyCatProfile entity,
+                                  Map<String, String> okapiHeaders,
+                                  Handler<AsyncResult<Response>> asyncResultHandler,
+                                  Context vertxContext) {
     PgUtil.post(PROFILE_TABLE, entity, okapiHeaders, vertxContext,
-        PostCopycatTargetProfilesResponse.class, asyncResultHandler);
+        PostCopycatProfilesResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void getCopycatTargetProfiles(int offset, int limit, String query,
-                                       Map<String, String> okapiHeaders,
-                                       Handler<AsyncResult<Response>> asyncResultHandler,
-                                       Context vertxContext) {
+  public void getCopycatProfiles(int offset, int limit, String query,
+                                 Map<String, String> okapiHeaders,
+                                 Handler<AsyncResult<Response>> asyncResultHandler,
+                                 Context vertxContext) {
 
-    PgUtil.get(PROFILE_TABLE, CopyCatTargetProfile.class, CopyCatTargetCollection.class,
-        query, offset, limit,  okapiHeaders, vertxContext, GetCopycatTargetProfilesResponse.class,
+    PgUtil.get(PROFILE_TABLE, CopyCatProfile.class, CopyCatCollection.class,
+        query, offset, limit,  okapiHeaders, vertxContext, GetCopycatProfilesResponse.class,
         asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void getCopycatTargetProfilesById(String id, Map<String, String> okapiHeaders,
-                                           Handler<AsyncResult<Response>> asyncResultHandler,
-                                           Context vertxContext) {
+  public void getCopycatProfilesById(String id, Map<String, String> okapiHeaders,
+                                     Handler<AsyncResult<Response>> asyncResultHandler,
+                                     Context vertxContext) {
 
-    PgUtil.getById(PROFILE_TABLE, CopyCatTargetProfile.class, id, okapiHeaders, vertxContext,
-        GetCopycatTargetProfilesByIdResponse.class, asyncResultHandler);
+    PgUtil.getById(PROFILE_TABLE, CopyCatProfile.class, id, okapiHeaders, vertxContext,
+        GetCopycatProfilesByIdResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void putCopycatTargetProfilesById(String id, CopyCatTargetProfile entity,
-                                           Map<String, String> okapiHeaders,
-                                           Handler<AsyncResult<Response>> asyncResultHandler,
-                                           Context vertxContext) {
+  public void putCopycatProfilesById(String id, CopyCatProfile entity,
+                                     Map<String, String> okapiHeaders,
+                                     Handler<AsyncResult<Response>> asyncResultHandler,
+                                     Context vertxContext) {
 
     PgUtil.put(PROFILE_TABLE, entity, id, okapiHeaders, vertxContext,
-        PutCopycatTargetProfilesByIdResponse.class, asyncResultHandler);
+        PutCopycatProfilesByIdResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void deleteCopycatTargetProfilesById(String id, Map<String, String> okapiHeaders,
-                                              Handler<AsyncResult<Response>> asyncResultHandler,
-                                              Context vertxContext) {
+  public void deleteCopycatProfilesById(String id, Map<String, String> okapiHeaders,
+                                        Handler<AsyncResult<Response>> asyncResultHandler,
+                                        Context vertxContext) {
 
     PgUtil.deleteById(PROFILE_TABLE, id, okapiHeaders, vertxContext,
-        DeleteCopycatTargetProfilesByIdResponse.class, asyncResultHandler);
+        DeleteCopycatProfilesByIdResponse.class, asyncResultHandler);
   }
 }
