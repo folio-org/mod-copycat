@@ -354,6 +354,10 @@
                   <sourceFile>${project.build.directory}/DeploymentDescriptor-template.json</sourceFile>
                   <destinationFile>${project.build.directory}/DeploymentDescriptor.json</destinationFile>
                 </fileSet>
+                <fileSet>
+                  <sourceFile>${project.build.directory}/DeploymentDescriptor-VM-template.json</sourceFile>
+                  <destinationFile>${project.build.directory}/DeploymentDescriptor-VM.json</destinationFile>
+                </fileSet>
               </fileSets>
             </configuration>
           </execution>
