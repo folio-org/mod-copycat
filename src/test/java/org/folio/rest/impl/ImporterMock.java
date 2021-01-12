@@ -4,16 +4,16 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ImporterMock {
   private final Vertx vertx;
@@ -23,6 +23,7 @@ public class ImporterMock {
   private int importStatus = 204;
   private int putProfileStatus = 200;
   private int waitMs = 1;
+  private String lastJobProfileId;
 
   Set<String> jobs = new TreeSet<>();
 
@@ -46,28 +47,40 @@ public class ImporterMock {
     putProfileStatus = code;
   }
 
+  public String getLastJobProfileJobId() {
+    return lastJobProfileId;
+  }
+
   public void createJob(RoutingContext ctx) {
     try {
       JsonObject requestBody = ctx.getBodyAsJson();
       String userId = requestBody.getString("userId");
       UUID uuid = UUID.fromString(userId);
+
+      JsonObject responseBody = new JsonObject();
+      String id = UUID.randomUUID().toString();
+
+      responseBody.put("parentJobExecutionId", id);
+      JsonArray jobExecutions = new JsonArray();
+      jobExecutions.add(new JsonObject()
+          .put("id", id)
+          .put("jobProfileInfo", requestBody.getJsonObject("jobProfileInfo"))
+          .put("userId", uuid.toString()));
+
+      lastJobProfileId = requestBody.getJsonObject("jobProfileInfo").getString("id");
+      responseBody.put("jobExecutions", jobExecutions);
+      jobs.add(id);
+      vertx.setTimer(waitMs, res -> {
+        ctx.response().putHeader("Content-Type", "application/json");
+        ctx.response().setStatusCode(createStatus);
+        ctx.response().end(responseBody.encode());
+      });
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       ctx.response().setStatusCode(500);
       ctx.response().end(e.getMessage());
       return;
     }
-    JsonObject responseBody = new JsonObject();
-    String id = UUID.randomUUID().toString();
-
-    jobs.add(id);
-    responseBody.put("parentJobExecutionId", id);
-
-    vertx.setTimer(waitMs, res -> {
-      ctx.response().putHeader("Content-Type", "application/json");
-      ctx.response().setStatusCode(createStatus);
-      ctx.response().end(responseBody.encode());
-    });
   }
 
   public void putProfile(RoutingContext ctx) {

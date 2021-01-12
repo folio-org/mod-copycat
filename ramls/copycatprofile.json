@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "target profile",
-  "description": "copycat target profile",
+  "title": "copycat profile",
+  "description": "copycat import profile",
   "type": "object",
   "properties": {
     "id": {
@@ -28,7 +28,7 @@
        "type": "string",
        "description": "Specifies where the external identifier is to be embedded in the MARC record, e.g. '999__$f' to place it in field 999, indicator double space (absent) and subfield f"
     },
-    "importProfileId": {
+    "jobProfileId": {
        "type": "string",
        "description": "Identifier of a FOLIO MARC-importing profile that specifies how to map MARC fields to FOLIO inventory"
     },
@@ -38,5 +38,6 @@
     }
   },
   "additionalProperties": false,
-  "required": [ "url", "name", "externalIdQueryMap" ]
+  "required": [ "name" ]
+
 }

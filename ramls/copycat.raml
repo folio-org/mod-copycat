@@ -6,8 +6,8 @@ baseUri: http://localhost
 
 types:
   copyCatImports: !include copycatimports.json
-  copyCatTargetProfile: !include copycattargetprofile.json
-  copyCatTargetCollection: !include copycattargetcollection.json
+  copyCatProfile: !include copycatprofile.json
+  copyCatCollection: !include copycatcollection.json
   error: !include raml-util/schemas/error.schema
   errors: !include raml-util/schemas/errors.schema
 
@@ -34,21 +34,21 @@ traits:
           description: Internal error
           body:
             text/plain:
-  /target-profiles:
+  /profiles:
     post:
-      description: Create target profile
+      description: Create profile
       body:
         application/json:
-          type: copyCatTargetProfile
+          type: copyCatProfile
       responses:
         201:
           description: Created OK
           headers:
             Location:
-              description: URI of target profile
+              description: URI of profile
           body:
             application/json:
-              type: copyCatTargetProfile
+              type: copyCatProfile
         400:
           description: Error in usage
           body:
@@ -60,16 +60,16 @@ traits:
     get:
       is: [pageable,
        searchable: {
-             description: "search target profiles",
+             description: "search profiles",
              example: "name = loc"}
       ]
-      description: Get target profiles
+      description: Get profiles
       responses:
         200:
           description: Get collection OK
           body:
             application/json:
-              type: copyCatTargetCollection
+              type: copyCatCollection
         400:
           description: Error in usage
           body:
@@ -80,13 +80,13 @@ traits:
             text/plain:
     /{id}:
       get:
-        description: Get target profile
+        description: Get profile
         responses:
           200:
             description: retrieved OK
             body:
               application/json:
-                type: copyCatTargetProfile
+                type: copyCatProfile
           400:
             description: User error
             body:
@@ -103,7 +103,7 @@ traits:
         description: Update target profile
         body:
           application/json:
-            type: copyCatTargetProfile
+            type: copyCatProfile
         responses:
           204:
             description: updated OK

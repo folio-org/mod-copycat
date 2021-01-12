@@ -2,7 +2,7 @@
   "scripts" : [ ],
   "tables" : [
     {
-      "tableName" : "targetprofile",
+      "tableName" : "profile",
       "withMetadata" : true,
       "index": [
         {
@@ -15,10 +15,6 @@
         },
         {
           "fieldName": "externalIdQueryMap",
-          "tOps": "ADD"
-        },
-        {
-          "fieldName": "importProfileId",
           "tOps": "ADD"
         }
       ],

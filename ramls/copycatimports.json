@@ -5,18 +5,32 @@
   "type": "object",
   "properties": {
     "externalIdentifier": {
-       "description": "external identifier for the record",
-       "type": "string"
+      "description": "external identifier for the record",
+      "type": "string"
     },
     "internalIdentifier": {
-       "description": "internal identifier for the record",
-       "type": "string"
+      "description": "internal identifier for the record",
+      "type": "string"
     },
-    "targetProfileId": {
-       "description": "target profile to be used for importing",
-       "type": "string"
+    "profileId": {
+      "description": "profile to be used for importing",
+      "type": "string"
+    },
+    "record": {
+      "description" : "local record",
+      "type" : "object",
+      "properties" : {
+         "json" : {
+           "description" : "record object within json property",
+           "type" : "object"
+          },
+         "marc" : {
+           "description" : "base64 encoded ISO2709 MARC",
+           "type" : "string"
+         }
+      }
     }
   },
   "additionalProperties": false,
-  "required": [ "externalIdentifier", "targetProfileId" ]
+  "required": [ "profileId" ]
 }

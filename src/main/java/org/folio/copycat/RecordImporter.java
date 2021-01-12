@@ -25,6 +25,7 @@ import org.folio.okapi.common.XOkapiHeaders;
  */
 public class RecordImporter {
 
+  static final String DEFAULT_JOB_PROFILE_ID =  "c8f98545-898c-4f48-a494-3ab6736a3243";
   private static final int WEBCLIENT_CONNECT_TIMEOUT = 10;
   private static final int WEBCLIENT_IDLE_TIMEOUT = 20;
 
@@ -71,14 +72,17 @@ public class RecordImporter {
     this(okapiHeaders, context, null);
   }
 
-  Future<String> createJob() {
+  Future<String> createJob(String jobProfileId) {
     String abs = okapiUrl + "/change-manager/jobExecutions";
     HttpRequest<Buffer> request = client.postAbs(abs);
     request.headers().addAll(okapiHeaders);
     request.putHeader("Accept", "*/*");
     request.putHeader("Content-Type", "application/json");
     JsonObject jobProfileInfo = new JsonObject();
-    jobProfileInfo.put("id", "c8f98545-898c-4f48-a494-3ab6736a3243");
+    if (jobProfileId == null) {
+      jobProfileId = DEFAULT_JOB_PROFILE_ID;
+    }
+    jobProfileInfo.put("id", jobProfileId);
     jobProfileInfo.put("name", "Default job profile");
     jobProfileInfo.put("dataType", "MARC");
 
@@ -99,11 +103,11 @@ public class RecordImporter {
 
   /**
    * begin importing for current user/tenant.
-   *
+   * @param jobProfileId SRS job profile Id; null for default profile.
    * @return async result.
    */
-  public Future<Void> begin() {
-    return createJob().compose(id -> {
+  public Future<Void> begin(String jobProfileId) {
+    return createJob(jobProfileId).compose(id -> {
       jobId = id;
       return putJobProfile();
     });

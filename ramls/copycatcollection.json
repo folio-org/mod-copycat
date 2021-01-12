@@ -1,15 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "target profiles response",
-  "description": "copycat target profiles",
+  "title": "CopyCat Profiles Response",
+  "description": "CopyCat Profiles",
   "type": "object",
   "properties": {
-    "targetprofiles": {
-      "description": "List of target profiles",
+    "profiles": {
+      "description": "List of CopyCat profiles",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "copycattargetprofile.json"
+        "$ref": "copycatprofile.json"
       }
     },
     "totalRecords": {
@@ -17,7 +17,7 @@
     }
   },
   "required": [
-    "targetprofiles",
+    "profiles",
     "totalRecords"
   ]
 }
