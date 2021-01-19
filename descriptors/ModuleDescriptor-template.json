@@ -39,33 +39,33 @@
       ]
     },
     {
-      "id": "copycat-targetprofiles",
+      "id": "copycat-profiles",
       "version": "1.0",
       "handlers" : [
         {
           "methods" : [ "POST" ],
-          "pathPattern" : "/copycat/target-profiles",
-          "permissionsRequired": [ "copycat.target-profiles.item.post" ]
+          "pathPattern" : "/copycat/profiles",
+          "permissionsRequired": [ "copycat.profiles.item.post" ]
         },
         {
           "methods" : [ "GET" ],
-          "pathPattern" : "/copycat/target-profiles",
-          "permissionsRequired": [ "copycat.target-profiles.collection.get" ]
+          "pathPattern" : "/copycat/profiles",
+          "permissionsRequired": [ "copycat.profiles.collection.get" ]
         },
         {
           "methods" : [ "GET" ],
-          "pathPattern" : "/copycat/target-profiles/{id}",
-          "permissionsRequired": [ "copycat.target-profiles.item.get" ]
+          "pathPattern" : "/copycat/profiles/{id}",
+          "permissionsRequired": [ "copycat.profiles.item.get" ]
         },
         {
           "methods" : [ "PUT" ],
-          "pathPattern" : "/copycat/target-profiles/{id}",
-          "permissionsRequired": [ "copycat.target-profiles.item.put" ]
+          "pathPattern" : "/copycat/profiles/{id}",
+          "permissionsRequired": [ "copycat.profiles.item.put" ]
         },
         {
           "methods" : [ "DELETE" ],
-          "pathPattern" : "/copycat/target-profiles/{id}",
-          "permissionsRequired": [ "copycat.target-profiles.item.delete" ]
+          "pathPattern" : "/copycat/profiles/{id}",
+          "permissionsRequired": [ "copycat.profiles.item.delete" ]
         }
       ]
     }
@@ -87,29 +87,29 @@
       "description" : "Copycat record"
     },
     {
-      "permissionName": "copycat.target-profiles.item.post",
+      "permissionName": "copycat.profiles.item.post",
       "displayName": "Target profile POST",
-      "description": "Create copycat target profile"
+      "description": "Create CopyCat profile"
     },
     {
-      "permissionName": "copycat.target-profiles.collection.get",
+      "permissionName": "copycat.profiles.collection.get",
       "displayName": "Target profile GET collection",
-      "description": "Retrieve copycat target profiles"
+      "description": "Retrieve CopyCat profiles"
     },
     {
-      "permissionName": "copycat.target-profiles.item.get",
+      "permissionName": "copycat.profiles.item.get",
       "displayName": "Target profile GET",
-      "description": "Retrieve copycat target profile"
+      "description": "Retrieve CopyCat profile"
     },
     {
-      "permissionName": "copycat.target-profiles.item.put",
+      "permissionName": "copycat.profiles.item.put",
       "displayName": "Target profile PUT",
-      "description": "Update copycat target profile"
+      "description": "Update CopyCat profile"
     },
     {
-      "permissionName": "copycat.target-profiles.item.delete",
+      "permissionName": "copycat.profiles.item.delete",
       "displayName": "Target profile DELETE",
-      "description": "Delete copycat target profile"
+      "description": "Delete CopyCat profile"
     }
   ],
   "launchDescriptor": {

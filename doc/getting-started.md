@@ -52,9 +52,9 @@ In another terminal:
 
 ## To use
 
-Create a target profile:
+Create a profile:
 
-	term2$ curl  -d'{"url":"z3950.indexdata.com/marc", "name":"ID MARC test", "externalIdQueryMap" : "@attr 1=1016 $identifier"}' -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/target-profiles
+	term2$ curl -d'{"url":"z3950.indexdata.com/marc", "name":"ID MARC test", "externalIdQueryMap" : "@attr 1=1016 $identifier"}' -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/profiles
 	{
 	  "id" : "6a69ab96-51af-4827-bb7d-7a9cf2f1a8cf",
 	  "name" : "ID MARC test",
@@ -62,11 +62,11 @@ Create a target profile:
 	}
 	term$
 
-List all target profiles:
+List all profiles:
 
-	term2$ curl   -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/target-profiles
+	term2$ curl -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/profiles
 	{
-	  "targetprofiles" : [ {
+	  "profiles" : [ {
 	    "id" : "6a69ab96-51af-4827-bb7d-7a9cf2f1a8cf",
 	    "name" : "ID MARC test",
 	    "url" : "z3950.indexdata.com/marc",
@@ -78,7 +78,7 @@ List all target profiles:
 
 Import a record based on an external identifier (could be OCLC number, ISBN, other):
 
-	term2$ curl -d'{"externalIdentifier":"780306m19009999ohu", "targetProfileId":"1d0489ab-3989-4f0b-b535-725bebf21373"}'   -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/imports
+	term2$ curl -d'{"externalIdentifier":"780306m19009999ohu", "profileId":"6a69ab96-51af-4827-bb7d-7a9cf2f1a8cf"}' -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/imports
 	{
 	  "errors" : [ {
 	  "message" : "Missing X-Okapi-Url header",
@@ -112,7 +112,7 @@ Whichever of these approaches you use, you now need to tell Okapi about the copy
 Now login and you will be able to access mod-copycat via Okapi. Use the `X-Okapi-Token` from the response headers echoed by the `-D -` option to the login operation:
 
 	curl -w '\n' -D - -X POST -d '{"username":"diku_admin","password":"********"}' -H "Content-type: application/json" -H "Accept: application/json" -H "x-okapi-tenant: diku" http://localhost:9130/authn/login
-	curl -w '\n' -H "X-Okapi-Tenant: diku" -H "X-Okapi-Token: XXXXXXXX" -H "Accept: */*" -H "Content-Type: application/json" http://localhost:9130/copycat/target-profiles
+	curl -w '\n' -H "X-Okapi-Tenant: diku" -H "X-Okapi-Token: XXXXXXXX" -H "Accept: */*" -H "Content-Type: application/json" http://localhost:9130/copycat/profiles
 
 ## To unassociate, undeploy and remove a running module
 

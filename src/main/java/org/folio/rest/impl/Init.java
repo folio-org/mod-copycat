@@ -7,10 +7,10 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.resource.interfaces.PostDeployVerticle;
+import org.folio.rest.resource.interfaces.InitAPI;
 import org.yaz4j.Connection;
 
-public class Init implements PostDeployVerticle {
+public class Init implements InitAPI {
   private static Logger log = LogManager.getLogger(Init.class);
 
   @Override
