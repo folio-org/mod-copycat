@@ -15,12 +15,13 @@ import org.folio.okapi.common.XOkapiHeaders;
 
 /**
  * Responsible for importing records. Uses mod-record-source-manager for importing.
- * <ul>
- * <li></li><a href="https://github.com/folio-org/mod-source-record-manager">mod-record-source-manager</a></li>
- * <li></li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/descriptors/ModuleDescriptor-template.json">Descriptor</a></li>
- * <li></li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/ramls/change-manager.raml">RAML</a></li>
- * <li></li><a href="https://github.com/folio-org/data-import-raml-storage/blob/master/schemas/dto/">schemas</a></li>
- * <li></li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/README.md#data-import-workflow">workflow</a></li>
+ *
+ * <p><ul>
+ * <li><a href="https://github.com/folio-org/mod-source-record-manager">mod-record-source-manager</a></li>
+ * <li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/descriptors/ModuleDescriptor-template.json">Descriptor</a></li>
+ * <li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/ramls/change-manager.raml">RAML</a></li>
+ * <li><a href="https://github.com/folio-org/data-import-raml-storage/blob/master/schemas/dto/">schemas</a></li>
+ * <li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/README.md#data-import-workflow">workflow</a></li>
  * </ul>
  */
 public class RecordImporter {
