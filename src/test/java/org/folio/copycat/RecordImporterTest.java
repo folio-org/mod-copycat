@@ -24,9 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(VertxExtension.class)
 public class RecordImporterTest {
-  private static Logger log = LogManager.getLogger(JsonMarcTest.class);
+  private static final Logger log = LogManager.getLogger(JsonMarcTest.class);
   private static ImporterMock mock;
-  private static int port = 9231; // where mock is running
+  private static final int port = 9231; // where mock is running
 
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext context) {
@@ -86,7 +86,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testBadUserId(Vertx vertx, VertxTestContext context) throws IOException {
+  void testBadUserId(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
@@ -103,7 +103,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testBadUrlBegin(Vertx vertx, VertxTestContext context) throws IOException {
+  void testBadUrlBegin(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
@@ -120,7 +120,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testBadUrlPutProfile(Vertx vertx, VertxTestContext context) throws IOException {
+  void testBadUrlPutProfile(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
@@ -137,7 +137,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testBadUrlPost(Vertx vertx, VertxTestContext context) throws IOException {
+  void testBadUrlPost(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
@@ -154,7 +154,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testBadUrlEnd(Vertx vertx, VertxTestContext context) throws IOException {
+  void testBadUrlEnd(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
@@ -171,7 +171,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testBadStatusCreate(Vertx vertx, VertxTestContext context) throws IOException {
+  void testBadStatusCreate(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
     int port = 9231; // where mock is running
 
