@@ -51,7 +51,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
       final JsonObject jsonObject = new JsonObject(record.getAdditionalProperties());
       final JsonObject json = jsonObject.getJsonObject("json");
       if (json != null) {
-        log.info("local JSON record {}", () -> json.encodePrettily());
+        log.info("local JSON record {}", json::encodePrettily);
         return Future.succeededFuture(json);
       }
       final String base64String = jsonObject.getString("marc");
@@ -66,7 +66,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
         MarcJsonWriter writer = new MarcJsonWriter(out, MarcJsonWriter.MARC_IN_JSON);
         writer.write(reader.next());
         JsonObject json2 = new JsonObject(out.toString());
-        log.info("converted MARC record {}", () -> json2.encodePrettily());
+        log.info("converted MARC record {}", json2::encodePrettily);
         writer.close();
         return Future.succeededFuture(json2);
       }
@@ -104,8 +104,11 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               if (pattern == null) {
                 return Future.failedFuture("Missing internalIdEmbedPath in target profile");
               }
+              log.info("Embedding identifier {} in MARC {}",
+                  entity::getInternalIdentifier, () -> pattern);
               JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
             }
+            log.info("Importing {}", marc::encodePrettily);
             RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
             return importer.begin(targetProfile.getJobProfileId())
                 .compose(x -> importer.post(marc))
