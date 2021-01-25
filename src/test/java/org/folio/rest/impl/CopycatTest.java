@@ -637,5 +637,4 @@ class CopycatTest {
       })), vertxContext);
     })), vertxContext);
   }
-
 }

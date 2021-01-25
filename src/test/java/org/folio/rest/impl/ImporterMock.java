@@ -21,14 +21,29 @@ public class ImporterMock {
   private static final Logger log = LogManager.getLogger(CopycatImpl.class);
   private int createStatus = 201;
   private int importStatus = 204;
+  private int sourceStorageStatus = 200;
   private int putProfileStatus = 200;
+  private String instanceId = "1234";
   private int waitMs = 1;
+  private int iteration;
   private String lastJobProfileId;
 
   Set<String> jobs = new TreeSet<>();
 
   public ImporterMock(Vertx vertx) {
     this.vertx = vertx;
+  }
+
+  public void setIterations(int iterations) {
+    this.iteration = iterations;
+  }
+
+  public String getInstanceId() {
+    return instanceId;
+  }
+
+  public void setSourceStorageStatus(int code) {
+    sourceStorageStatus = code;
   }
 
   public void setCreateStatus(int code) {
@@ -127,10 +142,6 @@ public class ImporterMock {
         ctx.response().end("Missing initialRecords");
         return;
       }
-      JsonObject recordsMetadata = requestBody.getJsonObject("recordsMetadata");
-      if (Boolean.TRUE.equals(recordsMetadata.getBoolean("last"))) {
-        jobs.remove(id);
-      }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       ctx.response().setStatusCode(500);
@@ -141,6 +152,38 @@ public class ImporterMock {
     ctx.response().end();
   }
 
+  public void sourceStorage(RoutingContext ctx) {
+    String id = ctx.request().getParam("snapshotId");
+    if (!jobs.contains(id)) {
+      ctx.response().setStatusCode(404);
+      ctx.response().end("Job not found " + id);
+      return;
+    }
+    ctx.response().setStatusCode(sourceStorageStatus);
+    if (sourceStorageStatus != 200) {
+      ctx.end("Error " + sourceStorageStatus);
+      return;
+    }
+
+    JsonObject sourceRecord = new JsonObject()
+        .put("recordType", "MARC")
+        .put("additionalInfo",
+            new JsonObject().put("suppressDiscovery", false));
+    if (iteration == 0) {
+      sourceRecord.put("externalIdsHolder",
+          new JsonObject().put("instanceId", instanceId));
+    } else {
+      --iteration;
+    }
+
+    ctx.response().putHeader("Application", "application/json");
+    JsonObject response = new JsonObject()
+        .put("sourceRecords",
+            new JsonArray()
+                .add(sourceRecord));
+    ctx.response().end(response.encodePrettily());
+  }
+
   public Future<Void> start(int port) {
     Router router = Router.router(vertx);
     router.postWithRegex("/change-manager/jobExecutions.*").handler(BodyHandler.create());
@@ -149,6 +192,10 @@ public class ImporterMock {
 
     router.putWithRegex("/change-manager/jobExecutions/.*").handler(BodyHandler.create());
     router.putWithRegex("/change-manager/jobExecutions/.*").handler(this::putProfile);
+
+    router.getWithRegex("/source-storage/source-records.*").handler(BodyHandler.create());
+    router.getWithRegex("/source-storage/source-records.*").handler(this::sourceStorage);
+
 
     Promise<Void> promise = Promise.promise();
     vertx.createHttpServer()

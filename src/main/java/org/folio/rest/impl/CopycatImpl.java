@@ -115,10 +115,12 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
                 .compose(x -> importer.end());
           });
         })
-        .onSuccess(record ->
-            asyncResultHandler.handle(
-                Future.succeededFuture(PostCopycatImportsResponse.respond204()))
-        )
+        .onSuccess(
+            instances -> {
+              log.info("Got instance identifiers: {}", String.join(", ", instances));
+              asyncResultHandler.handle(
+                  Future.succeededFuture(PostCopycatImportsResponse.respond204()));
+            })
         .onFailure(cause ->
             asyncResultHandler.handle(
                 Future.succeededFuture(

@@ -2,12 +2,16 @@ package org.folio.copycat;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,6 +33,8 @@ public class RecordImporter {
   static final String DEFAULT_JOB_PROFILE_ID =  "c8f98545-898c-4f48-a494-3ab6736a3243";
   private static final int WEBCLIENT_CONNECT_TIMEOUT = 10;
   private static final int WEBCLIENT_IDLE_TIMEOUT = 20;
+  private static final int SOURCE_STORAGE_POLL_WAIT = 300;
+  private static final int SOURCE_STORAGE_POLL_ITER = 10;
 
   private static Logger log = LogManager.getLogger(RecordImporter.class);
   private final WebClient client;
@@ -36,6 +42,9 @@ public class RecordImporter {
   private final String okapiUrl;
   private final String userId;
   private String jobId;
+  private Vertx vertx;
+  private int storagePollWait;
+  private int storagePollIter;
 
   /**
    * Constructor for importing (can NOT be shared between users/tenants).
@@ -51,7 +60,8 @@ public class RecordImporter {
       options.setConnectTimeout(WEBCLIENT_CONNECT_TIMEOUT);
       options.setIdleTimeout(WEBCLIENT_IDLE_TIMEOUT);
     }
-    client = WebClient.create(context.owner(), options);
+    vertx = context.owner();
+    client = WebClient.create(vertx, options);
     this.okapiUrl = okapiHeaders.get(XOkapiHeaders.URL);
     if (this.okapiUrl == null) {
       throw new IllegalArgumentException("Missing " + XOkapiHeaders.URL + " header");
@@ -61,6 +71,8 @@ public class RecordImporter {
       throw new IllegalArgumentException("Missing " + XOkapiHeaders.USER_ID + " header");
     }
     this.okapiHeaders = okapiHeaders;
+    storagePollWait = SOURCE_STORAGE_POLL_WAIT;
+    storagePollIter = SOURCE_STORAGE_POLL_ITER;
   }
 
   /**
@@ -71,6 +83,14 @@ public class RecordImporter {
 
   public RecordImporter(Map<String, String> okapiHeaders, Context context) {
     this(okapiHeaders, context, null);
+  }
+
+  void setStoragePollWait(int ms) {
+    storagePollWait = ms;
+  }
+
+  void setStoragePollIter(int cnt) {
+    storagePollIter = cnt;
   }
 
   Future<String> createJob(String jobProfileId) {
@@ -166,7 +186,6 @@ public class RecordImporter {
     });
   }
 
-
   /**
    * post record for importing.
    *
@@ -177,12 +196,72 @@ public class RecordImporter {
     return post(record, false);
   }
 
+  Future<List<String>> getSourceRecords1() {
+    String abs = okapiUrl + "/source-storage/source-records?snapshotId=" + jobId;
+    HttpRequest<Buffer> request = client.getAbs(abs);
+    request.headers().addAll(okapiHeaders);
+    request.putHeader("Accept", "*/*");
+    request.putHeader("Content-Type", "application/json");
+    return request.send().compose(result -> {
+      if (result.statusCode() != 200) {
+        log.error("{} returned {}", abs, result.statusCode());
+        return Future.failedFuture(abs  + " returned " + result.statusCode()
+            + " (expected 200):" + result.bodyAsString());
+      }
+      log.info("Got 200 OK {} {}", abs, result.bodyAsString());
+      try {
+        JsonObject obj = result.bodyAsJsonObject();
+        JsonArray sourceRecords = obj.getJsonArray("sourceRecords");
+        if (sourceRecords == null) {
+          return Future.failedFuture("missing \"sourceRecords\" in response");
+        }
+        List<String> instances = new LinkedList<>();
+        for (int i = 0; i < sourceRecords.size(); i++) {
+          String instanceId = null;
+          JsonObject sourceRecord = sourceRecords.getJsonObject(i);
+          if (sourceRecord != null) {
+            JsonObject externalIdsHolder = sourceRecord.getJsonObject("externalIdsHolder");
+            if (externalIdsHolder != null) {
+              instanceId = externalIdsHolder.getString("instanceId");
+            }
+          }
+          if (instanceId == null) {
+            return Future.succeededFuture(null);
+          }
+          instances.add(instanceId);
+        }
+        return Future.succeededFuture(instances);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+        return Future.failedFuture(e);
+      }
+    });
+  }
+
+  Future<List<String>> getSourceRecords(int it) {
+    if (it > storagePollIter) {
+      return Future.failedFuture("Did not get any instances after retries");
+    }
+    log.info("get source records, iteration {}", it);
+    return getSourceRecords1().compose(res -> {
+      if (res == null) {  // didn't get the instance identifiers
+        Promise<List<String>> promise = Promise.promise();
+        vertx.setTimer(storagePollWait, x -> getSourceRecords(it + 1)
+            .onComplete(y -> promise.handle(y)));
+        return promise.future();
+      }
+      return Future.succeededFuture(res);
+    });
+  }
+
   /**
    * end importing.
    *
    * @return async result.
    */
-  public Future<Void> end() {
-    return post(null, true).onComplete(x -> client.close());
+  public Future<List<String>> end() {
+    return post(null, true)
+        .compose(x -> getSourceRecords(1))
+        .onComplete(x -> client.close());
   }
 }
