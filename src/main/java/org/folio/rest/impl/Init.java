@@ -11,7 +11,7 @@ import org.folio.rest.resource.interfaces.InitAPI;
 import org.yaz4j.Connection;
 
 public class Init implements InitAPI {
-  private static Logger log = LogManager.getLogger(Init.class);
+  private static final Logger log = LogManager.getLogger(Init.class);
 
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {

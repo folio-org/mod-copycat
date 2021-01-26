@@ -355,7 +355,7 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
     // rapid retry and try only 2 times before giving up
     importer.setStoragePollWait(1);
-    importer.setStoragePollIter(2);
+    importer.setStoragePollIterations(2);
     mock.setIterations(3);
 
     String jobProfileId = UUID.randomUUID().toString();

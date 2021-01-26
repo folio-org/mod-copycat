@@ -43,7 +43,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
   }
 
   private static final String PROFILE_TABLE = "profile";
-  private static Logger log = LogManager.getLogger(CopycatImpl.class);
+  private static final Logger log = LogManager.getLogger(CopycatImpl.class);
 
   static Future<JsonObject> getLocalRecord(Record record) {
 

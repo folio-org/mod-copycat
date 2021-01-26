@@ -34,17 +34,17 @@ public class RecordImporter {
   private static final int WEBCLIENT_CONNECT_TIMEOUT = 10;
   private static final int WEBCLIENT_IDLE_TIMEOUT = 20;
   private static final int SOURCE_STORAGE_POLL_WAIT = 300;
-  private static final int SOURCE_STORAGE_POLL_ITER = 10;
+  private static final int SOURCE_STORAGE_POLL_ITERATIONS = 10;
 
-  private static Logger log = LogManager.getLogger(RecordImporter.class);
+  private static final Logger log = LogManager.getLogger(RecordImporter.class);
   private final WebClient client;
   private final Map<String, String> okapiHeaders;
   private final String okapiUrl;
   private final String userId;
   private String jobId;
-  private Vertx vertx;
+  private final Vertx vertx;
   private int storagePollWait;
-  private int storagePollIter;
+  private int storagePollIterations;
 
   /**
    * Constructor for importing (can NOT be shared between users/tenants).
@@ -72,7 +72,7 @@ public class RecordImporter {
     }
     this.okapiHeaders = okapiHeaders;
     storagePollWait = SOURCE_STORAGE_POLL_WAIT;
-    storagePollIter = SOURCE_STORAGE_POLL_ITER;
+    storagePollIterations = SOURCE_STORAGE_POLL_ITERATIONS;
   }
 
   /**
@@ -89,8 +89,8 @@ public class RecordImporter {
     storagePollWait = ms;
   }
 
-  void setStoragePollIter(int cnt) {
-    storagePollIter = cnt;
+  void setStoragePollIterations(int cnt) {
+    storagePollIterations = cnt;
   }
 
   Future<String> createJob(String jobProfileId) {
@@ -246,13 +246,13 @@ public class RecordImporter {
         return Future.succeededFuture(res);
       }
       // didn't get the instance identifiers
-      if (it >= storagePollIter) {
+      if (it >= storagePollIterations) {
         return Future.failedFuture("Did not get any instances after "
-            + storagePollIter + " retries");
+            + storagePollIterations + " retries");
       }
       Promise<List<String>> promise = Promise.promise();
       vertx.setTimer(storagePollWait, x -> getSourceRecords(it + 1)
-          .onComplete(y -> promise.handle(y)));
+          .onComplete(promise));
       return promise.future();
     });
   }
