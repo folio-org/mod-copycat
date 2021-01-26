@@ -23,8 +23,11 @@ traits:
         application/json:
           type: copyCatImports
       responses:
-        204:
+        200:
           description: Imported OK
+          body:
+            application/json:
+              type: copyCatImports
         400:
           description: Import error
           body:
