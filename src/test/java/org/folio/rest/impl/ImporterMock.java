@@ -21,9 +21,10 @@ public class ImporterMock {
   private static final Logger log = LogManager.getLogger(CopycatImpl.class);
   private int createStatus = 201;
   private int importStatus = 204;
-  private int sourceStorageStatus = 200;
+  private int sourceStorageRecordStorageStatus = 200;
   private int putProfileStatus = 200;
   private String instanceId = "1234";
+  private String sourceRecordStorageResponse;
   private int waitMs = 1;
   private int iteration;
   private String lastJobProfileId;
@@ -42,8 +43,12 @@ public class ImporterMock {
     return instanceId;
   }
 
-  public void setSourceStorageStatus(int code) {
-    sourceStorageStatus = code;
+  public void setSourceRecordStorageStatus(int code) {
+    sourceStorageRecordStorageStatus = code;
+  }
+
+  public void setSourceStorageResponse(String response) {
+    this.sourceRecordStorageResponse = response;
   }
 
   public void setCreateStatus(int code) {
@@ -159,12 +164,18 @@ public class ImporterMock {
       ctx.response().end("Job not found " + id);
       return;
     }
-    ctx.response().setStatusCode(sourceStorageStatus);
-    if (sourceStorageStatus != 200) {
-      ctx.end("Error " + sourceStorageStatus);
+    ctx.response().setStatusCode(sourceStorageRecordStorageStatus);
+    if (sourceStorageRecordStorageStatus != 200) {
+      ctx.end("Error " + sourceStorageRecordStorageStatus);
+      sourceStorageRecordStorageStatus = 200;
       return;
     }
-
+    ctx.response().putHeader("Application", "application/json");
+    if (sourceRecordStorageResponse != null) {
+      ctx.response().end(sourceRecordStorageResponse);
+      sourceRecordStorageResponse = null;
+      return;
+    }
     JsonObject sourceRecord = new JsonObject()
         .put("recordType", "MARC")
         .put("additionalInfo",
@@ -176,7 +187,6 @@ public class ImporterMock {
       --iteration;
     }
 
-    ctx.response().putHeader("Application", "application/json");
     JsonObject response = new JsonObject()
         .put("sourceRecords",
             new JsonArray()

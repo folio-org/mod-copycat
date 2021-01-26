@@ -213,17 +213,15 @@ public class RecordImporter {
         JsonObject obj = result.bodyAsJsonObject();
         JsonArray sourceRecords = obj.getJsonArray("sourceRecords");
         if (sourceRecords == null) {
-          return Future.failedFuture("missing \"sourceRecords\" in response");
+          return Future.failedFuture("Missing \"sourceRecords\" in response");
         }
         List<String> instances = new LinkedList<>();
         for (int i = 0; i < sourceRecords.size(); i++) {
           String instanceId = null;
           JsonObject sourceRecord = sourceRecords.getJsonObject(i);
-          if (sourceRecord != null) {
-            JsonObject externalIdsHolder = sourceRecord.getJsonObject("externalIdsHolder");
-            if (externalIdsHolder != null) {
-              instanceId = externalIdsHolder.getString("instanceId");
-            }
+          JsonObject externalIdsHolder = sourceRecord.getJsonObject("externalIdsHolder");
+          if (externalIdsHolder != null) {
+            instanceId = externalIdsHolder.getString("instanceId");
           }
           if (instanceId == null) {
             return Future.succeededFuture(null);
@@ -240,7 +238,7 @@ public class RecordImporter {
 
   Future<List<String>> getSourceRecords(int it) {
     if (it > storagePollIter) {
-      return Future.failedFuture("Did not get any instances after retries");
+      return Future.failedFuture("Did not get any instances after " + storagePollIter + " retries");
     }
     log.info("get source records, iteration {}", it);
     return getSourceRecords1().compose(res -> {

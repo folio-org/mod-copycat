@@ -2,6 +2,7 @@ package org.folio.copycat;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxExtension;
@@ -239,7 +240,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testImporterIter3(Vertx vertx, VertxTestContext context) throws IOException {
+  void testImporterWithIterations(Vertx vertx, VertxTestContext context) throws IOException {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -247,9 +248,11 @@ public class RecordImporterTest {
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
-    importer.setStoragePollWait(1);
 
+    // rapid retry and the mock returns after 3 iterations (rather than immediately)
+    importer.setStoragePollWait(1);
     mock.setIterations(3);
+
     String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
     JsonObject marc = new JsonObject(file);
 
@@ -265,7 +268,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testImporterIter4(Vertx vertx, VertxTestContext context) throws IOException {
+  void testImporterRetryLimit(Vertx vertx, VertxTestContext context) throws IOException {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -273,10 +276,11 @@ public class RecordImporterTest {
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+    // rapid retry and try only 1 time before giving up
     importer.setStoragePollWait(1);
-    importer.setStoragePollIter(1);
+    importer.setStoragePollIter(2);
 
-    mock.setIterations(3);
+    mock.setIterations(2);
     String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
     JsonObject marc = new JsonObject(file);
 
@@ -285,7 +289,107 @@ public class RecordImporterTest {
         .compose(x -> importer.post(marc))
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
-      assertThat(cause.getMessage()).contains("Did not get any instances after retries");
+      assertThat(cause.getMessage()).contains("Did not get any instances after 2 retries");
+      context.completeNow();
+    }));
+  }
+
+  @Test
+  void testImporterBadStatusSourceStorage(Vertx vertx, VertxTestContext context) throws IOException {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+
+    mock.setSourceRecordStorageStatus(400);
+    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
+    JsonObject marc = new JsonObject(file);
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<List<String>> future = importer.begin(jobProfileId)
+        .compose(x -> importer.post(marc))
+        .compose(x -> importer.end());
+    future.onComplete(context.failing(cause -> {
+      assertThat(cause.getMessage()).contains("returned 400 (expected 200)");
+      context.completeNow();
+    }));
+  }
+
+  @Test
+  void testImporterSourceRecordStorageBadResponse(Vertx vertx, VertxTestContext context) throws IOException {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+
+    mock.setSourceStorageResponse("{");
+    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
+    JsonObject marc = new JsonObject(file);
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<List<String>> future = importer.begin(jobProfileId)
+        .compose(x -> importer.post(marc))
+        .compose(x -> importer.end());
+    future.onComplete(context.failing(cause -> {
+      assertThat(cause.getMessage()).contains("Failed to decode");
+      context.completeNow();
+    }));
+  }
+
+  @Test
+  void testImporterSourceRecordStorageMissingSourceRecordsProperty(Vertx vertx, VertxTestContext context) throws IOException {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+
+    mock.setSourceStorageResponse("{}");
+    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
+    JsonObject marc = new JsonObject(file);
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<List<String>> future = importer.begin(jobProfileId)
+        .compose(x -> importer.post(marc))
+        .compose(x -> importer.end());
+    future.onComplete(context.failing(cause -> {
+      assertThat(cause.getMessage()).isEqualTo("Missing \"sourceRecords\" in response");
+      context.completeNow();
+    }));
+  }
+
+  @Test
+  void testImporterSourceRecordStorageBadObjectInList(Vertx vertx, VertxTestContext context) throws IOException {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+
+    JsonObject obj = new JsonObject()
+        .put("sourceRecords",
+            new JsonArray().add(1) // Integer in array and not JsonObject
+        );
+    mock.setSourceStorageResponse(obj.encode());
+    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
+    JsonObject marc = new JsonObject(file);
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<List<String>> future = importer.begin(jobProfileId)
+        .compose(x -> importer.post(marc))
+        .compose(x -> importer.end());
+    future.onComplete(context.failing(cause -> {
+      assertThat(cause.getMessage()).contains("class java.lang.Integer cannot be cast to class io.vertx.core.json.JsonObject");
       context.completeNow();
     }));
   }
@@ -303,7 +407,7 @@ public class RecordImporterTest {
     options.setIdleTimeoutUnit(TimeUnit.MILLISECONDS);
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext(), options);
 
-    mock.setWaitMs(10);
+    mock.setWaitMs(1000);
     importer.begin(null).onComplete(context.failing(cause -> context.verify(() -> {
       mock.setWaitMs(1);
       assertThat(cause.getMessage()).contains("Connection was closed");
