@@ -30,7 +30,7 @@ import org.folio.okapi.common.XOkapiHeaders;
  */
 public class RecordImporter {
 
-  static final String DEFAULT_JOB_PROFILE_ID =  "c8f98545-898c-4f48-a494-3ab6736a3243";
+  static final String DEFAULT_JOB_PROFILE_ID = "c8f98545-898c-4f48-a494-3ab6736a3243";
   private static final int WEBCLIENT_CONNECT_TIMEOUT = 10;
   private static final int WEBCLIENT_IDLE_TIMEOUT = 20;
   private static final int SOURCE_STORAGE_POLL_WAIT = 300;
@@ -93,17 +93,14 @@ public class RecordImporter {
     storagePollIterations = cnt;
   }
 
-  Future<String> createJob(String jobProfileId) {
+  Future<String> createJob() {
     String abs = okapiUrl + "/change-manager/jobExecutions";
     HttpRequest<Buffer> request = client.postAbs(abs);
     request.headers().addAll(okapiHeaders);
     request.putHeader("Accept", "*/*");
     request.putHeader("Content-Type", "application/json");
     JsonObject jobProfileInfo = new JsonObject();
-    if (jobProfileId == null) {
-      jobProfileId = DEFAULT_JOB_PROFILE_ID;
-    }
-    jobProfileInfo.put("id", jobProfileId);
+    jobProfileInfo.put("id", DEFAULT_JOB_PROFILE_ID);
     jobProfileInfo.put("name", "Default job profile");
     jobProfileInfo.put("dataType", "MARC");
 
@@ -111,10 +108,11 @@ public class RecordImporter {
     initJob.put("userId", userId);
     initJob.put("sourceType", "ONLINE");
     initJob.put("jobProfileInfo", jobProfileInfo);
-    log.info("createJob with {}", initJob.encode());
+    log.info("POST {}: {}", abs, initJob.encodePrettily());
     return request.sendJsonObject(initJob).compose(result -> {
+      log.info("RES {}: {}", abs, result.bodyAsString());
       if (result.statusCode() != 201) {
-        log.error("{} returned {}", abs, result.statusCode());
+        log.error("POST {} returned {}", abs, result.statusCode());
         return Future.failedFuture(abs + " returned " + result.statusCode()
             + " (expected 201):" + result.bodyAsString());
       }
@@ -128,13 +126,13 @@ public class RecordImporter {
    * @return async result.
    */
   public Future<Void> begin(String jobProfileId) {
-    return createJob(jobProfileId).compose(id -> {
+    return createJob().compose(id -> {
       jobId = id;
-      return putJobProfile();
+      return putJobProfile(jobProfileId);
     });
   }
 
-  Future<Void> putJobProfile() {
+  Future<Void> putJobProfile(String jobProfileId) {
     String abs = okapiUrl + "/change-manager/jobExecutions/" + jobId + "/jobProfile";
     HttpRequest<Buffer> request = client.putAbs(abs);
     request.headers().addAll(okapiHeaders);
@@ -142,13 +140,15 @@ public class RecordImporter {
     request.putHeader("Content-Type", "application/json");
 
     JsonObject jobProfile = new JsonObject();
-    jobProfile.put("id", "d0ebb7b0-2f0f-11eb-adc1-0242ac120002");
-    jobProfile.put("name", "CLI Create MARC Bibs and Instances");
+    jobProfile.put("id", jobProfileId);
+    jobProfile.put("name", "OCLC - Default Update Instance");
     jobProfile.put("dataType", "MARC");
 
+    log.info("PUT {}: {}", abs, jobProfile.encodePrettily());
     return request.sendJsonObject(jobProfile).compose(result -> {
+      log.info("RES {}: {}", abs, result.bodyAsString());
       if (result.statusCode() != 200) {
-        log.error("{} returned {}", abs, result.statusCode());
+        log.error("PUT {} returned {}", abs, result.statusCode());
         return Future.failedFuture(abs  + " returned " + result.statusCode()
             + " (expected 200):" + result.bodyAsString());
       }
@@ -176,9 +176,11 @@ public class RecordImporter {
     JsonObject rawRecordsDto = new JsonObject();
     rawRecordsDto.put("recordsMetadata", recordsMetadata);
     rawRecordsDto.put("initialRecords", initialRecords);
+    log.info("POST {}: {}", abs, rawRecordsDto.encodePrettily());
     return request.sendJsonObject(rawRecordsDto).compose(result -> {
+      log.info("RES {}: {}", abs, result.bodyAsString());
       if (result.statusCode() != 204) {
-        log.error("{} returned {}", abs, result.statusCode());
+        log.error("POST {} returned {}", abs, result.statusCode());
         return Future.failedFuture(abs  + " returned " + result.statusCode()
             + " (expected 204):" + result.bodyAsString());
       }
@@ -203,12 +205,12 @@ public class RecordImporter {
     request.putHeader("Accept", "*/*");
     request.putHeader("Content-Type", "application/json");
     return request.send().compose(result -> {
+      log.info("RES {}: {}", abs, result.bodyAsString());
       if (result.statusCode() != 200) {
-        log.error("{} returned {}", abs, result.statusCode());
+        log.error("GET returned {}", abs, result.statusCode());
         return Future.failedFuture(abs  + " returned " + result.statusCode()
             + " (expected 200):" + result.bodyAsString());
       }
-      log.info("Got 200 OK {} {}", abs, result.bodyAsString());
       try {
         JsonObject obj = result.bodyAsJsonObject();
         JsonArray sourceRecords = obj.getJsonArray("sourceRecords");
@@ -227,9 +229,6 @@ public class RecordImporter {
             return Future.succeededFuture(null);
           }
           instances.add(instanceId);
-        }
-        if (instances.isEmpty()) {
-          return Future.succeededFuture(null);
         }
         return Future.succeededFuture(instances);
       } catch (Exception e) {

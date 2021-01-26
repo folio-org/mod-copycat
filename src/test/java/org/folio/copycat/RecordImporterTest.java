@@ -55,33 +55,12 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    Future<List<String>> future = importer.begin(null)
+    Future<List<String>> future = importer.begin("1234")
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
       assertThat(x).containsExactly(mock.getInstanceId());
-      assertThat(mock.getLastJobProfileJobId()).isEqualTo(RecordImporter.DEFAULT_JOB_PROFILE_ID);
-      context.completeNow();
-    }));
-  }
-
-  @Test
-  void testOKJobProfileId(Vertx vertx, VertxTestContext context) {
-    Map<String, String> headers = new HashMap<>();
-
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
-    headers.put(XOkapiHeaders.TENANT, "testlib");
-    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
-
-    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
-
-    String jobProfileId = UUID.randomUUID().toString();
-    Future<List<String>> future = importer.begin(jobProfileId)
-        .compose(x -> importer.post(marc1))
-        .compose(x -> importer.end());
-    future.onComplete(context.succeeding(x -> {
-      assertThat(x).containsExactly(mock.getInstanceId());
-      assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
+      assertThat(mock.getLastJobProfileJobId()).isEqualTo("1234");
       context.completeNow();
     }));
   }
@@ -128,7 +107,7 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    importer.putJobProfile().onComplete(context.failing(cause -> context.verify(() -> {
+    importer.putJobProfile("id").onComplete(context.failing(cause -> context.verify(() -> {
       assertThat(cause.getMessage()).contains("Connection refused");
       context.completeNow();
     })));
@@ -279,7 +258,7 @@ public class RecordImporterTest {
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
-      assertThat(x).containsExactly(mock.getInstanceId());
+      assertThat(x).isEmpty();
       assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
       context.completeNow();
     }));

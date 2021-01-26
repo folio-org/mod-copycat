@@ -349,6 +349,8 @@ class CopycatTest {
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(200);
+        CopyCatImports importsResponse = (CopyCatImports) res.getEntity();
+        assertThat(importsResponse.getInternalIdentifier()).isEqualTo("1234");
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);

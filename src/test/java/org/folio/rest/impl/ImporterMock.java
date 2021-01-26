@@ -1,8 +1,8 @@
 package org.folio.rest.impl;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -23,7 +23,7 @@ public class ImporterMock {
   private int importStatus = 204;
   private int sourceStorageRecordStorageStatus = 200;
   private int putProfileStatus = 200;
-  private String instanceId = "1234";
+  private final String instanceId = "1234";
   private String sourceRecordStorageResponse;
   private int waitMs = 1;
   private int iteration;
@@ -87,7 +87,6 @@ public class ImporterMock {
           .put("jobProfileInfo", requestBody.getJsonObject("jobProfileInfo"))
           .put("userId", uuid.toString()));
 
-      lastJobProfileId = requestBody.getJsonObject("jobProfileInfo").getString("id");
       responseBody.put("jobExecutions", jobExecutions);
       jobs.add(id);
       vertx.setTimer(waitMs, res -> {
@@ -103,7 +102,7 @@ public class ImporterMock {
     }
   }
 
-  public void putProfile(RoutingContext ctx) {
+  public void putOrDeleteProfile(RoutingContext ctx) {
     JsonObject requestBody;
     try {
       String path = ctx.request().path();
@@ -114,12 +113,19 @@ public class ImporterMock {
         ctx.response().end("Job not found " + id);
         return;
       }
+      if (HttpMethod.DELETE.equals(ctx.request().method())) {
+        jobs.remove(id);
+        ctx.response().setStatusCode(204);
+        ctx.response().end();
+        return;
+      }
       requestBody = ctx.getBodyAsJson();
       if (!requestBody.containsKey("id")) {
         ctx.response().setStatusCode(400);
         ctx.response().end("Missing id");
         return;
       }
+      lastJobProfileId = requestBody.getString("id");
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       ctx.response().setStatusCode(500);
@@ -201,28 +207,22 @@ public class ImporterMock {
     router.postWithRegex("/change-manager/jobExecutions/.*").handler(this::importJob);
 
     router.putWithRegex("/change-manager/jobExecutions/.*").handler(BodyHandler.create());
-    router.putWithRegex("/change-manager/jobExecutions/.*").handler(this::putProfile);
+    router.putWithRegex("/change-manager/jobExecutions/.*").handler(this::putOrDeleteProfile);
+    router.deleteWithRegex("/change-manager/jobExecutions/.*").handler(this::putOrDeleteProfile);
 
     router.getWithRegex("/source-storage/source-records.*").handler(BodyHandler.create());
     router.getWithRegex("/source-storage/source-records.*").handler(this::sourceStorage);
 
-
-    Promise<Void> promise = Promise.promise();
-    vertx.createHttpServer()
+    return vertx.createHttpServer()
         .requestHandler(router)
-        .listen(port, x -> {
-              if (x.succeeded()) {
-                server = x.result();
-              }
-              promise.handle(x.mapEmpty());
-            });
-    return promise.future();
+        .listen(port)
+        .onSuccess(x -> server = x).mapEmpty();
   }
 
   public Future<Void> stop() {
-    if (server != null) {
-      server.close();
+    if (server == null) {
+      return Future.succeededFuture();
     }
-    return Future.succeededFuture();
+    return server.close();
   }
 }

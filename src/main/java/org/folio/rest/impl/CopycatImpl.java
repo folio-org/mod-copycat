@@ -30,6 +30,8 @@ import org.marc4j.MarcJsonWriter;
 import org.marc4j.MarcStreamReader;
 
 public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
+  static final String JOB_PROFILE_CREATE_INSTANCE = "d0ebb7b0-2f0f-11eb-adc1-0242ac120002";
+  static final String JOB_PROFILE_UPDATE_INSTANCE = "91f9b8d6-d80e-4727-9783-73fb53e3c786";
 
   static Errors createErrors(String message) {
     List<Error> errors = new LinkedList<>();
@@ -99,7 +101,9 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               :  RecordRetriever.getRecordAsJsonObject(targetProfile,
               entity.getExternalIdentifier(), vertxContext);
           return fut.compose(marc -> {
+            String jobProfile = JOB_PROFILE_CREATE_INSTANCE;
             if (entity.getInternalIdentifier() != null) {
+              jobProfile = JOB_PROFILE_UPDATE_INSTANCE;
               String pattern = targetProfile.getInternalIdEmbedPath();
               if (pattern == null) {
                 return Future.failedFuture("Missing internalIdEmbedPath in target profile");
@@ -110,15 +114,17 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
             }
             log.info("Importing {}", marc::encodePrettily);
             RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
-            return importer.begin(targetProfile.getJobProfileId())
+            return importer.begin(jobProfile)
                 .compose(x -> importer.post(marc))
                 .compose(x -> importer.end());
           });
         })
         .onSuccess(
             instances -> {
-              log.info("Got instance identifiers: {}", String.join(", ", instances));
-              entity.setInternalIdentifier(instances.get(0));
+              if (!instances.isEmpty()) {
+                log.info("Got instance identifiers: {}", String.join(", ", instances));
+                entity.setInternalIdentifier(instances.get(0));
+              }
               asyncResultHandler.handle(
                   Future.succeededFuture(
                       PostCopycatImportsResponse.respond200WithApplicationJson(entity)));
