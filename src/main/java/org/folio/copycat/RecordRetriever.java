@@ -114,9 +114,9 @@ public final class RecordRetriever {
   public static Future<JsonObject> getRecordAsJsonObject(CopyCatProfile profile,
                                                          String externalId, Context vertxContext) {
     // execute in separate thread, because getRecordAsJsonObject is a blocking function.
-    return Future.future(promise0 -> vertxContext.owner().<JsonObject>executeBlocking(promise1 ->
+    return Future.future(promise0 -> vertxContext.owner().executeBlocking(promise1 ->
         getRecordAsJsonObject(profile, externalId)
-            .onComplete(record -> promise1.handle(record)), result -> promise0.handle(result)));
+            .onComplete(promise1), promise0));
   }
 
 }

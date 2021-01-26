@@ -30,6 +30,8 @@ import org.marc4j.MarcJsonWriter;
 import org.marc4j.MarcStreamReader;
 
 public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
+  static final String JOB_PROFILE_CREATE_INSTANCE = "d0ebb7b0-2f0f-11eb-adc1-0242ac120002";
+  static final String JOB_PROFILE_UPDATE_INSTANCE = "91f9b8d6-d80e-4727-9783-73fb53e3c786";
 
   static Errors createErrors(String message) {
     List<Error> errors = new LinkedList<>();
@@ -43,7 +45,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
   }
 
   private static final String PROFILE_TABLE = "profile";
-  private static Logger log = LogManager.getLogger(CopycatImpl.class);
+  private static final Logger log = LogManager.getLogger(CopycatImpl.class);
 
   static Future<JsonObject> getLocalRecord(Record record) {
 
@@ -51,7 +53,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
       final JsonObject jsonObject = new JsonObject(record.getAdditionalProperties());
       final JsonObject json = jsonObject.getJsonObject("json");
       if (json != null) {
-        log.info("local JSON record {}", () -> json.encodePrettily());
+        log.info("local JSON record {}", json::encodePrettily);
         return Future.succeededFuture(json);
       }
       final String base64String = jsonObject.getString("marc");
@@ -66,7 +68,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
         MarcJsonWriter writer = new MarcJsonWriter(out, MarcJsonWriter.MARC_IN_JSON);
         writer.write(reader.next());
         JsonObject json2 = new JsonObject(out.toString());
-        log.info("converted MARC record {}", () -> json2.encodePrettily());
+        log.info("converted MARC record {}", json2::encodePrettily);
         writer.close();
         return Future.succeededFuture(json2);
       }
@@ -99,23 +101,34 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               :  RecordRetriever.getRecordAsJsonObject(targetProfile,
               entity.getExternalIdentifier(), vertxContext);
           return fut.compose(marc -> {
+            String jobProfile = JOB_PROFILE_CREATE_INSTANCE;
             if (entity.getInternalIdentifier() != null) {
+              jobProfile = JOB_PROFILE_UPDATE_INSTANCE;
               String pattern = targetProfile.getInternalIdEmbedPath();
               if (pattern == null) {
                 return Future.failedFuture("Missing internalIdEmbedPath in target profile");
               }
+              log.info("Embedding identifier {} in MARC {}",
+                  entity::getInternalIdentifier, () -> pattern);
               JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
             }
+            log.info("Importing {}", marc::encodePrettily);
             RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
-            return importer.begin(targetProfile.getJobProfileId())
+            return importer.begin(jobProfile)
                 .compose(x -> importer.post(marc))
                 .compose(x -> importer.end());
           });
         })
-        .onSuccess(record ->
-            asyncResultHandler.handle(
-                Future.succeededFuture(PostCopycatImportsResponse.respond204()))
-        )
+        .onSuccess(
+            instances -> {
+              if (!instances.isEmpty()) {
+                log.info("Got instance identifiers: {}", String.join(", ", instances));
+                entity.setInternalIdentifier(instances.get(0));
+              }
+              asyncResultHandler.handle(
+                  Future.succeededFuture(
+                      PostCopycatImportsResponse.respond200WithApplicationJson(entity)));
+            })
         .onFailure(cause ->
             asyncResultHandler.handle(
                 Future.succeededFuture(

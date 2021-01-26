@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "tags",
-  "description": "copycat import request",
+  "description": "copycat import request/response",
   "type": "object",
   "properties": {
     "externalIdentifier": {

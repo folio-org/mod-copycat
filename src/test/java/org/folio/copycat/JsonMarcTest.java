@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class JsonMarcTest {
-  private static Logger log = LogManager.getLogger(JsonMarcTest.class);
+  private static final Logger log = LogManager.getLogger(JsonMarcTest.class);
 
   @Test
   void constructor() {
