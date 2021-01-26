@@ -4,6 +4,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -333,6 +334,10 @@ class CopycatTest {
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
+
+    // make mock return no source records
+    JsonObject obj = new JsonObject().put("sourceRecords", new JsonArray());
+    mock.setSourceStorageResponse(obj.encode());
 
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
