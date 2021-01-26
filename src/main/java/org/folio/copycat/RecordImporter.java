@@ -228,6 +228,9 @@ public class RecordImporter {
           }
           instances.add(instanceId);
         }
+        if (instances.isEmpty()) {
+          return Future.succeededFuture(null);
+        }
         return Future.succeededFuture(instances);
       } catch (Exception e) {
         log.error(e.getMessage(), e);

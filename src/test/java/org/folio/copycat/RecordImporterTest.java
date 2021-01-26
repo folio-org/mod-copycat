@@ -29,9 +29,12 @@ public class RecordImporterTest {
   private static final Logger log = LogManager.getLogger(JsonMarcTest.class);
   private static ImporterMock mock;
   private static final int port = 9231; // where mock is running
+  private static JsonObject marc1;
 
   @BeforeAll
-  static void beforeAll(Vertx vertx, VertxTestContext context) {
+  static void beforeAll(Vertx vertx, VertxTestContext context) throws IOException {
+    String file = new String(RecordImporterTest.class.getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
+    marc1 = new JsonObject(file);
     mock = new ImporterMock(vertx);
     mock.start(port).onComplete(context.succeeding(res -> context.completeNow()));
   }
@@ -43,7 +46,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testOK(Vertx vertx, VertxTestContext context) throws IOException {
+  void testOK(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -52,11 +55,8 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject marc = new JsonObject(file);
-
     Future<List<String>> future = importer.begin(null)
-        .compose(x -> importer.post(marc))
+        .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
       assertThat(x).containsExactly(mock.getInstanceId());
@@ -66,7 +66,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testOKJobProfileId(Vertx vertx, VertxTestContext context) throws IOException {
+  void testOKJobProfileId(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -75,12 +75,9 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject marc = new JsonObject(file);
-
     String jobProfileId = UUID.randomUUID().toString();
     Future<List<String>> future = importer.begin(jobProfileId)
-        .compose(x -> importer.post(marc))
+        .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
       assertThat(x).containsExactly(mock.getInstanceId());
@@ -92,7 +89,6 @@ public class RecordImporterTest {
   @Test
   void testBadUserId(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
-    int port = 9231; // where mock is running
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
     headers.put(XOkapiHeaders.TENANT, "testlib");
@@ -109,7 +105,6 @@ public class RecordImporterTest {
   @Test
   void testBadUrlBegin(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
-    int port = 9231; // where mock is running
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + (port + 1)); // nothing running
     headers.put(XOkapiHeaders.TENANT, "testlib");
@@ -126,7 +121,6 @@ public class RecordImporterTest {
   @Test
   void testBadUrlPutProfile(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
-    int port = 9231; // where mock is running
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + (port + 1)); // nothing running
     headers.put(XOkapiHeaders.TENANT, "testlib");
@@ -143,7 +137,6 @@ public class RecordImporterTest {
   @Test
   void testBadUrlPost(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
-    int port = 9231; // where mock is running
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + (port + 1)); // nothing running
     headers.put(XOkapiHeaders.TENANT, "testlib");
@@ -160,7 +153,6 @@ public class RecordImporterTest {
   @Test
   void testBadUrlEnd(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
-    int port = 9231; // where mock is running
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + (port + 1)); // nothing running
     headers.put(XOkapiHeaders.TENANT, "testlib");
@@ -177,7 +169,6 @@ public class RecordImporterTest {
   @Test
   void testBadStatusCreate(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
-    int port = 9231; // where mock is running
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
     headers.put(XOkapiHeaders.TENANT, "testlib");
@@ -194,7 +185,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testBadStatusImport(Vertx vertx, VertxTestContext context) throws IOException {
+  void testBadStatusImport(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -203,12 +194,9 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject marc = new JsonObject(file);
-
     mock.setImportStatus(201);
     Future<Void> future = importer.begin(null)
-        .compose(x -> importer.post(marc));
+        .compose(x -> importer.post(marc1));
     future.onComplete(context.failing(cause -> context.verify(() -> {
       mock.setImportStatus(204);
       assertThat(cause.getMessage()).contains("returned 201");
@@ -217,7 +205,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testBadStatusPutProfile(Vertx vertx, VertxTestContext context) throws IOException {
+  void testBadStatusPutProfile(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -226,12 +214,9 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject marc = new JsonObject(file);
-
     mock.setPutProfileStatus(201);
     Future<Void> future = importer.begin(null)
-        .compose(x -> importer.post(marc));
+        .compose(x -> importer.post(marc1));
     future.onComplete(context.failing(cause -> context.verify(() -> {
       mock.setPutProfileStatus(200);
       assertThat(cause.getMessage()).contains("returned 201");
@@ -240,7 +225,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testImporterWithMissingInstanceId(Vertx vertx, VertxTestContext context) throws IOException {
+  void testImporterWithMissingInstanceId(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -260,12 +245,9 @@ public class RecordImporterTest {
         );
     mock.setSourceStorageResponse(obj.encode());
 
-    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject marc = new JsonObject(file);
-
     String jobProfileId = UUID.randomUUID().toString();
     Future<List<String>> future = importer.begin(jobProfileId)
-        .compose(x -> importer.post(marc))
+        .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
       assertThat(x).containsExactly(mock.getInstanceId());
@@ -275,7 +257,70 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testImporterWithIterations(Vertx vertx, VertxTestContext context) throws IOException {
+  void testImporterWithEmptySourceRecords(Vertx vertx, VertxTestContext context) {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+    // rapid retry
+    importer.setStoragePollWait(1);
+
+    JsonObject obj = new JsonObject()
+        .put("sourceRecords",
+            new JsonArray()
+        );
+    mock.setSourceStorageResponse(obj.encode());
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<List<String>> future = importer.begin(jobProfileId)
+        .compose(x -> importer.post(marc1))
+        .compose(x -> importer.end());
+    future.onComplete(context.succeeding(x -> {
+      assertThat(x).containsExactly(mock.getInstanceId());
+      assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
+      context.completeNow();
+    }));
+  }
+
+  @Test
+  void testImporterWithTwoSourceRecords(Vertx vertx, VertxTestContext context) {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+
+    JsonObject obj = new JsonObject()
+        .put("sourceRecords",
+            new JsonArray().add(
+                new JsonObject().put("externalIdsHolder",
+                    new JsonObject().put("instanceId", "id1")
+                ))
+            .add(
+                new JsonObject().put("externalIdsHolder",
+                    new JsonObject().put("instanceId", "id2")
+                ))
+            );
+    mock.setSourceStorageResponse(obj.encode());
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<List<String>> future = importer.begin(jobProfileId)
+        .compose(x -> importer.post(marc1))
+        .compose(x -> importer.end());
+    future.onComplete(context.succeeding(x -> {
+      assertThat(x).containsExactly("id1", "id2");
+      assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
+      context.completeNow();
+    }));
+  }
+
+  @Test
+  void testImporterWithIterations(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -288,12 +333,9 @@ public class RecordImporterTest {
     importer.setStoragePollWait(1);
     mock.setIterations(3);
 
-    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject marc = new JsonObject(file);
-
     String jobProfileId = UUID.randomUUID().toString();
     Future<List<String>> future = importer.begin(jobProfileId)
-        .compose(x -> importer.post(marc))
+        .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
       assertThat(x).containsExactly(mock.getInstanceId());
@@ -303,7 +345,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testImporterRetryLimit(Vertx vertx, VertxTestContext context) throws IOException {
+  void testImporterRetryLimit(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -314,14 +356,11 @@ public class RecordImporterTest {
     // rapid retry and try only 2 times before giving up
     importer.setStoragePollWait(1);
     importer.setStoragePollIter(2);
-
     mock.setIterations(3);
-    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject marc = new JsonObject(file);
 
     String jobProfileId = UUID.randomUUID().toString();
     Future<List<String>> future = importer.begin(jobProfileId)
-        .compose(x -> importer.post(marc))
+        .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
       assertThat(cause.getMessage()).contains("Did not get any instances after 2 retries");
@@ -330,7 +369,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testImporterBadStatusSourceStorage(Vertx vertx, VertxTestContext context) throws IOException {
+  void testImporterBadStatusSourceStorage(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -340,12 +379,10 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
     mock.setSourceRecordStorageStatus(400);
-    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject marc = new JsonObject(file);
 
     String jobProfileId = UUID.randomUUID().toString();
     Future<List<String>> future = importer.begin(jobProfileId)
-        .compose(x -> importer.post(marc))
+        .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
       assertThat(cause.getMessage()).contains("returned 400 (expected 200)");
@@ -354,7 +391,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testImporterSourceRecordStorageBadResponse(Vertx vertx, VertxTestContext context) throws IOException {
+  void testImporterSourceRecordStorageBadResponse(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -364,12 +401,10 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
     mock.setSourceStorageResponse("{");
-    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject marc = new JsonObject(file);
 
     String jobProfileId = UUID.randomUUID().toString();
     Future<List<String>> future = importer.begin(jobProfileId)
-        .compose(x -> importer.post(marc))
+        .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
       assertThat(cause.getMessage()).contains("Failed to decode");
@@ -378,7 +413,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testImporterSourceRecordStorageMissingSourceRecordsProperty(Vertx vertx, VertxTestContext context) throws IOException {
+  void testImporterSourceRecordStorageMissingSourceRecordsProperty(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -388,12 +423,10 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
     mock.setSourceStorageResponse("{}");
-    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject marc = new JsonObject(file);
 
     String jobProfileId = UUID.randomUUID().toString();
     Future<List<String>> future = importer.begin(jobProfileId)
-        .compose(x -> importer.post(marc))
+        .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
       assertThat(cause.getMessage()).isEqualTo("Missing \"sourceRecords\" in response");
@@ -402,7 +435,7 @@ public class RecordImporterTest {
   }
 
   @Test
-  void testImporterSourceRecordStorageBadObjectInList(Vertx vertx, VertxTestContext context) throws IOException {
+  void testImporterSourceRecordStorageBadObjectInList(Vertx vertx, VertxTestContext context) {
     Map<String, String> headers = new HashMap<>();
 
     headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
@@ -416,12 +449,10 @@ public class RecordImporterTest {
             new JsonArray().add(1) // Integer in array and not JsonObject
         );
     mock.setSourceStorageResponse(obj.encode());
-    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject marc = new JsonObject(file);
 
     String jobProfileId = UUID.randomUUID().toString();
     Future<List<String>> future = importer.begin(jobProfileId)
-        .compose(x -> importer.post(marc))
+        .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
       assertThat(cause.getMessage()).contains("class java.lang.Integer cannot be cast to class io.vertx.core.json.JsonObject");
