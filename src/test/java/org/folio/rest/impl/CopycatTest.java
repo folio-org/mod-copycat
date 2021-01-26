@@ -154,7 +154,9 @@ class CopycatTest {
           .withProfileId(targetProfileId)
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
-        assertThat(res.getStatus()).isEqualTo(204);
+        assertThat(res.getStatus()).isEqualTo(200);
+        CopyCatImports importResposne = (CopyCatImports) res.getEntity();
+        assertThat(importResposne.getInternalIdentifier()).isEqualTo(mock.getInstanceId());
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
@@ -346,7 +348,7 @@ class CopycatTest {
           .withInternalIdentifier("1234")
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
-        assertThat(res.getStatus()).isEqualTo(204);
+        assertThat(res.getStatus()).isEqualTo(200);
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
@@ -464,7 +466,7 @@ class CopycatTest {
           .withProfileId(targetProfileId)
           .withRecord(record);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
-        assertThat(res.getStatus()).isEqualTo(204);
+        assertThat(res.getStatus()).isEqualTo(200);
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
@@ -529,7 +531,7 @@ class CopycatTest {
           .withProfileId(targetProfileId)
           .withRecord(record);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
-        assertThat(res.getStatus()).isEqualTo(204);
+        assertThat(res.getStatus()).isEqualTo(200);
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);

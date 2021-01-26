@@ -217,12 +217,12 @@ public class RecordImporter {
         }
         List<String> instances = new LinkedList<>();
         for (int i = 0; i < sourceRecords.size(); i++) {
-          String instanceId = null;
           JsonObject sourceRecord = sourceRecords.getJsonObject(i);
           JsonObject externalIdsHolder = sourceRecord.getJsonObject("externalIdsHolder");
-          if (externalIdsHolder != null) {
-            instanceId = externalIdsHolder.getString("instanceId");
+          if (externalIdsHolder == null) {
+            return Future.succeededFuture(null);
           }
+          String instanceId = externalIdsHolder.getString("instanceId");
           if (instanceId == null) {
             return Future.succeededFuture(null);
           }
@@ -237,18 +237,20 @@ public class RecordImporter {
   }
 
   Future<List<String>> getSourceRecords(int it) {
-    if (it > storagePollIter) {
-      return Future.failedFuture("Did not get any instances after " + storagePollIter + " retries");
-    }
     log.info("get source records, iteration {}", it);
     return getSourceRecords1().compose(res -> {
-      if (res == null) {  // didn't get the instance identifiers
-        Promise<List<String>> promise = Promise.promise();
-        vertx.setTimer(storagePollWait, x -> getSourceRecords(it + 1)
-            .onComplete(y -> promise.handle(y)));
-        return promise.future();
+      if (res !=  null) {
+        return Future.succeededFuture(res);
       }
-      return Future.succeededFuture(res);
+      // didn't get the instance identifiers
+      if (it >= storagePollIter) {
+        return Future.failedFuture("Did not get any instances after "
+            + storagePollIter + " retries");
+      }
+      Promise<List<String>> promise = Promise.promise();
+      vertx.setTimer(storagePollWait, x -> getSourceRecords(it + 1)
+          .onComplete(y -> promise.handle(y)));
+      return promise.future();
     });
   }
 

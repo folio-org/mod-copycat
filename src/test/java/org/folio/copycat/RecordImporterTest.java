@@ -276,11 +276,11 @@ public class RecordImporterTest {
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
-    // rapid retry and try only 1 time before giving up
+    // rapid retry and try only 2 times before giving up
     importer.setStoragePollWait(1);
     importer.setStoragePollIter(2);
 
-    mock.setIterations(2);
+    mock.setIterations(3);
     String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
     JsonObject marc = new JsonObject(file);
 
