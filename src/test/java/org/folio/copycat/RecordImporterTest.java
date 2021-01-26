@@ -240,6 +240,41 @@ public class RecordImporterTest {
   }
 
   @Test
+  void testImporterWithMissingInstanceId(Vertx vertx, VertxTestContext context) throws IOException {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+    // rapid retry
+    importer.setStoragePollWait(1);
+
+    JsonObject obj = new JsonObject()
+        .put("sourceRecords",
+            new JsonArray().add(
+                new JsonObject().put("externalIdsHolder",
+                    new JsonObject().put("other", "val"))
+            )
+        );
+    mock.setSourceStorageResponse(obj.encode());
+
+    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
+    JsonObject marc = new JsonObject(file);
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<List<String>> future = importer.begin(jobProfileId)
+        .compose(x -> importer.post(marc))
+        .compose(x -> importer.end());
+    future.onComplete(context.succeeding(x -> {
+      assertThat(x).containsExactly(mock.getInstanceId());
+      assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
+      context.completeNow();
+    }));
+  }
+
+  @Test
   void testImporterWithIterations(Vertx vertx, VertxTestContext context) throws IOException {
     Map<String, String> headers = new HashMap<>();
 
