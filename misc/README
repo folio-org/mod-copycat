@@ -1,0 +1,3 @@
+Completely random stuff that is used in development
+
+Does not go into test and src, because this is not managed by Maven.
