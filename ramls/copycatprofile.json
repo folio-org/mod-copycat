@@ -26,7 +26,7 @@
     },
     "internalIdEmbedPath": {
        "type": "string",
-       "description": "Specifies where the external identifier is to be embedded in the MARC record, e.g. '999__$f' to place it in field 999, indicator double space (absent) and subfield f"
+       "description": "Specifies where the internalIdentifier is to be embedded in the MARC record, e.g. '999__$i' to place it in field 999, indicator double space (absent) and subfield i; this field only has effect when internalIdentifier is present"
     },
     "jobProfileId": {
        "type": "string",
