@@ -100,7 +100,9 @@ public final class RecordRetriever {
   }
 
   static Future<JsonObject> getRecordAsJsonObject(CopyCatProfile profile, String externalId) {
-    return getRecordAsJsonObject(profile, externalId, "json")
+    // for YAZ, specifying marc8 here really means that it will use either UTF-8 or MARC-8
+    // depending on the leader of the MARC record.
+    return getRecordAsJsonObject(profile, externalId, "json;charset=marc8")
         .map(buf -> new JsonObject(new String(buf)));
   }
 
