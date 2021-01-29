@@ -19,6 +19,7 @@ import org.folio.rest.jaxrs.model.CopyCatImports;
 import org.folio.rest.jaxrs.model.CopyCatProfile;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Record;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.resource.Copycat;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,12 +50,12 @@ class CopycatTest {
   }
 
   static Future<Void> tenantInit(Vertx vertx, VertxTestContext context) {
-    TenantAPI tenantAPI = new TenantAPI();
+    TenantAPI tenantAPI = new CopyCatInit();
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     Promise<Void> promise = Promise.promise();
-    tenantAPI.postTenantSync(null, headers, context.succeeding(res1 -> context.verify(() -> {
+    tenantAPI.postTenantSync(new TenantAttributes(), headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(204);
       promise.complete();
     })), vertx.getOrCreateContext());
