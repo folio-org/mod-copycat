@@ -18,7 +18,7 @@ public class RecordRetrieverTest {
   private static final String URL_INDEXDATA = "z3950.indexdata.com/marc";
   private static final String URL_BAD_TARGET = "z3950.indexdata.com:211/marc";
   private static final String URL_WORLDCAT = "zcat.oclc.org/OLUCWorldCat";
-  private static final String EXTERNAL_ID_WORLDCAT = "0679429220";
+  private static final String EXTERNAL_ID_WORLDCAT = "1188724030";
   private static final String EXTERNAL_ID_INDEXDATA = "780306m19009999ohu";
 
   @Test
@@ -115,7 +115,7 @@ public class RecordRetrieverTest {
         .withName("OLUCWorldCat")
         .withAuthentication("foo bar")
         .withUrl(URL_WORLDCAT)
-        .withExternalIdQueryMap("@attr 1=7 $identifier");
+        .withExternalIdQueryMap("@attr 1=1211 $identifier");
 
     RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_WORLDCAT, "json")
         .onComplete(context.failing(cause -> context.verify(() -> {
