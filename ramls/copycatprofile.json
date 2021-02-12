@@ -35,6 +35,15 @@
     "targetOptions" : {
        "type":"object",
        "description": "ZOOM options. https://software.indexdata.com/yaz/doc/zoom.html#zoom-connections and https://software.indexdata.com/yaz/doc/zoom.resultsets.html#zoom.resultset.options"
+    },
+    "externalIdentifierType": {
+      "type": "string",
+      "description": "UUID of an identifier-type defined by the inventory module",
+      "$ref": "uuid.json",
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether this profile should be presented to users importing records"
     }
   },
   "additionalProperties": false,
