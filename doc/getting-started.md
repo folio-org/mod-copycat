@@ -106,7 +106,7 @@ Once the VM is running, there are several approaches that can be taken:
 Whichever of these approaches you use, you now need to tell Okapi about the copycat module: load the module, deploy it, and associated it with the `diku` tenant:
 
 	curl -w '\n' -d @target/ModuleDescriptor.json http://localhost:9130/_/proxy/modules
-	curl -w '\n' -d @target/DeploymentDescriptor.VM.json http://localhost:9130/_/discovery/modules
+	curl -w '\n' -d @target/DeploymentDescriptor-VM.json http://localhost:9130/_/discovery/modules
 	curl -w '\n' -d '[{ "action": "enable", "id": "mod-copycat-1.0.0-SNAPSHOT" }]' http://localhost:9130/_/proxy/tenants/diku/install
 
 Now login and you will be able to access mod-copycat via Okapi. Use the `X-Okapi-Token` from the response headers echoed by the `-D -` option to the login operation:
@@ -121,9 +121,13 @@ This may be necessary so that the module can be re-added in order to force new o
 	curl http://localhost:9130/_/proxy/tenants/diku/modules | grep mod-copycat
 	# From the output, extract the module-ID for the next step
 	curl -X DELETE http://localhost:9130/_/proxy/tenants/diku/modules/mod-copycat-1.0.0-SNAPSHOT
+
 	curl http://localhost:9130/_/discovery/modules | grep -i copycat
 	# From the output, find the deployment UUID for the next step
 	curl -X DELETE http://localhost:9130/_/discovery/modules/mod-copycat-1.0.0-SNAPSHOT/15272446-17ba-41b8-b78b-b67df95bbeef
+	# Or undeploy ALL running instances by omitting the UUID of this specific one:
+	curl -X DELETE http://localhost:9130/_/discovery/modules/mod-copycat-1.0.0-SNAPSHOT
+
 	curl -X DELETE http://localhost:9130/_/proxy/modules/mod-copycat-1.0.0-SNAPSHOT
 
 ## Adding permissions on the UI side
