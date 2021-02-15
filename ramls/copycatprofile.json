@@ -26,7 +26,7 @@
     },
     "internalIdEmbedPath": {
        "type": "string",
-       "description": "Specifies where the external identifier is to be embedded in the MARC record, e.g. '999__$f' to place it in field 999, indicator double space (absent) and subfield f"
+       "description": "Specifies where the internalIdentifier is to be embedded in the MARC record, e.g. '999__$i' to place it in field 999, indicator double space (absent) and subfield i; this field only has effect when internalIdentifier is present"
     },
     "jobProfileId": {
        "type": "string",
@@ -35,6 +35,15 @@
     "targetOptions" : {
        "type":"object",
        "description": "ZOOM options. https://software.indexdata.com/yaz/doc/zoom.html#zoom-connections and https://software.indexdata.com/yaz/doc/zoom.resultsets.html#zoom.resultset.options"
+    },
+    "externalIdentifierType": {
+      "type": "string",
+      "description": "UUID of an identifier-type defined by the inventory module",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether this profile should be presented to users importing records"
     }
   },
   "additionalProperties": false,

@@ -43,14 +43,14 @@
       "version": "1.0",
       "handlers" : [
         {
-          "methods" : [ "POST" ],
-          "pathPattern" : "/copycat/profiles",
-          "permissionsRequired": [ "copycat.profiles.item.post" ]
-        },
-        {
           "methods" : [ "GET" ],
           "pathPattern" : "/copycat/profiles",
           "permissionsRequired": [ "copycat.profiles.collection.get" ]
+        },
+        {
+          "methods" : [ "POST" ],
+          "pathPattern" : "/copycat/profiles",
+          "permissionsRequired": [ "copycat.profiles.item.post" ]
         },
         {
           "methods" : [ "GET" ],
@@ -83,33 +83,54 @@
   "permissionSets" : [
     {
       "permissionName" : "copycat.imports.post",
-      "displayName" : "copycat imports post",
-      "description" : "Copycat record"
-    },
-    {
-      "permissionName": "copycat.profiles.item.post",
-      "displayName": "Target profile POST",
-      "description": "Create CopyCat profile"
+      "displayName" : "Create CopyCat profile",
+      "description" : "Create CopyCat profile"
     },
     {
       "permissionName": "copycat.profiles.collection.get",
-      "displayName": "Target profile GET collection",
+      "displayName": "Get CopyCat profiles by query",
       "description": "Retrieve CopyCat profiles"
     },
     {
+      "permissionName": "copycat.profiles.item.post",
+      "displayName": "Create CopyCat profile",
+      "description": "Create CopyCat profile"
+    },
+    {
       "permissionName": "copycat.profiles.item.get",
-      "displayName": "Target profile GET",
-      "description": "Retrieve CopyCat profile"
+      "displayName": "Get CopyCat profile",
+      "description": "Get CopyCat profile"
     },
     {
       "permissionName": "copycat.profiles.item.put",
-      "displayName": "Target profile PUT",
+      "displayName": "Update CopyCat profile",
       "description": "Update CopyCat profile"
     },
     {
       "permissionName": "copycat.profiles.item.delete",
-      "displayName": "Target profile DELETE",
+      "displayName": "Delete CopyCat profile",
       "description": "Delete CopyCat profile"
+    },
+    {
+      "permissionName": "copycat.profiles.all",
+      "displayName": "CopyCat profiles",
+      "description": "All permissions for CopyCat profiles",
+      "subPermissions": [
+         "copycat.profiles.collection.get",
+         "copycat.profiles.item.post",
+         "copycat.profiles.item.get",
+         "copycat.profiles.item.put",
+         "copycat.profiles.item.delete"
+      ]
+    },
+    {
+      "permissionName": "copycat.all",
+      "displayName": "CopyCat all",
+      "description": "All permissions for CopyCat",
+      "subPermissions": [
+         "copycat.profiles.all",
+         "copycat.imports.post"
+      ]
     }
   ],
   "launchDescriptor": {

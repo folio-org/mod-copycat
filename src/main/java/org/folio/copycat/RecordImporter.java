@@ -2,12 +2,16 @@ package org.folio.copycat;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,26 +19,32 @@ import org.folio.okapi.common.XOkapiHeaders;
 
 /**
  * Responsible for importing records. Uses mod-record-source-manager for importing.
- * <ul>
- * <li></li><a href="https://github.com/folio-org/mod-source-record-manager">mod-record-source-manager</a></li>
- * <li></li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/descriptors/ModuleDescriptor-template.json">Descriptor</a></li>
- * <li></li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/ramls/change-manager.raml">RAML</a></li>
- * <li></li><a href="https://github.com/folio-org/data-import-raml-storage/blob/master/schemas/dto/">schemas</a></li>
- * <li></li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/README.md#data-import-workflow">workflow</a></li>
+ *
+ * <p><ul>
+ * <li><a href="https://github.com/folio-org/mod-source-record-manager">mod-record-source-manager</a></li>
+ * <li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/descriptors/ModuleDescriptor-template.json">Descriptor</a></li>
+ * <li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/ramls/change-manager.raml">RAML</a></li>
+ * <li><a href="https://github.com/folio-org/data-import-raml-storage/blob/master/schemas/dto/">schemas</a></li>
+ * <li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/README.md#data-import-workflow">workflow</a></li>
  * </ul>
  */
 public class RecordImporter {
 
-  static final String DEFAULT_JOB_PROFILE_ID =  "c8f98545-898c-4f48-a494-3ab6736a3243";
+  static final String DEFAULT_JOB_PROFILE_ID = "c8f98545-898c-4f48-a494-3ab6736a3243";
   private static final int WEBCLIENT_CONNECT_TIMEOUT = 10;
   private static final int WEBCLIENT_IDLE_TIMEOUT = 20;
+  private static final int SOURCE_STORAGE_POLL_WAIT = 300;
+  private static final int SOURCE_STORAGE_POLL_ITERATIONS = 10;
 
-  private static Logger log = LogManager.getLogger(RecordImporter.class);
+  private static final Logger log = LogManager.getLogger(RecordImporter.class);
   private final WebClient client;
   private final Map<String, String> okapiHeaders;
   private final String okapiUrl;
   private final String userId;
   private String jobId;
+  private final Vertx vertx;
+  private int storagePollWait;
+  private int storagePollIterations;
 
   /**
    * Constructor for importing (can NOT be shared between users/tenants).
@@ -50,7 +60,8 @@ public class RecordImporter {
       options.setConnectTimeout(WEBCLIENT_CONNECT_TIMEOUT);
       options.setIdleTimeout(WEBCLIENT_IDLE_TIMEOUT);
     }
-    client = WebClient.create(context.owner(), options);
+    vertx = context.owner();
+    client = WebClient.create(vertx, options);
     this.okapiUrl = okapiHeaders.get(XOkapiHeaders.URL);
     if (this.okapiUrl == null) {
       throw new IllegalArgumentException("Missing " + XOkapiHeaders.URL + " header");
@@ -60,6 +71,8 @@ public class RecordImporter {
       throw new IllegalArgumentException("Missing " + XOkapiHeaders.USER_ID + " header");
     }
     this.okapiHeaders = okapiHeaders;
+    storagePollWait = SOURCE_STORAGE_POLL_WAIT;
+    storagePollIterations = SOURCE_STORAGE_POLL_ITERATIONS;
   }
 
   /**
@@ -72,17 +85,22 @@ public class RecordImporter {
     this(okapiHeaders, context, null);
   }
 
-  Future<String> createJob(String jobProfileId) {
+  void setStoragePollWait(int ms) {
+    storagePollWait = ms;
+  }
+
+  void setStoragePollIterations(int cnt) {
+    storagePollIterations = cnt;
+  }
+
+  Future<String> createJob() {
     String abs = okapiUrl + "/change-manager/jobExecutions";
     HttpRequest<Buffer> request = client.postAbs(abs);
     request.headers().addAll(okapiHeaders);
     request.putHeader("Accept", "*/*");
     request.putHeader("Content-Type", "application/json");
     JsonObject jobProfileInfo = new JsonObject();
-    if (jobProfileId == null) {
-      jobProfileId = DEFAULT_JOB_PROFILE_ID;
-    }
-    jobProfileInfo.put("id", jobProfileId);
+    jobProfileInfo.put("id", DEFAULT_JOB_PROFILE_ID);
     jobProfileInfo.put("name", "Default job profile");
     jobProfileInfo.put("dataType", "MARC");
 
@@ -90,10 +108,11 @@ public class RecordImporter {
     initJob.put("userId", userId);
     initJob.put("sourceType", "ONLINE");
     initJob.put("jobProfileInfo", jobProfileInfo);
-    log.info("createJob with {}", initJob.encode());
+    log.info("POST {}: {}", abs, initJob.encodePrettily());
     return request.sendJsonObject(initJob).compose(result -> {
+      log.info("RES {}: {}", abs, result.bodyAsString());
       if (result.statusCode() != 201) {
-        log.error("{} returned {}", abs, result.statusCode());
+        log.error("POST {} returned {}", abs, result.statusCode());
         return Future.failedFuture(abs + " returned " + result.statusCode()
             + " (expected 201):" + result.bodyAsString());
       }
@@ -107,13 +126,13 @@ public class RecordImporter {
    * @return async result.
    */
   public Future<Void> begin(String jobProfileId) {
-    return createJob(jobProfileId).compose(id -> {
+    return createJob().compose(id -> {
       jobId = id;
-      return putJobProfile();
+      return putJobProfile(jobProfileId);
     });
   }
 
-  Future<Void> putJobProfile() {
+  Future<Void> putJobProfile(String jobProfileId) {
     String abs = okapiUrl + "/change-manager/jobExecutions/" + jobId + "/jobProfile";
     HttpRequest<Buffer> request = client.putAbs(abs);
     request.headers().addAll(okapiHeaders);
@@ -121,13 +140,15 @@ public class RecordImporter {
     request.putHeader("Content-Type", "application/json");
 
     JsonObject jobProfile = new JsonObject();
-    jobProfile.put("id", "d0ebb7b0-2f0f-11eb-adc1-0242ac120002");
-    jobProfile.put("name", "CLI Create MARC Bibs and Instances");
+    jobProfile.put("id", jobProfileId);
+    jobProfile.put("name", "OCLC - Default Update Instance");
     jobProfile.put("dataType", "MARC");
 
+    log.info("PUT {}: {}", abs, jobProfile.encodePrettily());
     return request.sendJsonObject(jobProfile).compose(result -> {
+      log.info("RES {}: {}", abs, result.bodyAsString());
       if (result.statusCode() != 200) {
-        log.error("{} returned {}", abs, result.statusCode());
+        log.error("PUT {} returned {}", abs, result.statusCode());
         return Future.failedFuture(abs  + " returned " + result.statusCode()
             + " (expected 200):" + result.bodyAsString());
       }
@@ -155,16 +176,17 @@ public class RecordImporter {
     JsonObject rawRecordsDto = new JsonObject();
     rawRecordsDto.put("recordsMetadata", recordsMetadata);
     rawRecordsDto.put("initialRecords", initialRecords);
+    log.info("POST {}: {}", abs, rawRecordsDto.encodePrettily());
     return request.sendJsonObject(rawRecordsDto).compose(result -> {
+      log.info("RES {}: {}", abs, result.bodyAsString());
       if (result.statusCode() != 204) {
-        log.error("{} returned {}", abs, result.statusCode());
+        log.error("POST {} returned {}", abs, result.statusCode());
         return Future.failedFuture(abs  + " returned " + result.statusCode()
             + " (expected 204):" + result.bodyAsString());
       }
       return Future.succeededFuture();
     });
   }
-
 
   /**
    * post record for importing.
@@ -176,12 +198,72 @@ public class RecordImporter {
     return post(record, false);
   }
 
+  Future<List<String>> getSourceRecords1() {
+    String abs = okapiUrl + "/source-storage/source-records?snapshotId=" + jobId;
+    HttpRequest<Buffer> request = client.getAbs(abs);
+    request.headers().addAll(okapiHeaders);
+    request.putHeader("Accept", "*/*");
+    request.putHeader("Content-Type", "application/json");
+    return request.send().compose(result -> {
+      log.info("RES {}: {}", abs, result.bodyAsString());
+      if (result.statusCode() != 200) {
+        log.error("GET returned {}", abs, result.statusCode());
+        return Future.failedFuture(abs  + " returned " + result.statusCode()
+            + " (expected 200):" + result.bodyAsString());
+      }
+      try {
+        JsonObject obj = result.bodyAsJsonObject();
+        JsonArray sourceRecords = obj.getJsonArray("sourceRecords");
+        if (sourceRecords == null) {
+          return Future.failedFuture("Missing \"sourceRecords\" in response");
+        }
+        List<String> instances = new LinkedList<>();
+        for (int i = 0; i < sourceRecords.size(); i++) {
+          JsonObject sourceRecord = sourceRecords.getJsonObject(i);
+          JsonObject externalIdsHolder = sourceRecord.getJsonObject("externalIdsHolder");
+          if (externalIdsHolder == null) {
+            return Future.succeededFuture(null);
+          }
+          String instanceId = externalIdsHolder.getString("instanceId");
+          if (instanceId == null) {
+            return Future.succeededFuture(null);
+          }
+          instances.add(instanceId);
+        }
+        return Future.succeededFuture(instances);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+        return Future.failedFuture(e);
+      }
+    });
+  }
+
+  Future<List<String>> getSourceRecords(int it) {
+    log.info("get source records, iteration {}", it);
+    return getSourceRecords1().compose(res -> {
+      if (res !=  null) {
+        return Future.succeededFuture(res);
+      }
+      // didn't get the instance identifiers
+      if (it >= storagePollIterations) {
+        return Future.failedFuture("Did not get any instances after "
+            + storagePollIterations + " retries");
+      }
+      Promise<List<String>> promise = Promise.promise();
+      vertx.setTimer(storagePollWait, x -> getSourceRecords(it + 1)
+          .onComplete(promise));
+      return promise.future();
+    });
+  }
+
   /**
    * end importing.
    *
    * @return async result.
    */
-  public Future<Void> end() {
-    return post(null, true).onComplete(x -> client.close());
+  public Future<List<String>> end() {
+    return post(null, true)
+        .compose(x -> getSourceRecords(1))
+        .onComplete(x -> client.close());
   }
 }

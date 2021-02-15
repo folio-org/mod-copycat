@@ -100,7 +100,9 @@ public final class RecordRetriever {
   }
 
   static Future<JsonObject> getRecordAsJsonObject(CopyCatProfile profile, String externalId) {
-    return getRecordAsJsonObject(profile, externalId, "json")
+    // for YAZ, specifying marc8 here really means that it will use either UTF-8 or MARC-8
+    // depending on the leader of the MARC record.
+    return getRecordAsJsonObject(profile, externalId, "json;charset=marc8")
         .map(buf -> new JsonObject(new String(buf)));
   }
 
@@ -114,9 +116,9 @@ public final class RecordRetriever {
   public static Future<JsonObject> getRecordAsJsonObject(CopyCatProfile profile,
                                                          String externalId, Context vertxContext) {
     // execute in separate thread, because getRecordAsJsonObject is a blocking function.
-    return Future.future(promise0 -> vertxContext.owner().<JsonObject>executeBlocking(promise1 ->
+    return Future.future(promise0 -> vertxContext.owner().executeBlocking(promise1 ->
         getRecordAsJsonObject(profile, externalId)
-            .onComplete(record -> promise1.handle(record)), result -> promise0.handle(result)));
+            .onComplete(promise1), promise0));
   }
 
 }

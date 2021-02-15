@@ -1,15 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "tags",
-  "description": "copycat import request",
+  "description": "copycat import request/response",
   "type": "object",
   "properties": {
     "externalIdentifier": {
-      "description": "external identifier for the record",
+      "description": "external identifier for the record (for Z39.50 retrieval)",
       "type": "string"
     },
     "internalIdentifier": {
-      "description": "internal identifier for the record",
+      "description": "FOLIO instance identifier for the record; specify when a record should be updated",
       "type": "string"
     },
     "profileId": {

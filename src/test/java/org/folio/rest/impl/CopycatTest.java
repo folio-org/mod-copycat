@@ -4,6 +4,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -18,6 +19,7 @@ import org.folio.rest.jaxrs.model.CopyCatImports;
 import org.folio.rest.jaxrs.model.CopyCatProfile;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Record;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.resource.Copycat;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,12 +50,12 @@ class CopycatTest {
   }
 
   static Future<Void> tenantInit(Vertx vertx, VertxTestContext context) {
-    TenantAPI tenantAPI = new TenantAPI();
+    TenantAPI tenantAPI = new CopyCatInit();
     Map<String, String> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     Promise<Void> promise = Promise.promise();
-    tenantAPI.postTenantSync(null, headers, context.succeeding(res1 -> context.verify(() -> {
+    tenantAPI.postTenantSync(new TenantAttributes(), headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(204);
       promise.complete();
     })), vertx.getOrCreateContext());
@@ -154,7 +156,9 @@ class CopycatTest {
           .withProfileId(targetProfileId)
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
-        assertThat(res.getStatus()).isEqualTo(204);
+        assertThat(res.getStatus()).isEqualTo(200);
+        CopyCatImports importResposne = (CopyCatImports) res.getEntity();
+        assertThat(importResposne.getInternalIdentifier()).isEqualTo(mock.getInstanceId());
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
@@ -332,6 +336,10 @@ class CopycatTest {
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
 
+    // make mock return no source records
+    JsonObject obj = new JsonObject().put("sourceRecords", new JsonArray());
+    mock.setSourceStorageResponse(obj.encode());
+
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
@@ -346,7 +354,9 @@ class CopycatTest {
           .withInternalIdentifier("1234")
           .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
-        assertThat(res.getStatus()).isEqualTo(204);
+        assertThat(res.getStatus()).isEqualTo(200);
+        CopyCatImports importsResponse = (CopyCatImports) res.getEntity();
+        assertThat(importsResponse.getInternalIdentifier()).isEqualTo("1234");
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
@@ -464,7 +474,7 @@ class CopycatTest {
           .withProfileId(targetProfileId)
           .withRecord(record);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
-        assertThat(res.getStatus()).isEqualTo(204);
+        assertThat(res.getStatus()).isEqualTo(200);
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
@@ -529,7 +539,7 @@ class CopycatTest {
           .withProfileId(targetProfileId)
           .withRecord(record);
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
-        assertThat(res.getStatus()).isEqualTo(204);
+        assertThat(res.getStatus()).isEqualTo(200);
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
@@ -637,5 +647,4 @@ class CopycatTest {
       })), vertxContext);
     })), vertxContext);
   }
-
 }
