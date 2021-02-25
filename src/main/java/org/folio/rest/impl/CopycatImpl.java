@@ -102,6 +102,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               entity.getExternalIdentifier(), vertxContext);
           return fut.compose(marc -> {
             String jobProfile = JOB_PROFILE_CREATE_INSTANCE;
+            String name;
             if (entity.getInternalIdentifier() != null) {
               jobProfile = JOB_PROFILE_UPDATE_INSTANCE;
               String pattern = targetProfile.getInternalIdEmbedPath();
@@ -111,10 +112,13 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               log.info("Embedding identifier {} in MARC {}",
                   entity::getInternalIdentifier, () -> pattern);
               JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
+              name = "copycat update";
+            } else {
+              name = "copycat import";
             }
             log.info("Importing {}", marc::encodePrettily);
             RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
-            return importer.begin(jobProfile)
+            return importer.begin(jobProfile, name)
                 .compose(x -> importer.post(marc))
                 .compose(x -> importer.end());
           });
