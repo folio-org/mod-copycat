@@ -34,7 +34,7 @@ public class RecordImporter {
   private static final int WEBCLIENT_CONNECT_TIMEOUT = 10;
   private static final int WEBCLIENT_IDLE_TIMEOUT = 20;
   private static final int SOURCE_STORAGE_POLL_WAIT = 300;
-  private static final int SOURCE_STORAGE_POLL_ITERATIONS = 10;
+  private static final int SOURCE_STORAGE_POLL_ITERATIONS = 20;
 
   private static final Logger log = LogManager.getLogger(RecordImporter.class);
   private final WebClient client;
