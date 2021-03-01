@@ -98,7 +98,6 @@ public class ImporterMock {
       log.error(e.getMessage(), e);
       ctx.response().setStatusCode(500);
       ctx.response().end(e.getMessage());
-      return;
     }
   }
 

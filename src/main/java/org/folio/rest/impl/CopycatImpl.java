@@ -30,9 +30,6 @@ import org.marc4j.MarcJsonWriter;
 import org.marc4j.MarcStreamReader;
 
 public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
-  static final String JOB_PROFILE_CREATE_INSTANCE = "d0ebb7b0-2f0f-11eb-adc1-0242ac120002";
-  static final String JOB_PROFILE_UPDATE_INSTANCE = "91f9b8d6-d80e-4727-9783-73fb53e3c786";
-
   static Errors createErrors(String message) {
     List<Error> errors = new LinkedList<>();
     errors.add(new Error().withMessage(message));
@@ -101,10 +98,10 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               :  RecordRetriever.getRecordAsJsonObject(targetProfile,
               entity.getExternalIdentifier(), vertxContext);
           return fut.compose(marc -> {
-            String jobProfile = JOB_PROFILE_CREATE_INSTANCE;
+            String jobProfile;
             String name;
             if (entity.getInternalIdentifier() != null) {
-              jobProfile = JOB_PROFILE_UPDATE_INSTANCE;
+              jobProfile = targetProfile.getUpdateJobProfileId();
               String pattern = targetProfile.getInternalIdEmbedPath();
               if (pattern == null) {
                 return Future.failedFuture("Missing internalIdEmbedPath in target profile");
@@ -114,6 +111,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
               name = "copycat update";
             } else {
+              jobProfile = targetProfile.getCreateJobProfileId();
               name = "copycat import";
             }
             log.info("Importing {}", marc::encodePrettily);

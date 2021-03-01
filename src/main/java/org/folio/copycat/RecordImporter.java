@@ -208,7 +208,7 @@ public class RecordImporter {
     return request.send().compose(result -> {
       log.info("RES {}: {}", abs, result.bodyAsString());
       if (result.statusCode() != 200) {
-        log.error("GET returned {}", abs, result.statusCode());
+        log.error("GET returned {}", result.statusCode());
         return Future.failedFuture(abs  + " returned " + result.statusCode()
             + " (expected 200):" + result.bodyAsString());
       }
