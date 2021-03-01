@@ -28,9 +28,13 @@
        "type": "string",
        "description": "Specifies where the internalIdentifier is to be embedded in the MARC record, e.g. '999__$i' to place it in field 999, indicator double space (absent) and subfield i; this field only has effect when internalIdentifier is present"
     },
-    "jobProfileId": {
+    "createJobProfileId": {
        "type": "string",
-       "description": "Identifier of a FOLIO MARC-importing profile that specifies how to map MARC fields to FOLIO inventory"
+       "description": "Job profile to use for create"
+    },
+    "updateJobProfileId": {
+       "type": "string",
+       "description": "Job profile to use for update"
     },
     "targetOptions" : {
        "type":"object",
