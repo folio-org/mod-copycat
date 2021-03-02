@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.folio.okapi.common.XOkapiHeaders;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.jaxrs.model.CopyCatCollection;
 import org.folio.rest.jaxrs.model.CopyCatImports;
 import org.folio.rest.jaxrs.model.CopyCatProfile;
@@ -21,6 +22,7 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Record;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.resource.Copycat;
+import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,6 +41,7 @@ class CopycatTest {
 
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext context) {
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     mock = new ImporterMock(vertx);
     mock.start(mockPort)
         .compose(x -> tenantInit(vertx, context)).onComplete(context.succeeding(res -> context.completeNow()));

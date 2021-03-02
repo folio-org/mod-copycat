@@ -73,6 +73,11 @@
       <artifactId>domain-models-runtime</artifactId>
       <version>${raml-module-builder-version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>postgres-testing</artifactId>
+      <version>${raml-module-builder-version}</version>
+    </dependency>
     <!-- This dependency is required until https://issues.folio.org/browse/RMB-503 is fixed -->
     <dependency>
       <groupId>org.glassfish.web</groupId>
