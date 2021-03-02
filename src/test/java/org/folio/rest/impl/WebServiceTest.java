@@ -11,10 +11,12 @@ import java.util.Collections;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.XOkapiHeaders;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantInit;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,7 +37,9 @@ class WebServiceTest {
 
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext context) {
-    DeploymentOptions options = new DeploymentOptions().setConfig(
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
+    DeploymentOptions options = new DeploymentOptions()
+      .setConfig(
       new JsonObject()
         .put("http.port", port));
 
