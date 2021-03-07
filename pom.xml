@@ -15,13 +15,19 @@
       <name>FOLIO Maven repository</name>
       <url>https://repository.folio.org/repository/maven-folio</url>
     </repository>
-
     <repository>
       <id>indexdata</id>
       <name>Index Data</name>
       <url>http://maven.indexdata.com/</url>
     </repository>
   </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>folio-nexus</id>
+      <name>FOLIO Maven repository</name>
+      <url>https://repository.folio.org/repository/maven-folio</url>
+    </pluginRepository>
+  </pluginRepositories>
 
   <dependencyManagement>
     <dependencies>
@@ -115,7 +121,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>33.0.0-SNAPSHOT</raml-module-builder-version>
+    <raml-module-builder-version>33.0.0-pre1</raml-module-builder-version>
     <generate_routing_context></generate_routing_context>
     <argLine />
   </properties>
