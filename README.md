@@ -8,8 +8,27 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 ## Introduction
 
 [mod-copycat](https://github.com/folio-org/mod-copycat) is a FOLIO  module
-that assists in Copy cataloging. It imports records from remote systems
-using Z39.50.
+that assists in Copy cataloging. It can import records from remote systems
+using Z39.50 or a straight MARC record can be provided.
+
+mod-copycat provides two regular interface: `copycat-imports` and
+`copycat-profiles`.
+
+The provided interface `copycat-imports` is for the actual imporing. There
+are two modes:
+
+1. raw record. The record is part of the import operation. The raw
+record can be in JSON-MARC or as base64-encoded ISO2709.
+
+2. Z39.50 search. The record is specified by a Z39.50 query and the
+record is fetched and imported.
+
+The interface `copycat-profiles` is a CRUD interface for managing copycat
+profiles. These profiles include:
+
+* job profiles - for the change manager.
+
+* Z39.50 parameters.
 
 ## Additional information
 
