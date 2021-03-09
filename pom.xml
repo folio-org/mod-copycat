@@ -177,9 +177,6 @@
             <goals>
               <goal>java</goal>
             </goals>
-            <configuration>
-              <generateClients>false</generateClients>
-            </configuration>
           </execution>
         </executions>
       </plugin>
