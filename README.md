@@ -41,8 +41,9 @@ at the [FOLIO issue tracker](https://dev.folio.org/guidelines/issue-tracker).
 
 ### ModuleDescriptor
 
-See the built `target/ModuleDescriptor.json` for the interfaces that this module
-requires and provides, the permissions, and the additional module metadata.
+See the [ModuleDescriptor](descriptors/ModuleDescriptor-template.json)
+for the interfaces that this module requires and provides, the permissions,
+and the additional module metadata.
 
 ### Getting started
 
