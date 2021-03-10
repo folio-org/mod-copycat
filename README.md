@@ -14,7 +14,7 @@ using Z39.50 or a straight MARC record can be provided.
 mod-copycat provides two regular interface: `copycat-imports` and
 `copycat-profiles`.
 
-The provided interface `copycat-imports` is for the actual imporing. There
+The provided interface `copycat-imports` is for the actual importing. There
 are two modes:
 
 1. raw record. The record is part of the import operation. The raw
@@ -62,4 +62,3 @@ This module's [API documentation](https://dev.folio.org/reference/api/#mod-copyc
 The built artifacts for this module are available.
 See [configuration](https://dev.folio.org/download/artifacts) for repository access,
 and the [Docker image](https://hub.docker.com/r/folioorg/mod-copycat/).
-
