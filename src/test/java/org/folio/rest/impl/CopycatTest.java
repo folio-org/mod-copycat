@@ -368,6 +368,42 @@ class CopycatTest {
   }
 
   @Test
+  void testImportProfileWithoutInternalIdentifier(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+    Context vertxContext = vertx.getOrCreateContext();
+
+    // make mock return no source records
+    JsonObject obj = new JsonObject().put("sourceRecords", new JsonArray());
+    mock.setSourceStorageResponse(obj.encode());
+
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier")
+        .withInternalIdEmbedPath("999ff$i");
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withProfileId(targetProfileId)
+          .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(500);
+        assertThat(res.getEntity().toString()).isEqualTo("Failed to obtain created/updated instance ID");
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
   void testImportProfileMissingInternalIdEmbedPath(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 

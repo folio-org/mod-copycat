@@ -118,15 +118,19 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
             RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
             return importer.begin(jobProfile, name)
                 .compose(x -> importer.post(marc))
-                .compose(x -> importer.end());
+                .compose(x -> importer.end(entity.getInternalIdentifier()));
           });
         })
         .onSuccess(
             instances -> {
-              if (!instances.isEmpty()) {
-                log.info("Got instance identifiers: {}", String.join(", ", instances));
-                entity.setInternalIdentifier(instances.get(0));
+              if (instances.isEmpty()) {
+                asyncResultHandler.handle(
+                    Future.succeededFuture(
+                        PostCopycatImportsResponse.respond500WithTextPlain(
+                            "Failed to obtain created/updated instance ID")));
+                return;
               }
+              entity.setInternalIdentifier(instances.get(0));
               asyncResultHandler.handle(
                   Future.succeededFuture(
                       PostCopycatImportsResponse.respond200WithApplicationJson(entity)));

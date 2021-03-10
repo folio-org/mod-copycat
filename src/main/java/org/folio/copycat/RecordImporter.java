@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -260,11 +261,22 @@ public class RecordImporter {
   /**
    * end importing.
    *
+   * @param existingId existing instance ID (null if not known)
    * @return async result.
    */
-  public Future<List<String>> end() {
+  public Future<List<String>> end(String existingId) {
     return post(null, true)
-      .compose(x -> getSourceRecords(1))
-      .onComplete(x -> client.close());
+        .compose(x -> {
+          if (existingId != null) {
+            return Future.succeededFuture(Collections.singletonList(existingId));
+          }
+          return getSourceRecords(1);
+        })
+        .onComplete(x -> client.close());
   }
+
+  public Future<List<String>> end() {
+    return end(null);
+  }
+
 }
