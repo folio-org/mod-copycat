@@ -13,6 +13,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.XOkapiHeaders;
@@ -177,6 +178,7 @@ public class RecordImporter {
     JsonObject rawRecordsDto = new JsonObject();
     rawRecordsDto.put("recordsMetadata", recordsMetadata);
     rawRecordsDto.put("initialRecords", initialRecords);
+    rawRecordsDto.put("id", UUID.randomUUID().toString());
     log.info("POST {}: {}", abs, rawRecordsDto.encodePrettily());
     return request.sendJsonObject(rawRecordsDto).compose(result -> {
       log.info("RES {}: {}", abs, result.bodyAsString());
