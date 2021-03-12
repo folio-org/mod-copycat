@@ -21,8 +21,8 @@
       "type" : "object",
       "properties" : {
          "json" : {
-           "description" : "record object within json property",
-           "type" : "object"
+           "description" : "JSON MARC record object within json property",
+           "type" : "string"
           },
          "marc" : {
            "description" : "base64 encoded ISO2709 MARC",
