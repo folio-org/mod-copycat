@@ -47,13 +47,12 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
   static Future<JsonObject> getLocalRecord(Record record) {
 
     try {
-      final JsonObject jsonObject = new JsonObject(record.getAdditionalProperties());
-      final JsonObject json = jsonObject.getJsonObject("json");
+      final String json = record.getJson();
       if (json != null) {
-        log.info("local JSON record {}", json::encodePrettily);
-        return Future.succeededFuture(json);
+        log.info("local JSON record {}", json);
+        return Future.succeededFuture(new JsonObject(json));
       }
-      final String base64String = jsonObject.getString("marc");
+      final String base64String = record.getMarc();
       if (base64String != null) {
         byte[] bytes = Base64.getDecoder().decode(base64String);
         ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
@@ -69,8 +68,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
         writer.close();
         return Future.succeededFuture(json2);
       }
-      return Future.failedFuture("No known record types in payload, got "
-          + String.join(", ", jsonObject.fieldNames()));
+      return Future.failedFuture("One of 'json' or 'marc' must be given in record");
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       return Future.failedFuture(e);

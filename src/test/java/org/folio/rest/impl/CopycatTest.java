@@ -465,8 +465,8 @@ class CopycatTest {
     Context vertxContext = vertx.getOrCreateContext();
 
     String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
-    JsonObject jsonRecord = new JsonObject(file);
-    Record record = new Record().withAdditionalProperty("json", jsonRecord);
+
+    Record record = new Record().withJson(file);
 
     CopyCatProfile copyCatProfile = new CopyCatProfile().withName("local");
     api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
@@ -531,7 +531,7 @@ class CopycatTest {
     byte[] bytes = getClass().getClassLoader().getResourceAsStream("marc1.marc").readAllBytes();
     String base64String = Base64.getEncoder().encodeToString(bytes);
 
-    Record record = new Record().withAdditionalProperty("marc", base64String);
+    Record record = new Record().withMarc(base64String);
 
     CopyCatProfile copyCatProfile = new CopyCatProfile().withName("local");
     api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
@@ -561,7 +561,7 @@ class CopycatTest {
 
     Context vertxContext = vertx.getOrCreateContext();
 
-    Record record = new Record().withAdditionalProperty("marc", "ab");
+    Record record = new Record().withMarc("ab");
 
     CopyCatProfile copyCatProfile = new CopyCatProfile().withName("local");
     api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
@@ -594,7 +594,7 @@ class CopycatTest {
 
     Context vertxContext = vertx.getOrCreateContext();
 
-    Record record = new Record().withAdditionalProperty("marc", "");
+    Record record = new Record().withMarc("");
 
     CopyCatProfile copyCatProfile = new CopyCatProfile().withName("local");
     api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
@@ -643,7 +643,7 @@ class CopycatTest {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().size()).isEqualTo(1);
-        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("No known record types in payload, got badType");
+        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("One of 'json' or 'marc' must be given in record");
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
