@@ -652,7 +652,7 @@ class CopycatTest {
   }
 
   @Test
-  public void testGetLocalMarc6(Vertx vertx, VertxTestContext context) throws IOException {
+  void testGetLocalMarc6(Vertx vertx, VertxTestContext context) throws IOException {
     // this is marc6.marc and marc6.json from YAZ, but with 010 put at the end because marc4j somehow
     // swaps it..!
     byte [] marc = getClass().getClassLoader().getResourceAsStream("marc6.marc").readAllBytes();
@@ -666,7 +666,7 @@ class CopycatTest {
   }
 
   @Test
-  public void testGetLocalMarc7(Vertx vertx, VertxTestContext context) throws IOException {
+  void testGetLocalMarc7(Vertx vertx, VertxTestContext context) throws IOException {
     // this is marc7.marc and marc7.json from YAZ, but with 010 put at the end because marc4j somehow
     // swaps it..!
     byte [] marc = getClass().getClassLoader().getResourceAsStream("marc7.marc").readAllBytes();
