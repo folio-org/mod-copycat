@@ -118,7 +118,7 @@ public class RecordImporter {
             + " (expected 201):" + result.bodyAsString());
       }
       return Future.succeededFuture(result.bodyAsJsonObject().getString("parentJobExecutionId"));
-    });
+    }, e -> Future.failedFuture("POST " + abs + ": " + e.getMessage()));
   }
 
   /**
