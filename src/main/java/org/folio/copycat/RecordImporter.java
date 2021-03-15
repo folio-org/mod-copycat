@@ -155,7 +155,7 @@ public class RecordImporter {
             + " (expected 200):" + result.bodyAsString());
       }
       return Future.succeededFuture();
-    }, e -> Future.failedFuture("PUT " + abs + ":" + e.getMessage()));
+    }, e -> Future.failedFuture("PUT " + abs + ": " + e.getMessage()));
   }
 
   Future<Void> post(JsonObject record, boolean last) {
