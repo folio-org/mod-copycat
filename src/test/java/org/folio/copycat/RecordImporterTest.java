@@ -93,6 +93,7 @@ public class RecordImporterTest {
 
     importer.begin(null, "import").onComplete(context.failing(cause -> context.verify(() -> {
       assertThat(cause.getMessage()).contains("Connection refused");
+      assertThat(cause.getMessage()).contains("/change-manager/jobExecutions");
       context.completeNow();
     })));
   }
@@ -109,6 +110,7 @@ public class RecordImporterTest {
 
     importer.putJobProfile("id", "import").onComplete(context.failing(cause -> context.verify(() -> {
       assertThat(cause.getMessage()).contains("Connection refused");
+      assertThat(cause.getMessage()).contains("/change-manager/jobExecutions/");
       context.completeNow();
     })));
   }
@@ -125,6 +127,7 @@ public class RecordImporterTest {
 
     importer.post(new JsonObject()).onComplete(context.failing(cause -> context.verify(() -> {
       assertThat(cause.getMessage()).contains("Connection refused");
+      assertThat(cause.getMessage()).contains("/change-manager/jobExecutions/");
       context.completeNow();
     })));
   }
@@ -141,6 +144,24 @@ public class RecordImporterTest {
 
     importer.end().onComplete(context.failing(cause -> context.verify(() -> {
       assertThat(cause.getMessage()).contains("Connection refused");
+      assertThat(cause.getMessage()).contains("/change-manager/jobExecutions/");
+      context.completeNow();
+    })));
+  }
+
+  @Test
+  void testBadUrlGetSourceStorage(Vertx vertx, VertxTestContext context) {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + (port + 1)); // nothing running
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID,  UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+
+    importer.getSourceRecords1().onComplete(context.failing(cause -> context.verify(() -> {
+      assertThat(cause.getMessage()).contains("Connection refused");
+      assertThat(cause.getMessage()).contains("/source-storage/source-records");
       context.completeNow();
     })));
   }
