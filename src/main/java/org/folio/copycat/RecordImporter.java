@@ -155,7 +155,7 @@ public class RecordImporter {
             + " (expected 200):" + result.bodyAsString());
       }
       return Future.succeededFuture();
-    });
+    }, e -> Future.failedFuture("PUT " + abs + ":" + e.getMessage()));
   }
 
   Future<Void> post(JsonObject record, boolean last) {
@@ -188,7 +188,7 @@ public class RecordImporter {
             + " (expected 204):" + result.bodyAsString());
       }
       return Future.succeededFuture();
-    });
+    }, e -> Future.failedFuture("POST " + abs + ": " + e.getMessage()));
   }
 
   /**
@@ -238,7 +238,7 @@ public class RecordImporter {
         log.error(e.getMessage(), e);
         return Future.failedFuture(e);
       }
-    });
+    }, e -> Future.failedFuture("GET " + abs + ": " + e.getMessage()));
   }
 
   Future<List<String>> getSourceRecords(int it) {
