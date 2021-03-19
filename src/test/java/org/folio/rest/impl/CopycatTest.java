@@ -650,4 +650,33 @@ class CopycatTest {
       })), vertxContext);
     })), vertxContext);
   }
+
+  @Test
+  void testGetLocalMarc6(Vertx vertx, VertxTestContext context) throws IOException {
+    // this is marc6.marc and marc6.json from YAZ, but with 010 put at the end because marc4j somehow
+    // swaps it..!
+    byte [] marc = getClass().getClassLoader().getResourceAsStream("marc6.marc").readAllBytes();
+    String expectMarc = new String(getClass().getClassLoader().getResourceAsStream("marc6.json").readAllBytes());
+
+    Record record = new Record().withMarc(Base64.getEncoder().encodeToString(marc));
+    CopycatImpl.getLocalRecord(record).onComplete(context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.encodePrettily()).isEqualTo(new JsonObject(expectMarc).encodePrettily());
+      context.completeNow();;
+    })));
+  }
+
+  @Test
+  void testGetLocalMarc7(Vertx vertx, VertxTestContext context) throws IOException {
+    // this is marc7.marc and marc7.json from YAZ, but with 010 put at the end because marc4j somehow
+    // swaps it..!
+    byte [] marc = getClass().getClassLoader().getResourceAsStream("marc7.marc").readAllBytes();
+    String expectMarc = new String(getClass().getClassLoader().getResourceAsStream("marc7.json").readAllBytes());
+
+    Record record = new Record().withMarc(Base64.getEncoder().encodeToString(marc));
+    CopycatImpl.getLocalRecord(record).onComplete(context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.encodePrettily()).isEqualTo(new JsonObject(expectMarc).encodePrettily());
+      context.completeNow();;
+    })));
+  }
+
 }
