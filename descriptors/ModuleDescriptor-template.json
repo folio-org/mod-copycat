@@ -33,7 +33,8 @@
             "change-manager.jobexecutions.post",
             "change-manager.jobexecutions.get",
             "change-manager.jobexecutions.put",
-            "change-manager.records.post"
+            "change-manager.records.post",
+            "source-storage.sourceRecords.get"
           ]
         }
       ]
@@ -78,6 +79,10 @@
     {
       "id" : "source-manager-records",
       "version" : "1.0"
+    },
+    {
+      "id" : "source-storage-source-records",
+      "version" : "2.0"
     }
   ],
   "permissionSets" : [
