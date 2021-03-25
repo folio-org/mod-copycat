@@ -55,7 +55,7 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    Future<List<String>> future = importer.begin("1234", "import")
+    Future<List<String>> future = importer.begin("1234")
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
@@ -75,7 +75,7 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    importer.begin(null, "import").onComplete(context.failing(cause -> context.verify(() -> {
+    importer.begin(null).onComplete(context.failing(cause -> context.verify(() -> {
       assertThat(cause.getMessage()).contains("Invalid UUID string: 1234");
       context.completeNow();
     })));
@@ -91,7 +91,7 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    importer.begin(null, "import").onComplete(context.failing(cause -> context.verify(() -> {
+    importer.begin(null).onComplete(context.failing(cause -> context.verify(() -> {
       assertThat(cause.getMessage()).contains("Connection refused");
       assertThat(cause.getMessage()).contains("/change-manager/jobExecutions");
       context.completeNow();
@@ -108,7 +108,7 @@ public class RecordImporterTest {
 
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
-    importer.putJobProfile("id", "import").onComplete(context.failing(cause -> context.verify(() -> {
+    importer.putJobProfile("id").onComplete(context.failing(cause -> context.verify(() -> {
       assertThat(cause.getMessage()).contains("Connection refused");
       assertThat(cause.getMessage()).contains("/change-manager/jobExecutions/");
       context.completeNow();
@@ -177,7 +177,7 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
     mock.setCreateStatus(204);
-    importer.begin(null, "import").onComplete(context.failing(cause -> context.verify(() -> {
+    importer.begin(null).onComplete(context.failing(cause -> context.verify(() -> {
       mock.setCreateStatus(201);
       assertThat(cause.getMessage()).contains("returned 204");
       context.completeNow();
@@ -195,7 +195,7 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
     mock.setImportStatus(201);
-    Future<Void> future = importer.begin(null, "import")
+    Future<Void> future = importer.begin(null)
         .compose(x -> importer.post(marc1));
     future.onComplete(context.failing(cause -> context.verify(() -> {
       mock.setImportStatus(204);
@@ -215,7 +215,7 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
     mock.setPutProfileStatus(201);
-    Future<Void> future = importer.begin(null, "import")
+    Future<Void> future = importer.begin(null)
         .compose(x -> importer.post(marc1));
     future.onComplete(context.failing(cause -> context.verify(() -> {
       mock.setPutProfileStatus(200);
@@ -246,7 +246,7 @@ public class RecordImporterTest {
     mock.setSourceStorageResponse(obj.encode());
 
     String jobProfileId = UUID.randomUUID().toString();
-    Future<List<String>> future = importer.begin(jobProfileId, "import")
+    Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
@@ -275,7 +275,7 @@ public class RecordImporterTest {
     mock.setSourceStorageResponse(obj.encode());
 
     String jobProfileId = UUID.randomUUID().toString();
-    Future<List<String>> future = importer.begin(jobProfileId, "import")
+    Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
@@ -309,7 +309,7 @@ public class RecordImporterTest {
     mock.setSourceStorageResponse(obj.encode());
 
     String jobProfileId = UUID.randomUUID().toString();
-    Future<List<String>> future = importer.begin(jobProfileId, "import")
+    Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
@@ -334,7 +334,7 @@ public class RecordImporterTest {
     mock.setIterations(3);
 
     String jobProfileId = UUID.randomUUID().toString();
-    Future<List<String>> future = importer.begin(jobProfileId, "import")
+    Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
@@ -359,7 +359,7 @@ public class RecordImporterTest {
     mock.setIterations(3);
 
     String jobProfileId = UUID.randomUUID().toString();
-    Future<List<String>> future = importer.begin(jobProfileId, "import")
+    Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
@@ -381,7 +381,7 @@ public class RecordImporterTest {
     mock.setSourceRecordStorageStatus(400);
 
     String jobProfileId = UUID.randomUUID().toString();
-    Future<List<String>> future = importer.begin(jobProfileId, "import")
+    Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
@@ -403,7 +403,7 @@ public class RecordImporterTest {
     mock.setSourceStorageResponse("{");
 
     String jobProfileId = UUID.randomUUID().toString();
-    Future<List<String>> future = importer.begin(jobProfileId, "import")
+    Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
@@ -425,7 +425,7 @@ public class RecordImporterTest {
     mock.setSourceStorageResponse("{}");
 
     String jobProfileId = UUID.randomUUID().toString();
-    Future<List<String>> future = importer.begin(jobProfileId, "import")
+    Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
@@ -451,7 +451,7 @@ public class RecordImporterTest {
     mock.setSourceStorageResponse(obj.encode());
 
     String jobProfileId = UUID.randomUUID().toString();
-    Future<List<String>> future = importer.begin(jobProfileId, "import")
+    Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
@@ -474,7 +474,7 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext(), options);
 
     mock.setWaitMs(1000);
-    importer.begin(null, "import").onComplete(context.failing(cause -> context.verify(() -> {
+    importer.begin(null).onComplete(context.failing(cause -> context.verify(() -> {
       mock.setWaitMs(1);
       assertThat(cause.getMessage()).contains("Connection was closed");
       context.completeNow();

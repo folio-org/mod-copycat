@@ -124,17 +124,16 @@ public class RecordImporter {
   /**
    * begin importing for current user/tenant.
    * @param jobProfileId SRS job profile Id; null for default profile.
-   * @param name job name to show.
    * @return async result.
    */
-  public Future<Void> begin(String jobProfileId, String name) {
+  public Future<Void> begin(String jobProfileId) {
     return createJob().compose(id -> {
       jobId = id;
-      return putJobProfile(jobProfileId, name);
+      return putJobProfile(jobProfileId);
     });
   }
 
-  Future<Void> putJobProfile(String jobProfileId, String name) {
+  Future<Void> putJobProfile(String jobProfileId) {
     String abs = okapiUrl + "/change-manager/jobExecutions/" + jobId + "/jobProfile";
     HttpRequest<Buffer> request = client.putAbs(abs);
     request.headers().addAll(okapiHeaders);
@@ -143,7 +142,6 @@ public class RecordImporter {
 
     JsonObject jobProfile = new JsonObject();
     jobProfile.put("id", jobProfileId);
-    jobProfile.put("name", name);
     jobProfile.put("dataType", "MARC");
 
     log.info("PUT {}: {}", abs, jobProfile.encodePrettily());
