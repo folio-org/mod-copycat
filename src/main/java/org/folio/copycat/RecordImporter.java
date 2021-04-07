@@ -31,7 +31,6 @@ import org.folio.okapi.common.XOkapiHeaders;
  */
 public class RecordImporter {
 
-  static final String DEFAULT_JOB_PROFILE_ID = "c8f98545-898c-4f48-a494-3ab6736a3243";
   private static final int WEBCLIENT_CONNECT_TIMEOUT = 10;
   private static final int WEBCLIENT_IDLE_TIMEOUT = 20;
   private static final int SOURCE_STORAGE_POLL_WAIT = 300;
@@ -100,15 +99,9 @@ public class RecordImporter {
     request.headers().addAll(okapiHeaders);
     request.putHeader("Accept", "*/*");
     request.putHeader("Content-Type", "application/json");
-    JsonObject jobProfileInfo = new JsonObject();
-    jobProfileInfo.put("id", DEFAULT_JOB_PROFILE_ID);
-    jobProfileInfo.put("name", "Default job profile");
-    jobProfileInfo.put("dataType", "MARC");
-
     JsonObject initJob = new JsonObject();
     initJob.put("userId", userId);
     initJob.put("sourceType", "ONLINE");
-    initJob.put("jobProfileInfo", jobProfileInfo);
     log.info("POST {}: {}", abs, initJob.encodePrettily());
     return request.sendJsonObject(initJob).compose(result -> {
       log.info("RES {}: {}", abs, result.bodyAsString());
