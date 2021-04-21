@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -219,12 +220,11 @@ public class RecordImporter {
             return Future.succeededFuture(null);
           }
           String instanceId = externalIdsHolder.getString("instanceId");
-          if (instanceId == null) {
-            return Future.succeededFuture(null);
+          if (instanceId != null) {
+            instances.add(instanceId);
           }
-          instances.add(instanceId);
         }
-        return Future.succeededFuture(instances);
+        return Future.succeededFuture(instances.isEmpty() ? null : instances);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         return Future.failedFuture(e);
@@ -235,7 +235,7 @@ public class RecordImporter {
   Future<List<String>> getSourceRecords(int it) {
     log.info("get source records, iteration {}", it);
     return getSourceRecords1().compose(res -> {
-      if (res !=  null) {
+      if (res != null) {
         return Future.succeededFuture(res);
       }
       // didn't get the instance identifiers
@@ -250,14 +250,23 @@ public class RecordImporter {
     });
   }
 
+  Future<List<String>> end() {
+    return end(Collections.emptyList());
+  }
+
   /**
    * end importing.
-   *
-   * @return async result.
+   * @param instances existing instances (non-empty for update).
+   * @return async result with list of instances.
    */
-  public Future<List<String>> end() {
+  public Future<List<String>> end(List<String> instances) {
     return post(null, true)
-      .compose(x -> getSourceRecords(1))
+      .compose(x -> {
+        if (instances.isEmpty()) {
+          return getSourceRecords(1);
+        }
+        return Future.succeededFuture(instances);
+      })
       .onComplete(x -> client.close());
   }
 }

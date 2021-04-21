@@ -8,6 +8,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -279,7 +280,7 @@ public class RecordImporterTest {
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
-      assertThat(x).isEmpty();
+      assertThat(x).containsExactly(mock.getInstanceId());
       assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
       context.completeNow();
     }));
@@ -296,22 +297,23 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
     JsonObject obj = new JsonObject()
-        .put("sourceRecords",
-            new JsonArray().add(
-                new JsonObject().put("externalIdsHolder",
-                    new JsonObject().put("instanceId", "id1")
-                ))
-            .add(
-                new JsonObject().put("externalIdsHolder",
-                    new JsonObject().put("instanceId", "id2")
-                ))
-            );
+      .put("sourceRecords",
+        new JsonArray()
+          .add(
+            new JsonObject().put("externalIdsHolder",
+              new JsonObject().put("instanceId", "id1")
+            ))
+          .add(
+            new JsonObject().put("externalIdsHolder",
+              new JsonObject().put("instanceId", "id2")
+            ))
+      );
     mock.setSourceStorageResponse(obj.encode());
 
     String jobProfileId = UUID.randomUUID().toString();
     Future<List<String>> future = importer.begin(jobProfileId)
-        .compose(x -> importer.post(marc1))
-        .compose(x -> importer.end());
+      .compose(x -> importer.post(marc1))
+      .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
       assertThat(x).containsExactly("id1", "id2");
       assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
@@ -364,6 +366,31 @@ public class RecordImporterTest {
         .compose(x -> importer.end());
     future.onComplete(context.failing(cause -> {
       assertThat(cause.getMessage()).contains("Did not get any instances after 2 retries");
+      context.completeNow();
+    }));
+  }
+
+  @Test
+  void testImporterUpdate(Vertx vertx, VertxTestContext context) {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+    // rapid retry and try only 2 times before giving up
+    importer.setStoragePollWait(1);
+    importer.setStoragePollIterations(2);
+    mock.setIterations(3);
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<List<String>> future = importer.begin(jobProfileId)
+      .compose(x -> importer.post(marc1))
+      .compose(x -> importer.end(Collections.singletonList("9876")));
+    future.onComplete(context.succeeding(x -> {
+      assertThat(x).containsExactly("9876");
+      assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
       context.completeNow();
     }));
   }
