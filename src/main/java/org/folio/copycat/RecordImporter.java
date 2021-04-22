@@ -267,7 +267,7 @@ public class RecordImporter {
         }
         return getSourceRecords(1)
           .recover(cause -> {
-            log.warn(cause.getMessage(), cause);
+            log.warn("Polling failed and ignored: {}", cause.getMessage(), cause);
             return Future.succeededFuture(instances);
           });
       })
