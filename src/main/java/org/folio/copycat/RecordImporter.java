@@ -262,10 +262,14 @@ public class RecordImporter {
   public Future<List<String>> end(List<String> instances) {
     return post(null, true)
       .compose(x -> {
-        if (instances.isEmpty()) {
-          return getSourceRecords(1);
+        if (!instances.isEmpty()) {
+          return Future.succeededFuture(instances);
         }
-        return Future.succeededFuture(instances);
+        return getSourceRecords(1)
+          .recover(cause -> {
+            log.warn("Polling failed and ignored: {}", cause.getMessage(), cause);
+            return Future.succeededFuture(instances);
+          });
       })
       .onComplete(x -> client.close());
   }
