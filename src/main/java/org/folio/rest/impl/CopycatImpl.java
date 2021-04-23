@@ -63,10 +63,15 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
           return Future.failedFuture("Incomplete/missing MARC record");
         }
         org.marc4j.marc.Record marcRecord = reader.next();
-        marcRecord.getLeader().setCharCodingScheme('a');
+        char charCodingScheme = marcRecord.getLeader().getCharCodingScheme();
+        if (charCodingScheme == ' ') {
+          marcRecord.getLeader().setCharCodingScheme('a');
+        }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         MarcJsonWriter writer = new MarcJsonWriter(out, MarcJsonWriter.MARC_IN_JSON);
-        writer.setConverter(new AnselToUnicode());
+        if (charCodingScheme == ' ') {
+          writer.setConverter(new AnselToUnicode());
+        }
         writer.write(marcRecord);
         JsonObject json2 = new JsonObject(out.toString());
         log.info("converted MARC record {}", json2::encodePrettily);

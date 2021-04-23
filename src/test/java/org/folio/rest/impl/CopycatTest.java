@@ -679,4 +679,19 @@ class CopycatTest {
     })));
   }
 
+  @Test
+  void testGetLocalMarc7utf8(Vertx vertx, VertxTestContext context) throws IOException {
+    // this is marc7.xml.marc and marc7.json from YAZ, but with 010 put at the end because marc4j somehow
+    // swaps it..!
+    byte [] marc = getClass().getClassLoader().getResourceAsStream("marc7utf8.marc").readAllBytes();
+    String expectMarc = new String(getClass().getClassLoader().getResourceAsStream("marc7utf8.json").readAllBytes());
+
+    Record record = new Record().withMarc(Base64.getEncoder().encodeToString(marc));
+    CopycatImpl.getLocalRecord(record).onComplete(context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.encodePrettily()).isEqualTo(new JsonObject(expectMarc).encodePrettily());
+      context.completeNow();;
+    })));
+  }
+
+
 }
