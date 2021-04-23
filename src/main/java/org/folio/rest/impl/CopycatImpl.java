@@ -133,6 +133,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
                 log.info("Got instance identifiers: {}", String.join(", ", instances));
                 entity.setInternalIdentifier(instances.get(0));
               } else {
+                log.info("Got no instance identifiers");
                 entity.setInternalIdentifier(null);
               }
               asyncResultHandler.handle(
