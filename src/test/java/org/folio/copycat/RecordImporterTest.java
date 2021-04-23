@@ -8,7 +8,6 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -384,9 +383,9 @@ public class RecordImporterTest {
     String jobProfileId = UUID.randomUUID().toString();
     Future<List<String>> future = importer.begin(jobProfileId)
       .compose(x -> importer.post(marc1))
-      .compose(x -> importer.end(Collections.singletonList("9876")));
+      .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
-      assertThat(x).containsExactly("9876");
+      assertThat(x).isEmpty();
       assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
       context.completeNow();
     }));
