@@ -29,7 +29,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.marc4j.MarcJsonWriter;
 import org.marc4j.MarcStreamReader;
 import org.marc4j.converter.impl.AnselToUnicode;
-import org.marc4j.marc.Leader;
 
 public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
   static Errors createErrors(String message) {
@@ -125,7 +124,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
             RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
             return importer.begin(jobProfile)
                 .compose(x -> importer.post(marc))
-                .compose(x -> importer.end(instances));
+                .compose(x -> importer.end());
           });
         })
         .onSuccess(
@@ -133,6 +132,8 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               if (!instances.isEmpty()) {
                 log.info("Got instance identifiers: {}", String.join(", ", instances));
                 entity.setInternalIdentifier(instances.get(0));
+              } else {
+                entity.setInternalIdentifier(null);
               }
               asyncResultHandler.handle(
                   Future.succeededFuture(
