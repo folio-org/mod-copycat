@@ -1,3 +1,14 @@
+## 1.0.3 2021-04-23
+
+Changes:
+
+ * [MOCCPCT-35](https://issues.folio.org/browse/MOCCPCT-35) Poll failure: omit internalIdentifier in response
+
+Fixes:
+
+ * [MODCPCT-34](https://issues.folio.org/browse/MODCPCT-34) copycat assumes [MARC-8](https://issues.folio.org/browse/MARC-8) encoding with raw record
+ * [MODCPCT-32](https://issues.folio.org/browse/MODCPCT-32) Ignoer errors for polling storage
+
 ## 1.0.2 2021-04-22
 
 Fixes:
