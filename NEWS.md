@@ -7,7 +7,7 @@ Changes:
 
 Fixes:
 
- * [MODCPCT-34](https://issues.folio.org/browse/MODCPCT-34) copycat assumes [MARC-8](https://issues.folio.org/browse/MARC-8) encoding with raw record
+ * [MODCPCT-34](https://issues.folio.org/browse/MODCPCT-34) copycat assumes MARC-8 encoding with raw record
  * [MODCPCT-32](https://issues.folio.org/browse/MODCPCT-32) Ignore errors for polling storage
 
 ## 1.0.2 2021-04-22
