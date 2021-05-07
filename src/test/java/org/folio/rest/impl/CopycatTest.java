@@ -368,6 +368,46 @@ class CopycatTest {
   }
 
   @Test
+  void testImportProfileWithInternalIdentifierPollFailure(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+    Context vertxContext = vertx.getOrCreateContext();
+
+    // make poll fail
+    mock.setSourceRecordStorageStatus(404);
+
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
+      .withName("index data")
+      .withUrl(URL_INDEXDATA)
+      .withExternalIdQueryMap("$identifier")
+      .withInternalIdEmbedPath("999ff$i");
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+        .withProfileId(targetProfileId)
+        .withInternalIdentifier("1234")
+        .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(200);
+        CopyCatImports importsResponse = (CopyCatImports) res.getEntity();
+        assertThat(importsResponse.getInternalIdentifier()).isNull(); // poll failed so no internalIdentifier
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+          context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+
+
+
+  @Test
   void testImportProfileMissingInternalIdEmbedPath(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
@@ -678,5 +718,20 @@ class CopycatTest {
       context.completeNow();;
     })));
   }
+
+  @Test
+  void testGetLocalMarc7utf8(Vertx vertx, VertxTestContext context) throws IOException {
+    // this is marc7.xml.marc and marc7.json from YAZ, but with 010 put at the end because marc4j somehow
+    // swaps it..!
+    byte [] marc = getClass().getClassLoader().getResourceAsStream("marc7utf8.marc").readAllBytes();
+    String expectMarc = new String(getClass().getClassLoader().getResourceAsStream("marc7utf8.json").readAllBytes());
+
+    Record record = new Record().withMarc(Base64.getEncoder().encodeToString(marc));
+    CopycatImpl.getLocalRecord(record).onComplete(context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.encodePrettily()).isEqualTo(new JsonObject(expectMarc).encodePrettily());
+      context.completeNow();;
+    })));
+  }
+
 
 }

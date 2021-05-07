@@ -29,7 +29,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.marc4j.MarcJsonWriter;
 import org.marc4j.MarcStreamReader;
 import org.marc4j.converter.impl.AnselToUnicode;
-import org.marc4j.marc.Leader;
 
 public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
   static Errors createErrors(String message) {
@@ -63,10 +62,15 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
           return Future.failedFuture("Incomplete/missing MARC record");
         }
         org.marc4j.marc.Record marcRecord = reader.next();
-        marcRecord.getLeader().setCharCodingScheme('a');
+        char charCodingScheme = marcRecord.getLeader().getCharCodingScheme();
+        if (charCodingScheme == ' ') {
+          marcRecord.getLeader().setCharCodingScheme('a');
+        }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         MarcJsonWriter writer = new MarcJsonWriter(out, MarcJsonWriter.MARC_IN_JSON);
-        writer.setConverter(new AnselToUnicode());
+        if (charCodingScheme == ' ') {
+          writer.setConverter(new AnselToUnicode());
+        }
         writer.write(marcRecord);
         JsonObject json2 = new JsonObject(out.toString());
         log.info("converted MARC record {}", json2::encodePrettily);
@@ -102,12 +106,14 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               entity.getExternalIdentifier(), vertxContext);
           return fut.compose(marc -> {
             String jobProfile;
+            List<String> instances = new LinkedList<>();
             if (entity.getInternalIdentifier() != null) {
               jobProfile = targetProfile.getUpdateJobProfileId();
               String pattern = targetProfile.getInternalIdEmbedPath();
               if (pattern == null) {
                 return Future.failedFuture("Missing internalIdEmbedPath in target profile");
               }
+              instances.add(entity.getInternalIdentifier());
               log.info("Embedding identifier {} in MARC {}",
                   entity::getInternalIdentifier, () -> pattern);
               JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
@@ -126,6 +132,9 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               if (!instances.isEmpty()) {
                 log.info("Got instance identifiers: {}", String.join(", ", instances));
                 entity.setInternalIdentifier(instances.get(0));
+              } else {
+                log.info("Got no instance identifiers");
+                entity.setInternalIdentifier(null);
               }
               asyncResultHandler.handle(
                   Future.succeededFuture(

@@ -279,7 +279,7 @@ public class RecordImporterTest {
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
-      assertThat(x).isEmpty();
+      assertThat(x).containsExactly(mock.getInstanceId());
       assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
       context.completeNow();
     }));
@@ -296,22 +296,23 @@ public class RecordImporterTest {
     RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
 
     JsonObject obj = new JsonObject()
-        .put("sourceRecords",
-            new JsonArray().add(
-                new JsonObject().put("externalIdsHolder",
-                    new JsonObject().put("instanceId", "id1")
-                ))
-            .add(
-                new JsonObject().put("externalIdsHolder",
-                    new JsonObject().put("instanceId", "id2")
-                ))
-            );
+      .put("sourceRecords",
+        new JsonArray()
+          .add(
+            new JsonObject().put("externalIdsHolder",
+              new JsonObject().put("instanceId", "id1")
+            ))
+          .add(
+            new JsonObject().put("externalIdsHolder",
+              new JsonObject().put("instanceId", "id2")
+            ))
+      );
     mock.setSourceStorageResponse(obj.encode());
 
     String jobProfileId = UUID.randomUUID().toString();
     Future<List<String>> future = importer.begin(jobProfileId)
-        .compose(x -> importer.post(marc1))
-        .compose(x -> importer.end());
+      .compose(x -> importer.post(marc1))
+      .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
       assertThat(x).containsExactly("id1", "id2");
       assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
@@ -362,8 +363,30 @@ public class RecordImporterTest {
     Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
-    future.onComplete(context.failing(cause -> {
-      assertThat(cause.getMessage()).contains("Did not get any instances after 2 retries");
+    future.onComplete(context.succeeding(x -> context.completeNow()));
+  }
+
+  @Test
+  void testImporterUpdate(Vertx vertx, VertxTestContext context) {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+    // rapid retry and try only 2 times before giving up
+    importer.setStoragePollWait(1);
+    importer.setStoragePollIterations(2);
+    mock.setIterations(3);
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<List<String>> future = importer.begin(jobProfileId)
+      .compose(x -> importer.post(marc1))
+      .compose(x -> importer.end());
+    future.onComplete(context.succeeding(x -> {
+      assertThat(x).isEmpty();
+      assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
       context.completeNow();
     }));
   }
@@ -384,10 +407,7 @@ public class RecordImporterTest {
     Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
-    future.onComplete(context.failing(cause -> {
-      assertThat(cause.getMessage()).contains("returned 400 (expected 200)");
-      context.completeNow();
-    }));
+    future.onComplete(context.succeeding(x -> context.completeNow()));
   }
 
   @Test
@@ -406,10 +426,7 @@ public class RecordImporterTest {
     Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
-    future.onComplete(context.failing(cause -> {
-      assertThat(cause.getMessage()).contains("Failed to decode");
-      context.completeNow();
-    }));
+    future.onComplete(context.succeeding(x -> context.completeNow()));
   }
 
   @Test
@@ -428,10 +445,7 @@ public class RecordImporterTest {
     Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
-    future.onComplete(context.failing(cause -> {
-      assertThat(cause.getMessage()).isEqualTo("Missing \"sourceRecords\" in response");
-      context.completeNow();
-    }));
+    future.onComplete(context.succeeding(x -> context.completeNow()));
   }
 
   @Test
@@ -454,10 +468,7 @@ public class RecordImporterTest {
     Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
-    future.onComplete(context.failing(cause -> {
-      assertThat(cause.getMessage()).contains("class java.lang.Integer cannot be cast to class io.vertx.core.json.JsonObject");
-      context.completeNow();
-    }));
+    future.onComplete(context.succeeding(x -> context.completeNow()));
   }
 
   @Test
