@@ -50,7 +50,7 @@ Once the yaz4j library is available, mod-copycat itself can be built:
 
 ## To run
 
-You must have PostgresQL running. Set environment appropriately:
+You must have PostgreSQL running. Set environment appropriately:
 
 	$ export DB_HOST=localhost
 	$ export DB_PORT=5432
