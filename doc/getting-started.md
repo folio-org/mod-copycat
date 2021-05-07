@@ -9,9 +9,6 @@ mike@indexdata.com
 * [To run](#to-run)
 * [To initialize](#to-initialize)
 * [To use](#to-use)
-* [Integrating into a FOLIO-backend Vagrant box](#integrating-into-a-folio-backend-vagrant-box)
-* [To unassociate, undeploy and remove a running module](#to-unassociate-undeploy-and-remove-a-running-module)
-* [Adding permissions on the UI side](#adding-permissions-on-the-ui-side)
 
 ## Prerequisites
 
@@ -21,11 +18,11 @@ and
 [YAZ](https://www.indexdata.com/yaz)
 before you can compile and install mod-copycat.
 
-Installing yaz is easy on Ubuntu:
+Installing YAZ is easy on Ubuntu:
 
 	term1$ sudo apt install libyaz5
 
-yaz4j is distribued in https://maven.indexdata.com APT repo.
+yaz4j is distributed in https://maven.indexdata.com APT repo.
 If you are using Ubuntu, it is not necessary to compile and install yaz4j.
 
 Steps for install yaz4j (not necessary on Ubuntu amd64).
@@ -39,8 +36,8 @@ In the directory next to mod-copycat checkout, install as follows:
 
 This installs `yaz4j-1.6.0.jar` into the local Maven repository.
 
-Because we used the `bundle` profile, the jar file includes a shared object.
-If running on same platform as we compile, that's fine.
+Because `bundle` profile was specified, the jar file includes a shared object.
+If running on same platform, that's fine.
 If not, you'll have to ship a shared object separately and install it in the path.
 The shared object is installed in `target/native` in all cases (whether bundle is specified or not).
 
@@ -55,21 +52,21 @@ Once the yaz4j library is available, mod-copycat itself can be built:
 
 You must have PostgresQL running. Set environment appropriately:
 
-	term1$ export DB_HOST=localhost
-	term1$ export DB_PORT=5432
-	term1$ export DB_USERNAME=username
-	term1$ export DB_PASSWORD=password
-	term1$ export DB_DATABASE=database
+	$ export DB_HOST=localhost
+	$ export DB_PORT=5432
+	$ export DB_USERNAME=username
+	$ export DB_PASSWORD=password
+	$ export DB_DATABASE=database
 
 With these set, you can run:
 
-	term1$ java -jar target/mod-copycat-fat.jar
+	$ java -jar target/mod-copycat-fat.jar
 
 ## To initialize
 
 In another terminal:
 
-	term2$ curl -d'{"module_to":"foo","parameters":[{"key":"loadReference","value":"true"}]}' \
+	$ curl -d'{"module_to":"foo","parameters":[{"key":"loadReference","value":"true"}]}' \
 		-HX-Okapi-Tenant:diku -HContent-Type:application/json \
 		-HX-Okapi-Url:http://localhost:8081 http://localhost:8081/_/tenant
 
@@ -79,7 +76,7 @@ This will initialize mod-copycat for tenant `diku` and load reference-data.
 
 List all profiles:
 
-	term2$ curl -HX-Okapi-Tenant:diku http://localhost:8081/copycat/profiles
+    $ curl -HX-Okapi-Tenant:diku http://localhost:8081/copycat/profiles
 	{
 	  "profiles" : [ {
 	    "id" : "f26df83c-aa25-40b6-876e-96852c3d4fd4",
@@ -108,13 +105,46 @@ List all profiles:
 	  "totalRecords" : 2
 	}
 
-We have two profiles, one for OCLC Worldcat and one for Library of Congress LCDB.
+We have two profiles part of reference data, one for OCLC Worldcat and
+another for Library of Congress LCDB.
 
-Import a record based on OCLC number 253248524 from OCLC Worldcat. Replace okapiurl (below) with the
-address of an Okapi in a Folio system with mod-copycat and mod-source-record-manager running. Also replace
-token with a token obtained from that system.
+OCLC Worldcat requires credentials to be given before it can be used.
+Property `authentication` must be set for this profile before it can be used.
 
-	term2$ curl -d'{"externalIdentifier":"253248524", "profileId":"f26df83c-aa25-40b6-876e-96852c3d4fd4"}' \
-		-HX-Okapi-Url:okapiurl -HX-Okapi-Token:token -HX-Okapi-Tenant:diku \
-		-HContent-Type:application/json http://localhost:8081/copycat/imports
+In this example, we will import a record from Library of Congress.
 
+Use your favorite HTTP tool. Here okapi-curl is used:
+
+    $ git clone https://github.com/MikeTaylor/okapi-curl
+
+Set up tenant and URL for the remote backend by editing `.okapi`:
+
+    $ vi ~/.okapi
+
+Example values:
+
+    $ cat ~/.okapi
+    OKAPI_URL=https://folio-snapshot-okapi.dev.folio.org
+    OKAPI_TENANT=diku
+
+Login:
+
+    $ okapi-curl login
+
+Login will store token also in `~/.okapi`.
+
+Obtain User ID for the user (that you used in login):
+
+    $ okapi-curl /users?query=username%3D%3Duser | jq .users[0].id
+
+Finally, we're ready to make an import. Replace userid - no quotes. We
+import LC number `2004436018 `- title `Ole Lukøie`.
+
+	$ okapi-curl /copycat/imports -HX-Okapi-User-Id:userid \
+        -d'{"externalIdentifier":"2004436018","profileId":"8594713d-4525-4cc7-b138-a07db4692c37"}'
+    profileId":"8594713d-4525-4cc7-b138-a07db4692c37"}'
+    {
+      "externalIdentifier" : "2004436018",
+      "internalIdentifier" : "fa6856d2-83cb-41fb-a5fa-0a32505c2cb4",
+      "profileId" : "8594713d-4525-4cc7-b138-a07db4692c37"
+    }
