@@ -9,9 +9,6 @@ mike@indexdata.com
 * [To run](#to-run)
 * [To initialize](#to-initialize)
 * [To use](#to-use)
-* [Integrating into a FOLIO-backend Vagrant box](#integrating-into-a-folio-backend-vagrant-box)
-* [To unassociate, undeploy and remove a running module](#to-unassociate-undeploy-and-remove-a-running-module)
-* [Adding permissions on the UI side](#adding-permissions-on-the-ui-side)
 
 ## Prerequisites
 
@@ -19,7 +16,17 @@ You need
 [yaz4j](https://github.com/indexdata/yaz4j)
 and
 [YAZ](https://www.indexdata.com/yaz)
-before you can compile and install mod-copycat. In the directory next to your mod-copycat checkout, install as follows:
+before you can compile and install mod-copycat.
+
+Installing YAZ is easy on Ubuntu:
+
+	term1$ sudo apt install libyaz5
+
+yaz4j is distributed in https://maven.indexdata.com APT repo.
+If you are using Ubuntu, it is not necessary to compile and install yaz4j.
+
+Steps for install yaz4j (not necessary on Ubuntu amd64).
+In the directory next to mod-copycat checkout, install as follows:
 
 	term1$ sudo apt install yaz libyaz-dev swig
 	term1$ git clone https://github.com/indexdata/yaz4j.git
@@ -27,115 +34,120 @@ before you can compile and install mod-copycat. In the directory next to your mo
 	term1$ git checkout v1.6.0
 	term1$ mvn -B -Pbundle install
 
-This installs `yaz4j-1.6.0-SNAPSHOT.jar` into the local Maven repository.
+This installs `yaz4j-1.6.0.jar` into the local Maven repository.
 
-Because we used the `bundle` profile, the jar file includes a shared object. If running on same platform as we compile, that's fine. If not, you'll have to ship a shared object separately and install it in the path. The shared object is installed in `target/native` in all cases (whether bundle is specified or not).
+Because `bundle` profile was specified, the jar file includes a shared object.
+If running on same platform, that's fine.
+If not, you'll have to ship a shared object separately and install it in the path.
+The shared object is installed in `target/native` in all cases (whether bundle is specified or not).
 
 ## To build
 
 Once the yaz4j library is available, mod-copycat itself can be built:
 
-	term1$ cd ../mod-copycat
+	term1$ cd mod-copycat
 	term1$ mvn install
 
 ## To run
 
-	term1$ java -jar target/mod-copycat-fat.jar
+You must have PostgreSQL running. Set environment appropriately:
+
+	$ export DB_HOST=localhost
+	$ export DB_PORT=5432
+	$ export DB_USERNAME=username
+	$ export DB_PASSWORD=password
+	$ export DB_DATABASE=database
+
+With these set, you can run:
+
+	$ java -jar target/mod-copycat-fat.jar
 
 ## To initialize
 
 In another terminal:
 
-	term2$ curl -d'{"module_to":"foo"}' -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/_/tenant
-	[]
-	term2$ 
+	$ curl -d'{"module_to":"foo","parameters":[{"key":"loadReference","value":"true"}]}' \
+		-HX-Okapi-Tenant:diku -HContent-Type:application/json \
+		-HX-Okapi-Url:http://localhost:8081 http://localhost:8081/_/tenant
+
+This will initialize mod-copycat for tenant `diku` and load reference-data.
 
 ## To use
 
-Create a profile:
-
-	term2$ curl -d'{"url":"z3950.indexdata.com/marc", "name":"ID MARC test", "externalIdQueryMap" : "@attr 1=1016 $identifier"}' -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/profiles
-	{
-	  "id" : "6a69ab96-51af-4827-bb7d-7a9cf2f1a8cf",
-	  "name" : "ID MARC test",
-	  "url" : "z3950.indexdata.com/marc"
-	}
-	term$
-
 List all profiles:
 
-	term2$ curl -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/profiles
+    $ curl -HX-Okapi-Tenant:diku http://localhost:8081/copycat/profiles
 	{
 	  "profiles" : [ {
-	    "id" : "6a69ab96-51af-4827-bb7d-7a9cf2f1a8cf",
-	    "name" : "ID MARC test",
-	    "url" : "z3950.indexdata.com/marc",
-            "externalIdQueryMap" : "@attr 1=1016 $identifier"
+	    "id" : "f26df83c-aa25-40b6-876e-96852c3d4fd4",
+	    "name" : "OCLC WorldCat",
+	    "url" : "zcat.oclc.org/OLUCWorldCat",
+	    "externalIdQueryMap" : "@attr 1=1211 $identifier",
+	    "internalIdEmbedPath" : "999ff$i",
+	    "createJobProfileId" : "d0ebb7b0-2f0f-11eb-adc1-0242ac120002",
+	    "updateJobProfileId" : "91f9b8d6-d80e-4727-9783-73fb53e3c786",
+	    "externalIdentifierType" : "439bfbae-75bc-4f74-9fc7-b2a2d47ce3ef",
+	    "enabled" : true
+	  }, {
+	    "id" : "8594713d-4525-4cc7-b138-a07db4692c37",
+	    "name" : "Library of Congress",
+	    "url" : "lx2.loc.gov:210/LCDB",
+	    "externalIdQueryMap" : "@attr 1=9 $identifier",
+	    "internalIdEmbedPath" : "999ff$i",
+	    "createJobProfileId" : "d0ebb7b0-2f0f-11eb-adc1-0242ac120002",
+	    "updateJobProfileId" : "91f9b8d6-d80e-4727-9783-73fb53e3c786",
+	    "targetOptions" : {
+	      "preferredRecordSyntax" : "usmarc"
+	    },
+	    "externalIdentifierType" : "c858e4f2-2b6b-4385-842b-60732ee14abb",
+	    "enabled" : false
 	  } ],
-	  "totalRecords" : 1
-	}
-	term2$ 
-
-Import a record based on an external identifier (could be OCLC number, ISBN, other):
-
-	term2$ curl -d'{"externalIdentifier":"780306m19009999ohu", "profileId":"6a69ab96-51af-4827-bb7d-7a9cf2f1a8cf"}' -HX-Okapi-Tenant:testlib "-HAccept:*/*" -HContent-Type:application/json http://localhost:8081/copycat/imports
-	{
-	  "errors" : [ {
-	  "message" : "Missing X-Okapi-Url header",
-	  "parameters" : [ ]
-	  } ]
+	  "totalRecords" : 2
 	}
 
-In order to complete this operation mod-copycat must be able to contact Okapi and in turn mod-source-record-manager to complete the operation.
+We have two profiles as part of reference data, one for OCLC Worldcat and
+another for Library of Congress LCDB.
 
-## Integrating into a FOLIO-backend Vagrant box
+OCLC Worldcat requires credentials to be given before it can be used.
+Property `authentication` must be set for this profile before it can be used.
 
-Create the configuration file for a FOLIO core backend VM:
+In this example, we will import a record from Library of Congress.
 
-	$ vagrant init folio/snapshot-backend-core
+Use your favorite HTTP tool. Here okapi-curl is used:
 
-Now start the VM for the first time. This will take some time, as it will need to download the VM image:
+    $ git clone https://github.com/MikeTaylor/okapi-curl
 
-	$ vagrant up
+Set up tenant and URL for the remote backend by editing `.okapi`:
 
-Once the VM is running, there are several approaches that can be taken:
-* [Use a "host-only" private network in VirtualBox](https://github.com/folio-org/folio-ansible/blob/master/doc/index.md#running-backend-modules-on-your-host-system) to enable Okapi on the VM to contact mod-copycat on the host.
-* [Use an SSH tunnel](https://github.com/folio-org/mod-graphql/blob/master/doc/developing-with-a-vagrant-box.md#b-run-mod-graphql-in-the-host-box) to enable Okapi on the VM to contact mod-copycat on the host.
-* [Run mod-copycat inside the Vagrant box](https://github.com/folio-org/mod-graphql/blob/master/doc/developing-with-a-vagrant-box.md#a-run-mod-graphql-inside-the-vagrant-box). The linked document talks about running mod-graphql in this way, but the approach is the same. Note that if you use this approach, then the instance of the module running inside the VM must be initialised and populated: it does not share the database with any instance running in the host machine.
+    $ vi ~/.okapi
 
-Whichever of these approaches you use, you now need to tell Okapi about the copycat module: load the module, deploy it, and associated it with the `diku` tenant:
+Example values:
 
-	curl -w '\n' -d @target/ModuleDescriptor.json http://localhost:9130/_/proxy/modules
-	curl -w '\n' -d @target/DeploymentDescriptor-VM.json http://localhost:9130/_/discovery/modules
-	curl -w '\n' -d '[{ "action": "enable", "id": "mod-copycat-1.0.0-SNAPSHOT" }]' http://localhost:9130/_/proxy/tenants/diku/install
+    $ cat ~/.okapi
+    OKAPI_URL=https://folio-snapshot-okapi.dev.folio.org
+    OKAPI_TENANT=diku
 
-Now login and you will be able to access mod-copycat via Okapi. Use the `X-Okapi-Token` from the response headers echoed by the `-D -` option to the login operation:
+Login:
 
-	curl -w '\n' -D - -X POST -d '{"username":"diku_admin","password":"********"}' -H "Content-type: application/json" -H "Accept: application/json" -H "x-okapi-tenant: diku" http://localhost:9130/authn/login
-	curl -w '\n' -H "X-Okapi-Tenant: diku" -H "X-Okapi-Token: XXXXXXXX" -H "Accept: */*" -H "Content-Type: application/json" http://localhost:9130/copycat/profiles
+    $ okapi-curl login
 
-## To unassociate, undeploy and remove a running module
+Login will store token also in `~/.okapi`.
 
-This may be necessary so that the module can be re-added in order to force new or changed permissions to be recognised. The process has several steps, since the module must first be unassociated from the tenant and then undeployed before it can be removed:
+Obtain User ID for the user (that you used in login):
 
-	curl http://localhost:9130/_/proxy/tenants/diku/modules | grep mod-copycat
-	# From the output, extract the module-ID for the next step
-	curl -X DELETE http://localhost:9130/_/proxy/tenants/diku/modules/mod-copycat-1.0.0-SNAPSHOT
+    $ okapi-curl /users?query=username%3D%3Duser | jq .users[0].id
 
-	curl http://localhost:9130/_/discovery/modules | grep -i copycat
-	# From the output, find the deployment UUID for the next step
-	curl -X DELETE http://localhost:9130/_/discovery/modules/mod-copycat-1.0.0-SNAPSHOT/15272446-17ba-41b8-b78b-b67df95bbeef
-	# Or undeploy ALL running instances by omitting the UUID of this specific one:
-	curl -X DELETE http://localhost:9130/_/discovery/modules/mod-copycat-1.0.0-SNAPSHOT
+Finally, we're ready to make an import. Replace userid - no quotes. We
+import LC number `2004436018 `- title `Ole Lukøie`.
 
-	curl -X DELETE http://localhost:9130/_/proxy/modules/mod-copycat-1.0.0-SNAPSHOT
+	$ okapi-curl /copycat/imports -HX-Okapi-User-Id:userid \
+        -d'{"externalIdentifier":"2004436018","profileId":"8594713d-4525-4cc7-b138-a07db4692c37"}'
+    profileId":"8594713d-4525-4cc7-b138-a07db4692c37"}'
+    {
+      "externalIdentifier" : "2004436018",
+      "internalIdentifier" : "fa6856d2-83cb-41fb-a5fa-0a32505c2cb4",
+      "profileId" : "8594713d-4525-4cc7-b138-a07db4692c37"
+    }
 
-## Adding permissions on the UI side
-
-This is most easily done using the UI module's `yarn install`ed the Stripes CLI. Updating the module descriptor is straightforward, but it is then necessary to disable and re-enable the module for a tenant before that tenant can see the new permission definitions. Frustratingly, at the time of writing a bug in `stripes` means that it does not presently cache the Okapi URL or tenant name, so these need to be repeatedly provided on the command line:
-
-	yarn stripes mod update --okapi http://localhost:9130
-	yarn stripes mod disable --okapi http://localhost:9130 --tenant diku
-	yarn stripes mod enable --okapi http://localhost:9130 --tenant diku
-	echo ui-inventory.settings.single-record-import | yarn stripes perm assign --user diku_admin --okapi http://localhost:9130 --tenant diku
-
+This reports that the the LCDB record with LCCN 2004436018 has been created
+as a FOLIO instance with UUID fa6856d2-83cb-41fb-a5fa-0a32505c2cb4."
