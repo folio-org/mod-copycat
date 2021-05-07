@@ -105,7 +105,7 @@ List all profiles:
 	  "totalRecords" : 2
 	}
 
-We have two profiles part of reference data, one for OCLC Worldcat and
+We have two profiles as part of reference data, one for OCLC Worldcat and
 another for Library of Congress LCDB.
 
 OCLC Worldcat requires credentials to be given before it can be used.
@@ -148,3 +148,6 @@ import LC number `2004436018 `- title `Ole Lukøie`.
       "internalIdentifier" : "fa6856d2-83cb-41fb-a5fa-0a32505c2cb4",
       "profileId" : "8594713d-4525-4cc7-b138-a07db4692c37"
     }
+
+This reports that the the LCDB record with LCCN 2004436018 has been created
+as a FOLIO instance with UUID fa6856d2-83cb-41fb-a5fa-0a32505c2cb4."
