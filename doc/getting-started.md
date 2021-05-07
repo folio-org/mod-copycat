@@ -140,9 +140,8 @@ Obtain User ID for the user (that you used in login):
 Finally, we're ready to make an import. Replace userid - no quotes. We
 import LC number `2004436018 `- title `Ole Lukøie`.
 
-	$ okapi-curl /copycat/imports -HX-Okapi-User-Id:userid \
-        -d'{"externalIdentifier":"2004436018","profileId":"8594713d-4525-4cc7-b138-a07db4692c37"}'
-    profileId":"8594713d-4525-4cc7-b138-a07db4692c37"}'
+    $ okapi-curl /copycat/imports -HX-Okapi-User-Id:userid \
+       -d'{"externalIdentifier":"2004436018","profileId":"8594713d-4525-4cc7-b138-a07db4692c37"}'
     {
       "externalIdentifier" : "2004436018",
       "internalIdentifier" : "fa6856d2-83cb-41fb-a5fa-0a32505c2cb4",
