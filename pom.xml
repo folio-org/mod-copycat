@@ -121,12 +121,12 @@
   </dependencies>
 
   <properties>
-    <vertx.version>4.0.0</vertx.version>
+    <vertx.version>4.0.3</vertx.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>33.0.0-pre1</raml-module-builder-version>
+    <raml-module-builder-version>33.0.0-pre3</raml-module-builder-version>
     <generate_routing_context />
     <argLine />
   </properties>
