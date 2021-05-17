@@ -80,6 +80,7 @@ class WebServiceTest {
         assertThat(bodyResponse.getInteger("totalRecords")).isEqualTo(2); // number of reference records
         return Future.succeededFuture();
       })
+
       .compose(res ->
         webClient.get(port, "localhost", "/copycat/profiles/" + OCLC_WORLDCAT_ID)
           .putHeader(XOkapiHeaders.TENANT, TENANT)
@@ -98,6 +99,7 @@ class WebServiceTest {
         tenantAttributes.setModuleTo("mod-copycat-1.0.1");
         return TenantInit.exec(tenantClient, tenantAttributes, 60000);
       })
+
       .compose(res ->
         webClient.get(port, "localhost", "/copycat/profiles/" + OCLC_WORLDCAT_ID)
           .putHeader(XOkapiHeaders.TENANT, TENANT)
