@@ -87,10 +87,7 @@ class CopycatTest {
     PostgresClient postgresClient = PgUtil.postgresClient(vertx.getOrCreateContext(), headers);
     postgresClient
       .execute("SELECT jsonb FROM profile")
-      .onComplete(context.succeeding(res -> context.verify(() -> {
-        assertThat(res.rowCount()).isGreaterThanOrEqualTo(0);
-        context.completeNow();
-      })));
+      .onComplete(context.succeeding(res -> context.verify(() -> context.completeNow())));
   }
 
   @Test
