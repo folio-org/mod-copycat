@@ -182,7 +182,7 @@ public class ImporterMock {
       return;
     }
     JsonObject sourceRecord = new JsonObject()
-        .put("recordType", "MARC")
+        .put("recordType", "MARC_BIB")
         .put("additionalInfo",
             new JsonObject().put("suppressDiscovery", false));
     if (iteration == 0) {
