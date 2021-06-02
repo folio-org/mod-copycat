@@ -10,9 +10,9 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.jaxrs.model.CopyCatCollection;
@@ -22,6 +22,7 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Record;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.resource.Copycat;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -54,7 +55,7 @@ class CopycatTest {
 
   static Future<Void> tenantInit(Vertx vertx, VertxTestContext context) {
     TenantAPI tenantAPI = new CopyCatInit();
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     Promise<Void> promise = Promise.promise();
@@ -69,7 +70,7 @@ class CopycatTest {
   void testEmptyProfile(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap();
     headers.put(XOkapiHeaders.TENANT, tenant);
 
     api.getCopycatProfiles(0, 0, null, headers, context.succeeding(res -> context.verify(() -> {
@@ -80,10 +81,20 @@ class CopycatTest {
   }
 
   @Test
+  void testGetTableWithoutSchema(Vertx vertx, VertxTestContext context) {
+    Map<String, String> headers = new CaseInsensitiveMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    PostgresClient postgresClient = PgUtil.postgresClient(vertx.getOrCreateContext(), headers);
+    postgresClient
+      .execute("SELECT jsonb FROM profile")
+      .onComplete(context.succeeding(res -> context.verify(() -> context.completeNow())));
+  }
+
+  @Test
   void testAddProfile(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
 
     CopyCatProfile copycatProfile = new CopyCatProfile()
@@ -117,7 +128,7 @@ class CopycatTest {
   void testImportProfileNoProfile(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -140,7 +151,7 @@ class CopycatTest {
   void testImportProfileOK(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -173,7 +184,7 @@ class CopycatTest {
   void testImportProfileMissingTargetUrl(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -206,7 +217,7 @@ class CopycatTest {
   void testImportProfileMissingExternalIdQueryMap(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -239,7 +250,7 @@ class CopycatTest {
   void testImportProfileBadOkapiUrl(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + (mockPort + 1)); // nothing here
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -272,7 +283,7 @@ class CopycatTest {
   void testImportProfileMissingUserId(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     Context vertxContext = vertx.getOrCreateContext();
@@ -303,7 +314,7 @@ class CopycatTest {
   void testImportProfileMissingOkapiUrl(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     Context vertxContext = vertx.getOrCreateContext();
 
@@ -333,7 +344,7 @@ class CopycatTest {
   void testImportProfileWithInternalIdentifier(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -371,7 +382,7 @@ class CopycatTest {
   void testImportProfileWithInternalIdentifierPollFailure(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -411,7 +422,7 @@ class CopycatTest {
   void testImportProfileMissingInternalIdEmbedPath(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -444,7 +455,7 @@ class CopycatTest {
   void testImportProfileZeroHits(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -477,7 +488,7 @@ class CopycatTest {
   void testImportProfileNonExistingTargetProfile(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     Context vertxContext = vertx.getOrCreateContext();
 
@@ -497,7 +508,7 @@ class CopycatTest {
   void testImportProfileRecordJsonOK(Vertx vertx, VertxTestContext context) throws IOException {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -529,7 +540,7 @@ class CopycatTest {
   void testImportProfileRecordJsonBadContent(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -561,7 +572,7 @@ class CopycatTest {
   void testImportProfileRecordMarcOK(Vertx vertx, VertxTestContext context) throws IOException {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -594,7 +605,7 @@ class CopycatTest {
   void testImportProfileRecordMarcBase64Error(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -627,7 +638,7 @@ class CopycatTest {
   void testImportProfileRecordMarcEmpty(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
@@ -660,7 +671,7 @@ class CopycatTest {
   void testImportProfileRecordBadType(Vertx vertx, VertxTestContext context) throws IOException {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
