@@ -124,7 +124,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
             RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
             return importer.begin(jobProfile)
                 .compose(x -> importer.post(marc))
-                .compose(x -> importer.end());
+                .compose(x -> importer.end(instances));
           });
         })
         .onSuccess(

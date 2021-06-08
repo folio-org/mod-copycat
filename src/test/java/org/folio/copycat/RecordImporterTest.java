@@ -8,6 +8,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(VertxExtension.class)
-public class RecordImporterTest {
+class RecordImporterTest {
   private static final Logger log = LogManager.getLogger(JsonMarcTest.class);
   private static ImporterMock mock;
   private static final int port = 9231; // where mock is running
@@ -314,6 +315,7 @@ public class RecordImporterTest {
       .compose(x -> importer.post(marc1))
       .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
+      assertThat(importer.getPollingSucceeded()).isTrue();
       assertThat(x).containsExactly("id1", "id2");
       assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
       context.completeNow();
@@ -339,6 +341,7 @@ public class RecordImporterTest {
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> {
+      assertThat(importer.getPollingSucceeded()).isTrue();
       assertThat(x).containsExactly(mock.getInstanceId());
       assertThat(mock.getLastJobProfileJobId()).isEqualTo(jobProfileId);
       context.completeNow();
@@ -363,7 +366,10 @@ public class RecordImporterTest {
     Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
-    future.onComplete(context.succeeding(x -> context.completeNow()));
+    future.onComplete(context.succeeding(x -> {
+      assertThat(importer.getPollingSucceeded()).isFalse();
+      context.completeNow();
+    }));
   }
 
   @Test
@@ -407,7 +413,32 @@ public class RecordImporterTest {
     Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
-    future.onComplete(context.succeeding(x -> context.completeNow()));
+    future.onComplete(context.succeeding(x -> {
+      assertThat(importer.getPollingSucceeded()).isFalse();
+      context.completeNow();
+    }));
+  }
+
+  @Test
+  void testImporterUpdateNoCallToSourceStorage(Vertx vertx, VertxTestContext context) {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+
+    mock.setSourceRecordStorageStatus(400);
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<List<String>> future = importer.begin(jobProfileId)
+      .compose(x -> importer.post(marc1))
+      .compose(x -> importer.end(Collections.singletonList("1234"), 1L));
+    future.onComplete(context.succeeding(x -> {
+      assertThat(x).containsExactly("1234");
+      context.completeNow();
+    }));
   }
 
   @Test
@@ -426,7 +457,10 @@ public class RecordImporterTest {
     Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
-    future.onComplete(context.succeeding(x -> context.completeNow()));
+    future.onComplete(context.succeeding(x -> {
+      assertThat(importer.getPollingSucceeded()).isFalse();
+      context.completeNow();
+    }));
   }
 
   @Test
@@ -445,7 +479,10 @@ public class RecordImporterTest {
     Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
-    future.onComplete(context.succeeding(x -> context.completeNow()));
+    future.onComplete(context.succeeding(x -> {
+      assertThat(importer.getPollingSucceeded()).isFalse();
+      context.completeNow();
+    }));
   }
 
   @Test
@@ -468,7 +505,10 @@ public class RecordImporterTest {
     Future<List<String>> future = importer.begin(jobProfileId)
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
-    future.onComplete(context.succeeding(x -> context.completeNow()));
+    future.onComplete(context.succeeding(x -> {
+      assertThat(importer.getPollingSucceeded()).isFalse();
+      context.completeNow();
+    }));
   }
 
   @Test
