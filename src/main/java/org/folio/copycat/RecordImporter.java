@@ -47,6 +47,7 @@ public class RecordImporter {
   private final Vertx vertx;
   private int storagePollWait;
   private int storagePollIterations;
+  private Boolean pollingSucceeded;
 
   /**
    * Constructor for importing (can NOT be shared between users/tenants).
@@ -251,6 +252,10 @@ public class RecordImporter {
     });
   }
 
+  Boolean getPollingSucceeded() {
+    return pollingSucceeded;
+  }
+
   Future<List<String>> end(List<String> instances, long updatePoll) {
     return post(null, true)
       .compose(
@@ -261,10 +266,16 @@ public class RecordImporter {
             return promise.future();
           }
           return getSourceRecords(1)
-            .recover(cause -> {
-              log.warn("Polling failed and ignored: {}", cause.getMessage(), cause);
-              return Future.succeededFuture(Collections.emptyList());
-            });
+            .compose(
+              ok -> {
+                pollingSucceeded = true;
+                return Future.succeededFuture(ok);
+              },
+              cause -> {
+                pollingSucceeded = false;
+                log.warn("Polling failed and ignored: {}", cause.getMessage(), cause);
+                return Future.succeededFuture(Collections.emptyList());
+              });
         }
       ).onComplete(x -> client.close());
   }
