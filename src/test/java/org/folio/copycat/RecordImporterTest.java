@@ -8,6 +8,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -408,6 +409,28 @@ public class RecordImporterTest {
         .compose(x -> importer.post(marc1))
         .compose(x -> importer.end());
     future.onComplete(context.succeeding(x -> context.completeNow()));
+  }
+
+  @Test
+  void testImporterUpdateNoCallToSourceStorage(Vertx vertx, VertxTestContext context) {
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + port);
+    headers.put(XOkapiHeaders.TENANT, "testlib");
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    RecordImporter importer = new RecordImporter(headers, vertx.getOrCreateContext());
+
+    mock.setSourceRecordStorageStatus(400);
+
+    String jobProfileId = UUID.randomUUID().toString();
+    Future<List<String>> future = importer.begin(jobProfileId)
+      .compose(x -> importer.post(marc1))
+      .compose(x -> importer.end(Collections.singletonList("1234"), 1L));
+    future.onComplete(context.succeeding(x -> context.verify(() -> {
+      assertThat(x).containsExactly("1234");
+      context.completeNow();
+    })));
   }
 
   @Test

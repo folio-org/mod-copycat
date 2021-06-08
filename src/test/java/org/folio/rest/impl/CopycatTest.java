@@ -379,7 +379,7 @@ class CopycatTest {
   }
 
   @Test
-  void testImportProfileWithInternalIdentifierPollFailure(Vertx vertx, VertxTestContext context) {
+  void testImportProfileWithoutInternalIdentifierPollFailure(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
@@ -402,7 +402,6 @@ class CopycatTest {
       String targetProfileId = responseProfile.getId();
       CopyCatImports copyCatImports = new CopyCatImports()
         .withProfileId(targetProfileId)
-        .withInternalIdentifier("1234")
         .withExternalIdentifier(EXTERNAL_ID_INDEXDATA); // gets 1 record
       api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
         assertThat(res.getStatus()).isEqualTo(200);
@@ -414,9 +413,6 @@ class CopycatTest {
       })), vertxContext);
     })), vertxContext);
   }
-
-
-
 
   @Test
   void testImportProfileMissingInternalIdEmbedPath(Vertx vertx, VertxTestContext context) {

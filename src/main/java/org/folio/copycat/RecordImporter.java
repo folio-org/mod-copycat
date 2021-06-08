@@ -36,6 +36,7 @@ public class RecordImporter {
   private static final int WEBCLIENT_IDLE_TIMEOUT = 20;
   private static final int SOURCE_STORAGE_POLL_WAIT = 300;
   private static final int SOURCE_STORAGE_POLL_ITERATIONS = 20;
+  private static final int UPDATE_POLL = 5000;
 
   private static final Logger log = LogManager.getLogger(RecordImporter.class);
   private final WebClient client;
@@ -250,19 +251,34 @@ public class RecordImporter {
     });
   }
 
+  Future<List<String>> end(List<String> instances, long updatePoll) {
+    return post(null, true)
+      .compose(
+        x -> {
+          if (!instances.isEmpty()) {
+            Promise<List<String>> promise = Promise.promise();
+            vertx.setTimer(updatePoll, w -> promise.complete(instances));
+            return promise.future();
+          }
+          return getSourceRecords(1)
+            .recover(cause -> {
+              log.warn("Polling failed and ignored: {}", cause.getMessage(), cause);
+              return Future.succeededFuture(Collections.emptyList());
+            });
+        }
+      ).onComplete(x -> client.close());
+  }
+
   /**
    * end importing.
-   * @return async result with list of instances.
+   * @param instances known instances (empty for import, non-empty for overlay)
+   * @return list updated/imported instances.
    */
-  public Future<List<String>> end() {
-    return post(null, true)
-      .compose(x ->
-        getSourceRecords(1)
-          .recover(cause -> {
-            log.warn("Polling failed and ignored: {}", cause.getMessage(), cause);
-            return Future.succeededFuture(Collections.emptyList());
-          })
-      )
-      .onComplete(x -> client.close());
+  public Future<List<String>> end(List<String> instances) {
+    return end(instances, UPDATE_POLL);
+  }
+
+  Future<List<String>> end() {
+    return end(Collections.emptyList());
   }
 }
