@@ -97,6 +97,7 @@ public class RecordImporter {
   }
 
   Future<String> createJob() {
+    final String context = "Create job execution";
     String abs = okapiUrl + "/change-manager/jobExecutions";
     HttpRequest<Buffer> request = client.postAbs(abs);
     request.headers().addAll(okapiHeaders);
@@ -105,16 +106,17 @@ public class RecordImporter {
     JsonObject initJob = new JsonObject();
     initJob.put("userId", userId);
     initJob.put("sourceType", "ONLINE");
-    log.info("POST {}: {}", abs, initJob.encodePrettily());
+    log.info("{} POST {}: {}", context, abs, initJob.encodePrettily());
     return request.sendJsonObject(initJob).compose(result -> {
-      log.info("RES {}: {}", abs, result.bodyAsString());
+      log.info("{} RES {}: {}", context, abs, result.bodyAsString());
       if (result.statusCode() != 201) {
-        log.error("POST {} returned {}", abs, result.statusCode());
-        return Future.failedFuture(abs + " returned " + result.statusCode()
+        log.error("{} POST {} returned {}", context, abs, result.statusCode());
+        return Future.failedFuture(context + " failed: POST " + abs
+          + " returned " + result.statusCode()
             + " (expected 201):" + result.bodyAsString());
       }
       return Future.succeededFuture(result.bodyAsJsonObject().getString("parentJobExecutionId"));
-    }, e -> Future.failedFuture("POST " + abs + ": " + e.getMessage()));
+    }, e -> Future.failedFuture(context + " failed: POST " + abs + ": " + e.getMessage()));
   }
 
   /**
@@ -130,6 +132,7 @@ public class RecordImporter {
   }
 
   Future<Void> putJobProfile(String jobProfileId) {
+    final String context = "Assign job profile for job execution";
     String abs = okapiUrl + "/change-manager/jobExecutions/" + jobId + "/jobProfile";
     HttpRequest<Buffer> request = client.putAbs(abs);
     request.headers().addAll(okapiHeaders);
@@ -140,19 +143,20 @@ public class RecordImporter {
     jobProfile.put("id", jobProfileId);
     jobProfile.put("dataType", "MARC_BIB");
 
-    log.info("PUT {}: {}", abs, jobProfile.encodePrettily());
+    log.info("{} PUT {}: {}", context, abs, jobProfile.encodePrettily());
     return request.sendJsonObject(jobProfile).compose(result -> {
-      log.info("RES {}: {}", abs, result.bodyAsString());
+      log.info("{} RES {}: {}", context, abs, result.bodyAsString());
       if (result.statusCode() != 200) {
-        log.error("PUT {} returned {}", abs, result.statusCode());
-        return Future.failedFuture(abs  + " returned " + result.statusCode()
-            + " (expected 200):" + result.bodyAsString());
+        log.error("{} PUT {} returned {}", context, abs, result.statusCode());
+        return Future.failedFuture(context + " failed: PUT " + abs
+          + " returned " + result.statusCode() + " (expected 200):" + result.bodyAsString());
       }
       return Future.succeededFuture();
-    }, e -> Future.failedFuture("PUT " + abs + ": " + e.getMessage()));
+    }, e -> Future.failedFuture(context + " failed: " + "PUT " + abs + ": " + e.getMessage()));
   }
 
   Future<Void> post(JsonObject record, boolean last) {
+    final String context = "Add record for job execution";
     String abs = okapiUrl + "/change-manager/jobExecutions/" + jobId + "/records";
     HttpRequest<Buffer> request = client.postAbs(abs);
     request.headers().addAll(okapiHeaders);
@@ -173,16 +177,16 @@ public class RecordImporter {
     rawRecordsDto.put("recordsMetadata", recordsMetadata);
     rawRecordsDto.put("initialRecords", initialRecords);
     rawRecordsDto.put("id", UUID.randomUUID().toString());
-    log.info("POST {}: {}", abs, rawRecordsDto.encodePrettily());
+    log.info("{} POST {}: {}", context, abs, rawRecordsDto.encodePrettily());
     return request.sendJsonObject(rawRecordsDto).compose(result -> {
-      log.info("RES {}: {}", abs, result.bodyAsString());
+      log.info("{} RES {}: {}", context, abs, result.bodyAsString());
       if (result.statusCode() != 204) {
-        log.error("POST {} returned {}", abs, result.statusCode());
-        return Future.failedFuture(abs  + " returned " + result.statusCode()
-            + " (expected 204):" + result.bodyAsString());
+        log.error("{} POST {} returned {}", context, abs, result.statusCode());
+        return Future.failedFuture(context + " failed: POST " + abs
+          + " returned " + result.statusCode() + " (expected 204):" + result.bodyAsString());
       }
       return Future.succeededFuture();
-    }, e -> Future.failedFuture("POST " + abs + ": " + e.getMessage()));
+    }, e -> Future.failedFuture(context + " failed: POST " + abs + ": " + e.getMessage()));
   }
 
   /**
