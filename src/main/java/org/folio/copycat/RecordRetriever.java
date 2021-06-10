@@ -78,7 +78,7 @@ public final class RecordRetriever {
           conn.option(entry.getKey(), Integer.toString((Integer) entry.getValue()));
         } else {
           return Future.failedFuture("Illegal options type for key " + entry.getKey()
-              + ": " + entry.getValue().getClass());
+            + ": " + entry.getValue().getClass());
         }
       }
     }
@@ -89,11 +89,28 @@ public final class RecordRetriever {
       ResultSet search = conn.search(query);
       Record record = search.getRecord(0);
       if (record == null) {
-        return Future.failedFuture("No record found");
+        return Future.failedFuture("No record found when searching "
+          + profile.getUrl() + " for identifier " + externalId);
       }
       return Future.succeededFuture(record.get(type));
     } catch (ZoomException e) {
-      return Future.failedFuture(e);
+      /*
+       https://github.com/indexdata/yaz4j/blob/master/src/main/java/org/yaz4j/ExceptionUtil.java
+       some messages include the server URL , some don't.. No sub classes for the exception
+       so we can determine if this is init or other error, and no way to get the error code.
+       Using this hack to determine if this was init error.
+       */
+      if (e.getMessage().endsWith(" init request")) {
+        return Future.failedFuture("Z39.50 error: server " + profile.getUrl() + " rejected init."
+          + " This is probably due to missing or incorrect authentication for the copycat profile");
+      }
+      if (e.getMessage().startsWith("Bib1Exception")) {
+        return Future.failedFuture("Z39.50 error: server " + profile.getUrl()
+          + " returned diagnostic: " + e.getMessage()
+          + ". Perhaps the copycat profile is incorrectly configured for this server");
+      }
+      // for these errors yaz4j includes the server URL ...
+      return Future.failedFuture("Z39.50 error: " + e.getMessage());
     } finally {
       conn.close();
     }

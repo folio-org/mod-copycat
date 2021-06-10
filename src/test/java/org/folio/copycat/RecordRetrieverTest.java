@@ -93,6 +93,24 @@ public class RecordRetrieverTest {
   }
 
   @Test
+  void getMarcBadUseAttribute(Vertx vertx, VertxTestContext context) {
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
+      .withName("index data")
+      .withUrl(URL_INDEXDATA)
+      .withExternalIdQueryMap("@attr 1=1211 $identifier");
+
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json")
+      .onComplete(context.failing(cause -> context.verify(() -> {
+        assertThat(cause.getMessage())
+          .isEqualTo(
+            "Z39.50 error: server z3950.indexdata.com/marc returned diagnostic:"
+              + " Bib1Exception: Error Code = 114 (UnsupportedUseAttribute)."
+              + " Perhaps the copycat profile is incorrectly configured for this server");
+        context.completeNow();
+      })));
+  }
+
+  @Test
   void getMarcBadTarget(Vertx vertx, VertxTestContext context) {
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
@@ -104,7 +122,7 @@ public class RecordRetrieverTest {
     RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage())
-              .isEqualTo("Server " + URL_BAD_TARGET + " timed out handling our request");
+              .isEqualTo("Z39.50 error: Server " + URL_BAD_TARGET + " timed out handling our request");
           context.completeNow();
         })));
   }
@@ -120,7 +138,9 @@ public class RecordRetrieverTest {
     RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_WORLDCAT, "json")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage())
-              .isEqualTo("Server " + URL_WORLDCAT + " rejected our init request");
+              .isEqualTo("Z39.50 error: server " + URL_WORLDCAT + " rejected init."
+                + " This is probably due to missing or incorrect authentication for the copycat profile"
+              );
           context.completeNow();
         })));
   }
