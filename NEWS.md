@@ -1,3 +1,10 @@
+## 1.0.4 2021-06-11
+
+ * Z39.50 auth errors are handled with more informative message.
+ * Context for SRS interaction is reported in case of errors.
+ * [MODCPCT-48](https://issues.folio.org/browse/MODCPCT-48) No polling for overlay/update, but wait instead
+ * [MODCPCT-40](https://issues.folio.org/browse/MODCPCT-40) "Getting started guide" has outdated material
+
 ## 1.0.3 2021-04-23
 
 Changes:
