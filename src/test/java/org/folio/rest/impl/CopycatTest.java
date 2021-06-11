@@ -461,7 +461,8 @@ class CopycatTest {
         assertThat(res.getStatus()).isEqualTo(400);
         Errors errors = (Errors) res.getEntity();
         assertThat(errors.getErrors().size()).isEqualTo(1);
-        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("No record found");
+        assertThat(errors.getErrors().get(0).getMessage())
+          .isEqualTo("No record found when searching z3950.indexdata.com/marc for identifier 1234");
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 ->
             context.completeNow()
         ), vertxContext);

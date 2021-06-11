@@ -13,6 +13,8 @@ import org.yaz4j.PrefixQuery;
 import org.yaz4j.Query;
 import org.yaz4j.Record;
 import org.yaz4j.ResultSet;
+import org.yaz4j.exception.Bib1Exception;
+import org.yaz4j.exception.InitRejectedException;
 import org.yaz4j.exception.ZoomException;
 
 public final class RecordRetriever {
@@ -78,7 +80,7 @@ public final class RecordRetriever {
           conn.option(entry.getKey(), Integer.toString((Integer) entry.getValue()));
         } else {
           return Future.failedFuture("Illegal options type for key " + entry.getKey()
-              + ": " + entry.getValue().getClass());
+            + ": " + entry.getValue().getClass());
         }
       }
     }
@@ -89,11 +91,19 @@ public final class RecordRetriever {
       ResultSet search = conn.search(query);
       Record record = search.getRecord(0);
       if (record == null) {
-        return Future.failedFuture("No record found");
+        return Future.failedFuture("No record found when searching "
+          + profile.getUrl() + " for identifier " + externalId);
       }
       return Future.succeededFuture(record.get(type));
+    } catch (InitRejectedException e) {
+      return Future.failedFuture("Z39.50 error: server " + profile.getUrl() + " rejected init."
+        + " This may be due to missing or incorrect authentication for the copycat profile");
+    } catch (Bib1Exception e) {
+      return Future.failedFuture("Z39.50 error: server " + profile.getUrl()
+        + " returned diagnostic: " + e.getMessage()
+        + ". Perhaps the copycat profile is incorrectly configured for this server");
     } catch (ZoomException e) {
-      return Future.failedFuture(e);
+      return Future.failedFuture("Z39.50 error: " + e.getMessage());
     } finally {
       conn.close();
     }
