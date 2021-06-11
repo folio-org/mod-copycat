@@ -139,7 +139,7 @@ public class RecordRetrieverTest {
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage())
               .isEqualTo("Z39.50 error: server " + URL_WORLDCAT + " rejected init."
-                + " This is probably due to missing or incorrect authentication for the copycat profile"
+                + " This may be due to missing or incorrect authentication for the copycat profile"
               );
           context.completeNow();
         })));

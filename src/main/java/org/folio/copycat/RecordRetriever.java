@@ -13,6 +13,8 @@ import org.yaz4j.PrefixQuery;
 import org.yaz4j.Query;
 import org.yaz4j.Record;
 import org.yaz4j.ResultSet;
+import org.yaz4j.exception.Bib1Exception;
+import org.yaz4j.exception.InitRejectedException;
 import org.yaz4j.exception.ZoomException;
 
 public final class RecordRetriever {
@@ -93,23 +95,14 @@ public final class RecordRetriever {
           + profile.getUrl() + " for identifier " + externalId);
       }
       return Future.succeededFuture(record.get(type));
+    } catch (InitRejectedException e) {
+      return Future.failedFuture("Z39.50 error: server " + profile.getUrl() + " rejected init."
+        + " This may be due to missing or incorrect authentication for the copycat profile");
+    } catch (Bib1Exception e) {
+      return Future.failedFuture("Z39.50 error: server " + profile.getUrl()
+        + " returned diagnostic: " + e.getMessage()
+        + ". Perhaps the copycat profile is incorrectly configured for this server");
     } catch (ZoomException e) {
-      /*
-       https://github.com/indexdata/yaz4j/blob/master/src/main/java/org/yaz4j/ExceptionUtil.java
-       some messages include the server URL , some don't.. No sub classes for the exception
-       so we can determine if this is init or other error, and no way to get the error code.
-       Using this hack to determine if this was init error.
-       */
-      if (e.getMessage().endsWith(" init request")) {
-        return Future.failedFuture("Z39.50 error: server " + profile.getUrl() + " rejected init."
-          + " This is probably due to missing or incorrect authentication for the copycat profile");
-      }
-      if (e.getMessage().startsWith("Bib1Exception")) {
-        return Future.failedFuture("Z39.50 error: server " + profile.getUrl()
-          + " returned diagnostic: " + e.getMessage()
-          + ". Perhaps the copycat profile is incorrectly configured for this server");
-      }
-      // for these errors yaz4j includes the server URL ...
       return Future.failedFuture("Z39.50 error: " + e.getMessage());
     } finally {
       conn.close();
