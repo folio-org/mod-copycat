@@ -1,3 +1,10 @@
+## 1.0.4 2021-06-14
+
+ * [MODCPCT-39](https://issues.folio.org/browse/MODCPCT-39) Z39.50 auth errors are handled with more informative message.
+   Context for SRS interaction is reported in case of errors.
+ * [MODCPCT-48](https://issues.folio.org/browse/MODCPCT-48) No polling for overlay/update, but wait instead
+ * [MODCPCT-40](https://issues.folio.org/browse/MODCPCT-40) "Getting started guide" has outdated material
+
 ## 1.0.3 2021-04-23
 
 Changes:
@@ -7,7 +14,7 @@ Changes:
 
 Fixes:
 
- * [MODCPCT-34](https://issues.folio.org/browse/MODCPCT-34) copycat assumes MARC-8 encoding with raw record
+ * [MODCPCT-34](https://issues.folio.org/browse/MODCPCT-34) copycat assumes MARC8 encoding with raw record
  * [MODCPCT-32](https://issues.folio.org/browse/MODCPCT-32) Ignore errors for polling storage
 
 ## 1.0.2 2021-04-22
