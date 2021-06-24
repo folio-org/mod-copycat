@@ -141,7 +141,7 @@ public class RecordImporter {
 
     JsonObject jobProfile = new JsonObject();
     jobProfile.put("id", jobProfileId);
-    jobProfile.put("dataType", "MARC_BIB");
+    jobProfile.put("dataType", "MARC");
 
     log.info("{} PUT {}: {}", context, abs, jobProfile.encodePrettily());
     return request.sendJsonObject(jobProfile).compose(result -> {
