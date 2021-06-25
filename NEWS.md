@@ -1,3 +1,8 @@
+## 1.1.1 2021-06-25
+
+ * [MODCPCT-50](https://issues.folio.org/browse/MODCPCT-50) Change dataType to MARC
+   Which is considered a common type for MARC related subtypes
+
 ## 1.1.0 2021-06-18
 
  * [MODCPCT-45](https://issues.folio.org/browse/MODCPCT-45) Upgrade to Vert.x 4.1.0 / RMB 33.0.1
