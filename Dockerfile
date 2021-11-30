@@ -7,7 +7,7 @@ RUN apk add --no-cache swig openjdk11 maven \
 
 # Compile yaz (there's no apk package for it)
 USER folio
-RUN curl -s http://ftp.indexdata.dk/pub/yaz/yaz-5.30.3.tar.gz |tar xzf -
+RUN curl -s https://ftp.indexdata.com/pub/yaz/yaz-5.30.3.tar.gz |tar xzf -
 RUN cd yaz-5.30.3 && ./configure --prefix=/usr --disable-static --enable-shared && make
 
 # Install yaz
