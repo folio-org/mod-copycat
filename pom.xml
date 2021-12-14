@@ -38,16 +38,6 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-sql-client</artifactId>
-        <version>${vertx.version}-FOLIO</version>
-      </dependency>
-      <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-pg-client</artifactId>
-        <version>${vertx.version}-FOLIO</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -121,12 +111,12 @@
   </dependencies>
 
   <properties>
-    <vertx.version>4.0.0</vertx.version>
+    <vertx.version>4.2.1</vertx.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>33.0.0-pre1</raml-module-builder-version>
+    <raml-module-builder-version>33.2.2</raml-module-builder-version>
     <generate_routing_context />
     <argLine />
   </properties>
