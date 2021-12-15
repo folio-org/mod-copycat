@@ -1,3 +1,7 @@
+## 1.1.2 2021-12-15
+
+ * [MODCPCT-56](https://issues.folio.org/browse/MODCPCT-56) Upgrade to RMB 33.2.2
+
 ## 1.1.1 2021-06-25
 
  * [MODCPCT-50](https://issues.folio.org/browse/MODCPCT-50) Change dataType to MARC
