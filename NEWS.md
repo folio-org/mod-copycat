@@ -1,3 +1,7 @@
+## 1.0.5 2021-12-15
+
+ * [MODCPCT-56](https://issues.folio.org/browse/MODCPCT-56) Upgrade to RMB 33.2.2
+
 ## 1.0.4 2021-06-14
 
  * [MODCPCT-39](https://issues.folio.org/browse/MODCPCT-39) Z39.50 auth errors are handled with more informative message.
