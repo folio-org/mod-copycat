@@ -1,7 +1,6 @@
 package org.folio.copycat;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.folio.rest.jaxrs.model.CopyCatProfile;
