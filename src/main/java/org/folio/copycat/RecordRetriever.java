@@ -120,6 +120,9 @@ public final class RecordRetriever {
       Object marcencoding = targetOptions.getAdditionalProperties().get(MARCENCODING_PROPERTY);
       if (marcencoding instanceof String) {
         encoding = (String) marcencoding;
+      } else if (marcencoding != null) {
+        return Future.failedFuture("Illegal options type for key " + MARCENCODING_PROPERTY
+            + ": " + marcencoding.getClass());
       }
     }
     return getRecordAsBytes(profile, externalId, "json;charset=" + encoding)

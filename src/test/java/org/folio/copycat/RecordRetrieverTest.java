@@ -44,6 +44,23 @@ public class RecordRetrieverTest {
   }
 
   @Test
+  void getJsonMarcBadMarcEncoding(Vertx vertx, VertxTestContext context) {
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier")
+        .withTargetOptions(new TargetOptions()
+            .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, 1));
+
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA)
+        .onComplete(context.failing(cause -> context.verify(() -> {
+          assertThat(cause.getMessage())
+              .isEqualTo("Illegal options type for key " + RecordRetriever.MARCENCODING_PROPERTY + ": class java.lang.Integer");
+          context.completeNow();
+        })));
+  }
+
+  @Test
   void getLineMarcOK(Vertx vertx, VertxTestContext context) {
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
