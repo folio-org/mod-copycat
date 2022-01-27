@@ -38,7 +38,7 @@
     },
     "targetOptions" : {
        "type":"object",
-       "description": "A 1-level Json Object containing ZOOM options. https://software.indexdata.com/yaz/doc/zoom.html#zoom-connections and https://software.indexdata.com/yaz/doc/zoom.resultsets.html#zoom.resultset.options"
+       "description": "A 1-level Json Object containing ZOOM options. The most important ones being preferredRecordSyntax, charset, marcencoding (encoding for retrieved MARC records - default is marc-8). See https://software.indexdata.com/yaz/doc/zoom.html#zoom-connections and https://software.indexdata.com/yaz/doc/zoom.resultsets.html#zoom.resultset.options"
     },
     "externalIdentifierType": {
       "type": "string",
