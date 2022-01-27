@@ -33,9 +33,7 @@ public class RecordRetrieverTest {
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier")
         .withTargetOptions(new TargetOptions()
-            .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, "iso-8859-1")
-            .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, 1234) // currently ignored
-        );
+            .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, "iso-8859-1"));
 
     RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA)
         .onComplete(context.succeeding(marc -> context.verify(() -> {
