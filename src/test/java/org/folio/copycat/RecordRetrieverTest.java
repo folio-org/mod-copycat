@@ -1,7 +1,6 @@
 package org.folio.copycat;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.folio.rest.jaxrs.model.CopyCatProfile;
@@ -31,14 +30,49 @@ public class RecordRetrieverTest {
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
-        .withExternalIdQueryMap("$identifier");
+        .withExternalIdQueryMap("$identifier")
+        .withTargetOptions(new TargetOptions()
+            .withAdditionalProperty("preferredRecordSyntax", "usmarc"));
 
-    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json")
-        .onComplete(context.succeeding(res -> context.verify(() -> {
-          JsonObject marc = new JsonObject(new String(res));
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA)
+        .onComplete(context.succeeding(marc -> context.verify(() -> {
           assertThat(marc.getJsonArray("fields").getJsonObject(3)
               .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
+          context.completeNow();
+        })));
+  }
 
+  @Test
+  void getJsonMarcOKMarcEncoding(Vertx vertx, VertxTestContext context) {
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier")
+        .withTargetOptions(new TargetOptions()
+            .withAdditionalProperty("preferredRecordSyntax", "usmarc")
+            .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, "iso-8859-1"));
+
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA)
+        .onComplete(context.succeeding(marc -> context.verify(() -> {
+          assertThat(marc.getJsonArray("fields").getJsonObject(3)
+              .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
+          context.completeNow();
+        })));
+  }
+
+  @Test
+  void getJsonMarcMarcEncodingNumeric(Vertx vertx, VertxTestContext context) {
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier")
+        .withTargetOptions(new TargetOptions()
+            .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, 865));
+
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA)
+        .onComplete(context.succeeding(marc -> context.verify(() -> {
+          assertThat(marc.getJsonArray("fields").getJsonObject(3)
+              .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
           context.completeNow();
         })));
   }
@@ -50,7 +84,7 @@ public class RecordRetrieverTest {
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
 
-    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
+    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
         .onComplete(context.succeeding(res -> context.verify(() -> {
           String line = new String(res);
           assertThat(line).contains("008 " + EXTERNAL_ID_INDEXDATA);
@@ -68,7 +102,7 @@ public class RecordRetrieverTest {
             .withAdditionalProperty("preferredRecordSyntax", "sutrs")
             .withAdditionalProperty("timeout", 10));
 
-    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
+    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
         .onComplete(context.succeeding(res -> context.verify(() -> {
           String sutrs = new String(res);
           assertThat(sutrs).contains("008: " + EXTERNAL_ID_INDEXDATA);
@@ -85,7 +119,7 @@ public class RecordRetrieverTest {
         .withTargetOptions(new TargetOptions()
             .withAdditionalProperty("structure", Boolean.TRUE));
 
-    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
+    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage()).isEqualTo("Illegal options type for key structure: class java.lang.Boolean");
           context.completeNow();
@@ -99,7 +133,7 @@ public class RecordRetrieverTest {
       .withUrl(URL_INDEXDATA)
       .withExternalIdQueryMap("@attr 1=1211 $identifier");
 
-    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json")
+    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json")
       .onComplete(context.failing(cause -> context.verify(() -> {
         assertThat(cause.getMessage())
           .isEqualTo(
@@ -119,7 +153,7 @@ public class RecordRetrieverTest {
         .withTargetOptions(new TargetOptions()
             .withAdditionalProperty("timeout", 1)); // low timeout so we it's not taking too long
 
-    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json")
+    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage())
               .isEqualTo("Z39.50 error: Server " + URL_BAD_TARGET + " timed out handling our request");
@@ -135,7 +169,7 @@ public class RecordRetrieverTest {
         .withUrl(URL_WORLDCAT)
         .withExternalIdQueryMap("@attr 1=1211 $identifier");
 
-    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_WORLDCAT, "json")
+    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_WORLDCAT, "json")
         .onComplete(context.failing(cause -> context.verify(() -> {
           assertThat(cause.getMessage())
               .isEqualTo("Z39.50 error: server " + URL_WORLDCAT + " rejected init."

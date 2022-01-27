@@ -18,6 +18,8 @@ import org.yaz4j.exception.InitRejectedException;
 import org.yaz4j.exception.ZoomException;
 
 public final class RecordRetriever {
+  static final String MARCENCODING_PROPERTY = "marcencoding";
+
   private static Logger log = LogManager.getLogger(RecordRetriever.class);
 
   private RecordRetriever() {
@@ -58,8 +60,7 @@ public final class RecordRetriever {
    *             <a href="https://software.indexdata.com/yaz/doc/zoom.records.html">ZOOM_record_get</a>
    * @return record content
    */
-  static Future<byte[]> getRecordAsJsonObject(CopyCatProfile profile, String externalId,
-                                              String type) {
+  static Future<byte[]> getRecordAsBytes(CopyCatProfile profile, String externalId, String type) {
     if (profile.getUrl() == null) {
       return Future.failedFuture("url missing in target profile");
     }
@@ -112,7 +113,18 @@ public final class RecordRetriever {
   static Future<JsonObject> getRecordAsJsonObject(CopyCatProfile profile, String externalId) {
     // for YAZ, specifying marc8 here really means that it will use either UTF-8 or MARC-8
     // depending on the leader of the MARC record.
-    return getRecordAsJsonObject(profile, externalId, "json;charset=marc8")
+
+    String encoding = "marc-8";
+    TargetOptions targetOptions = profile.getTargetOptions();
+    if (targetOptions != null) {
+      Object marcencoding = targetOptions.getAdditionalProperties().get(MARCENCODING_PROPERTY);
+      if (marcencoding instanceof String) {
+        encoding = (String) marcencoding;
+      } else if (marcencoding != null) {
+        encoding = Integer.toString((Integer) marcencoding);
+      }
+    }
+    return getRecordAsBytes(profile, externalId, "json;charset=" + encoding)
         .map(buf -> new JsonObject(new String(buf)));
   }
 
@@ -124,7 +136,7 @@ public final class RecordRetriever {
    * @return async result with record (failure if no record is found)
    */
   public static Future<JsonObject> getRecordAsJsonObject(CopyCatProfile profile,
-                                                         String externalId, Context vertxContext) {
+      String externalId, Context vertxContext) {
     // execute in separate thread, because getRecordAsJsonObject is a blocking function.
     return Future.future(promise0 -> vertxContext.owner().executeBlocking(promise1 ->
         getRecordAsJsonObject(profile, externalId)
