@@ -32,6 +32,7 @@ public class RecordRetrieverTest {
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier")
         .withTargetOptions(new TargetOptions()
+            .withAdditionalProperty("preferredRecordSyntax", "usmarc")
             .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, "iso-8859-1"));
 
     RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA)
