@@ -32,6 +32,23 @@ public class RecordRetrieverTest {
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier")
         .withTargetOptions(new TargetOptions()
+            .withAdditionalProperty("preferredRecordSyntax", "usmarc"));
+
+    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA)
+        .onComplete(context.succeeding(marc -> context.verify(() -> {
+          assertThat(marc.getJsonArray("fields").getJsonObject(3)
+              .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
+          context.completeNow();
+        })));
+  }
+
+  @Test
+  void getJsonMarcOKMarcEncoding(Vertx vertx, VertxTestContext context) {
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier")
+        .withTargetOptions(new TargetOptions()
             .withAdditionalProperty("preferredRecordSyntax", "usmarc")
             .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, "iso-8859-1"));
 
@@ -44,18 +61,18 @@ public class RecordRetrieverTest {
   }
 
   @Test
-  void getJsonMarcBadMarcEncoding(Vertx vertx, VertxTestContext context) {
+  void getJsonMarcMarcEncodingNumeric(Vertx vertx, VertxTestContext context) {
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier")
         .withTargetOptions(new TargetOptions()
-            .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, 1));
+            .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, 865));
 
     RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA)
-        .onComplete(context.failing(cause -> context.verify(() -> {
-          assertThat(cause.getMessage())
-              .isEqualTo("Illegal options type for key " + RecordRetriever.MARCENCODING_PROPERTY + ": class java.lang.Integer");
+        .onComplete(context.succeeding(marc -> context.verify(() -> {
+          assertThat(marc.getJsonArray("fields").getJsonObject(3)
+              .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
           context.completeNow();
         })));
   }
