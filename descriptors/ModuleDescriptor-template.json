@@ -88,38 +88,38 @@
   "permissionSets" : [
     {
       "permissionName" : "copycat.imports.post",
-      "displayName" : "Create CopyCat profile",
-      "description" : "Create CopyCat profile"
+      "displayName" : "CopyCat - import records from remote resource",
+      "description" : "Import records from remote and source"
     },
     {
       "permissionName": "copycat.profiles.collection.get",
-      "displayName": "Get CopyCat profiles by query",
+      "displayName": "CopyCat - get CopyCat profiles",
       "description": "Retrieve CopyCat profiles"
     },
     {
       "permissionName": "copycat.profiles.item.post",
-      "displayName": "Create CopyCat profile",
+      "displayName": "CopyCat - create CopyCat profile",
       "description": "Create CopyCat profile"
     },
     {
       "permissionName": "copycat.profiles.item.get",
-      "displayName": "Get CopyCat profile",
-      "description": "Get CopyCat profile"
+      "displayName": "CopyCat - get CopyCat profile",
+      "description": "Get single CopyCat profile"
     },
     {
       "permissionName": "copycat.profiles.item.put",
-      "displayName": "Update CopyCat profile",
-      "description": "Update CopyCat profile"
+      "displayName": "CopyCat - update CopyCat profile",
+      "description": "Update single CopyCat profile"
     },
     {
       "permissionName": "copycat.profiles.item.delete",
-      "displayName": "Delete CopyCat profile",
-      "description": "Delete CopyCat profile"
+      "displayName": "CopyCat - delete CopyCat profile",
+      "description": "Delete single CopyCat profile"
     },
     {
       "permissionName": "copycat.profiles.all",
-      "displayName": "CopyCat profiles",
-      "description": "All permissions for CopyCat profiles",
+      "displayName": "CopyCat - all profile operations",
+      "description": "Allow all operations on CopyCat profiles",
       "subPermissions": [
          "copycat.profiles.collection.get",
          "copycat.profiles.item.post",
@@ -130,7 +130,7 @@
     },
     {
       "permissionName": "copycat.all",
-      "displayName": "CopyCat all",
+      "displayName": "CopyCat - all permissions",
       "description": "All permissions for CopyCat",
       "subPermissions": [
          "copycat.profiles.all",
