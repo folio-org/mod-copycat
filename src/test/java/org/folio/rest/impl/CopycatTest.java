@@ -73,7 +73,7 @@ class CopycatTest {
     Map<String, String> headers = new CaseInsensitiveMap();
     headers.put(XOkapiHeaders.TENANT, tenant);
 
-    api.getCopycatProfiles(0, 0, null, headers, context.succeeding(res -> context.verify(() -> {
+    api.getCopycatProfiles("auto", 0, 0, null, headers, context.succeeding(res -> context.verify(() -> {
       CopyCatCollection col = (CopyCatCollection) res.getEntity();
       assertThat(col.getTotalRecords()).isZero();
       context.completeNow();
@@ -106,7 +106,7 @@ class CopycatTest {
       assertThat(res1.getStatus()).isEqualTo(201);
       CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
       String id = responseProfile.getId();
-      api.getCopycatProfiles(0, 0, null, headers, context.succeeding(res2 -> context.verify(() -> {
+      api.getCopycatProfiles("auto", 0, 0, null, headers, context.succeeding(res2 -> context.verify(() -> {
         assertThat(res2.getStatus()).isEqualTo(200);
         CopyCatCollection col = (CopyCatCollection) res2.getEntity();
         assertThat(col.getTotalRecords()).isEqualTo(1);

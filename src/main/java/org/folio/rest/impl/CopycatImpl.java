@@ -159,14 +159,13 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
 
   @Validate
   @Override
-  public void getCopycatProfiles(int offset, int limit, String query,
-                                 Map<String, String> okapiHeaders,
-                                 Handler<AsyncResult<Response>> asyncResultHandler,
-                                 Context vertxContext) {
+  public void getCopycatProfiles(String totalRecords, int offset, int limit, String query,
+      Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
 
     PgUtil.get(PROFILE_TABLE, CopyCatProfile.class, CopyCatCollection.class,
-        query, offset, limit,  okapiHeaders, vertxContext, GetCopycatProfilesResponse.class,
-        asyncResultHandler);
+        query, totalRecords, offset, limit,  okapiHeaders, vertxContext,
+        GetCopycatProfilesResponse.class, asyncResultHandler);
   }
 
   @Validate
