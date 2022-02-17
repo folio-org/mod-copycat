@@ -16,6 +16,7 @@ RUN cd yaz-5.30.3 && make install
 
 # Compile yaz4j
 USER folio
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk
 RUN git clone https://github.com/indexdata/yaz4j.git
 RUN cd yaz4j && git checkout v1.6.0 && mvn compile
 
