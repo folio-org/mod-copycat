@@ -85,6 +85,7 @@ public final class RecordRetriever {
         }
       }
     }
+    long start = System.currentTimeMillis();
     try {
       Query query = constructQuery(profile, externalId);
       conn.connect();
@@ -106,6 +107,7 @@ public final class RecordRetriever {
     } catch (ZoomException e) {
       return Future.failedFuture("Z39.50 error: " + e.getMessage());
     } finally {
+      log.info("Z39.50 retrieval completed in {} milliseconds", System.currentTimeMillis() - start);
       conn.close();
     }
   }
