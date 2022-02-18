@@ -1,3 +1,16 @@
+## 1.2.0 2022-02-18
+
+Features:
+
+ * [MODCPCT-60](https://issues.folio.org/browse/MODCPCT-60) Allow encoding of imported records to be given.
+This is specified as property `marcencoding` in [copycat profile](ramls/copycatprofile.json).
+ * [MODCPCT-63](https://issues.folio.org/browse/MODCPCT-63) Log time it takes to do Z39.50 search and fetch
+
+Fixes:
+
+ * [MODCPCT-59](https://issues.folio.org/browse/MODCPCT-59) Two mod-copycat permissions share same displayName
+ * [MODCPCT-61](https://issues.folio.org/browse/MODCPCT-61) Update to RMB 33.2.5
+
 ## 1.1.0 2021-06-18
 
  * [MODCPCT-45](https://issues.folio.org/browse/MODCPCT-45) Upgrade to Vert.x 4.1.0 / RMB 33.0.1
