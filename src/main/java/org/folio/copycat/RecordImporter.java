@@ -200,7 +200,7 @@ public class RecordImporter {
   }
 
   Future<List<String>> getSourceRecords1() {
-    String abs = okapiUrl + "/source-storage/source-records?snapshotId=" + jobId;
+    String abs = okapiUrl + "/source-storage/source-records?limit=1&snapshotId=" + jobId;
     HttpRequest<Buffer> request = client.getAbs(abs);
     request.headers().addAll(okapiHeaders);
     request.putHeader("Accept", "*/*");
