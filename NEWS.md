@@ -1,3 +1,7 @@
+## 1.2.1 2022-03-28
+
+ * [MODCPCT-64](https://issues.folio.org/browse/MODCPCT-64) One-record OCLC (Create) Data Import takes over 9 seconds
+
 ## 1.2.0 2022-02-18
 
 Features:
