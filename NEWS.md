@@ -1,3 +1,7 @@
+## 1.3.0 2022-06-30
+
+ * [MODCPCT-66](https://issues.folio.org/brose/MODCPCT-66) Upgrade to RMB 34, Vert.x 4.3.1
+
 ## 1.2.1 2022-03-28
 
  * [MODCPCT-64](https://issues.folio.org/browse/MODCPCT-64) One-record OCLC (Create) Data Import takes over 9 seconds
