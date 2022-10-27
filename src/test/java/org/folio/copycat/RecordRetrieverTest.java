@@ -1,11 +1,14 @@
 package org.folio.copycat;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.folio.okapi.testing.UtilityClassTester;
 import org.folio.rest.jaxrs.model.CopyCatProfile;
 import org.folio.rest.jaxrs.model.TargetOptions;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.yaz4j.Connection;
@@ -14,19 +17,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(VertxExtension.class)
 public class RecordRetrieverTest {
+  private static final String HOST_INDEXDATA = "z3950.indexdata.com";
   private static final String URL_INDEXDATA = "z3950.indexdata.com/marc";
   private static final String URL_BAD_TARGET = "z3950.indexdata.com:211/marc";
   private static final String URL_WORLDCAT = "zcat.oclc.org/OLUCWorldCat";
   private static final String EXTERNAL_ID_WORLDCAT = "1188724030";
   private static final String EXTERNAL_ID_INDEXDATA = "780306m19009999ohu";
 
+  private static boolean zServerAvailable = false;
   @Test
   void constructor() {
     UtilityClassTester.assertUtilityClass(RecordRetriever.class);
   }
 
+
+  @BeforeAll
+  static void beforeAll(Vertx vertx, VertxTestContext context) {
+    Future<Void> f = vertx.createNetClient()
+        .connect(210, HOST_INDEXDATA)
+        .compose(x -> {
+          zServerAvailable = true;
+          return x.close();
+        }, e -> Future.succeededFuture());
+    f.onComplete(context.succeedingThenComplete());
+  }
+
   @Test
   void getJsonMarcOK(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
@@ -44,6 +62,7 @@ public class RecordRetrieverTest {
 
   @Test
   void getJsonMarcOKMarcEncoding(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
@@ -62,6 +81,7 @@ public class RecordRetrieverTest {
 
   @Test
   void getJsonMarcMarcEncodingNumeric(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
@@ -79,6 +99,7 @@ public class RecordRetrieverTest {
 
   @Test
   void getLineMarcOK(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
@@ -94,6 +115,7 @@ public class RecordRetrieverTest {
 
   @Test
   void getSutrsOK(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
@@ -128,6 +150,7 @@ public class RecordRetrieverTest {
 
   @Test
   void getMarcBadUseAttribute(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
       .withName("index data")
       .withUrl(URL_INDEXDATA)

@@ -31,8 +31,8 @@ class WebServiceTest {
 
   private static final String OCLC_WORLDCAT_ID = "f26df83c-aa25-40b6-876e-96852c3d4fd4";
   private static final String TENANT = "tenant";
-  private static final int mockPort = 9231;
-  private static final int port = 9230;
+  private static final int MOCK_PORT = 9231;
+  private static final int PORT = 9230;
   private static ImporterMock mock;
   private static WebClient webClient;
 
@@ -42,12 +42,12 @@ class WebServiceTest {
     DeploymentOptions options = new DeploymentOptions()
       .setConfig(
       new JsonObject()
-        .put("http.port", port));
+        .put("http.port", PORT));
 
     webClient = WebClient.create(vertx);
     mock = new ImporterMock(vertx);
     vertx.deployVerticle(RestVerticle.class.getName(), options)
-      .compose(a -> mock.start(mockPort))
+      .compose(a -> mock.start(MOCK_PORT))
       .onComplete(context.succeeding(x -> {
         log.debug("beforeAll completed");
         context.completeNow();
@@ -65,13 +65,13 @@ class WebServiceTest {
 
   @Test
   void testReferenceDataLoaded(Vertx vertx, VertxTestContext context) {
-    TenantClient tenantClient = new TenantClient("http://localhost:" + port, TENANT, null);
+    TenantClient tenantClient = new TenantClient("http://localhost:" + PORT, TENANT, null);
     TenantAttributes tenantAttributes = new TenantAttributes()
       .withModuleTo("mod-copycat-1.0.0")
       .withParameters(Collections.singletonList(new Parameter().withKey("loadReference").withValue("true")));
 
     TenantInit.exec(tenantClient, tenantAttributes, 60000)
-      .compose(res -> webClient.get(port, "localhost", "/copycat/profiles")
+      .compose(res -> webClient.get(PORT, "localhost", "/copycat/profiles")
         .putHeader(XOkapiHeaders.TENANT, TENANT)
         .send())
       .compose(res -> {
@@ -82,13 +82,13 @@ class WebServiceTest {
       })
 
       .compose(res ->
-        webClient.get(port, "localhost", "/copycat/profiles/" + OCLC_WORLDCAT_ID)
+        webClient.get(PORT, "localhost", "/copycat/profiles/" + OCLC_WORLDCAT_ID)
           .putHeader(XOkapiHeaders.TENANT, TENANT)
           .send())
       .compose(res -> {
         assertThat(res.statusCode()).isEqualTo(200);
         JsonObject oclcProfile = res.bodyAsJsonObject().put("authentication", "foo/bar");
-        return webClient.put(port, "localhost", "/copycat/profiles/" + OCLC_WORLDCAT_ID)
+        return webClient.put(PORT, "localhost", "/copycat/profiles/" + OCLC_WORLDCAT_ID)
           .putHeader(XOkapiHeaders.TENANT, TENANT)
           .putHeader("Content-Type", "application/json")
           .sendJson(oclcProfile);
@@ -101,7 +101,7 @@ class WebServiceTest {
       })
 
       .compose(res ->
-        webClient.get(port, "localhost", "/copycat/profiles/" + OCLC_WORLDCAT_ID)
+        webClient.get(PORT, "localhost", "/copycat/profiles/" + OCLC_WORLDCAT_ID)
           .putHeader(XOkapiHeaders.TENANT, TENANT)
           .send())
       .compose(res -> {

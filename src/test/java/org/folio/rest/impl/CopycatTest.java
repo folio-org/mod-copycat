@@ -25,6 +25,7 @@ import org.folio.rest.jaxrs.resource.Copycat;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,16 +36,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CopycatTest {
   static final String tenant = "testlib";
 
+  private static final String HOST_INDEXDATA = "z3950.indexdata.com";
   private static final String URL_INDEXDATA = "z3950.indexdata.com/marc";
   private static final String EXTERNAL_ID_INDEXDATA = "780306m19009999ohu";
-  private static final int mockPort = 9231;
+  private static final int MOCK_PORT = 9231;
+  private static boolean zServerAvailable = false;
   private static ImporterMock mock;
+
 
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext context) {
+    Future<Void> f = vertx.createNetClient()
+        .connect(210, HOST_INDEXDATA)
+        .compose(x -> {
+          zServerAvailable = true;
+          return x.close();
+        }, e -> Future.succeededFuture());
+
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     mock = new ImporterMock(vertx);
-    mock.start(mockPort)
+    f.compose(x -> mock.start(MOCK_PORT))
         .compose(x -> tenantInit(vertx, context)).onComplete(context.succeeding(res -> context.completeNow()));
   }
 
@@ -57,7 +68,7 @@ class CopycatTest {
     TenantAPI tenantAPI = new CopyCatInit();
     Map<String, String> headers = new CaseInsensitiveMap();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     Promise<Void> promise = Promise.promise();
     tenantAPI.postTenantSync(new TenantAttributes(), headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(204);
@@ -130,7 +141,7 @@ class CopycatTest {
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     Context vertxContext = vertx.getOrCreateContext();
@@ -149,11 +160,12 @@ class CopycatTest {
 
   @Test
   void testImportProfileOK(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     Context vertxContext = vertx.getOrCreateContext();
@@ -186,7 +198,7 @@ class CopycatTest {
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     Context vertxContext = vertx.getOrCreateContext();
@@ -215,11 +227,12 @@ class CopycatTest {
 
   @Test
   void testImportProfileMissingExternalIdQueryMap(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     Context vertxContext = vertx.getOrCreateContext();
@@ -248,11 +261,12 @@ class CopycatTest {
 
   @Test
   void testImportProfileBadOkapiUrl(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + (mockPort + 1)); // nothing here
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + (MOCK_PORT + 1)); // nothing here
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     Context vertxContext = vertx.getOrCreateContext();
@@ -281,11 +295,12 @@ class CopycatTest {
 
   @Test
   void testImportProfileMissingUserId(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     Context vertxContext = vertx.getOrCreateContext();
 
     CopyCatProfile copyCatProfile = new CopyCatProfile()
@@ -312,6 +327,7 @@ class CopycatTest {
 
   @Test
   void testImportProfileMissingOkapiUrl(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
@@ -342,11 +358,12 @@ class CopycatTest {
 
   @Test
   void testImportProfileWithInternalIdentifier(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
 
@@ -380,11 +397,12 @@ class CopycatTest {
 
   @Test
   void testImportProfileWithoutInternalIdentifierPollFailure(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
 
@@ -416,11 +434,12 @@ class CopycatTest {
 
   @Test
   void testImportProfileMissingInternalIdEmbedPath(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
 
@@ -449,11 +468,12 @@ class CopycatTest {
 
   @Test
   void testImportProfileZeroHits(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
     Copycat api = new CopycatImpl();
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
     Context vertxContext = vertx.getOrCreateContext();
 
@@ -507,7 +527,7 @@ class CopycatTest {
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     Context vertxContext = vertx.getOrCreateContext();
@@ -539,7 +559,7 @@ class CopycatTest {
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     Context vertxContext = vertx.getOrCreateContext();
@@ -571,7 +591,7 @@ class CopycatTest {
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     Context vertxContext = vertx.getOrCreateContext();
@@ -604,7 +624,7 @@ class CopycatTest {
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     Context vertxContext = vertx.getOrCreateContext();
@@ -637,7 +657,7 @@ class CopycatTest {
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     Context vertxContext = vertx.getOrCreateContext();
@@ -670,7 +690,7 @@ class CopycatTest {
 
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
-    headers.put(XOkapiHeaders.URL, "http://localhost:" + mockPort);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     Context vertxContext = vertx.getOrCreateContext();
