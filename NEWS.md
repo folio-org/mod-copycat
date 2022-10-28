@@ -1,3 +1,7 @@
+## 1.3.1 2022-10-28
+
+ * [MODCPCT-68](https://issues.folio.org/browse/MODCPCT-68) Upgrade to RMB 35, Vert.x 4.3.4
+
 ## 1.3.0 2022-06-30
 
  * [MODCPCT-66](https://issues.folio.org/brose/MODCPCT-66) Upgrade to RMB 34, Vert.x 4.3.1
