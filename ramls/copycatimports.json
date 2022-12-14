@@ -16,6 +16,10 @@
       "description": "profile to be used for importing",
       "type": "string"
     },
+    "selectedJobProfileId": {
+      "description": "Job profile to be used for importing",
+      "type": "string"
+    },
     "record": {
       "description" : "local record",
       "type" : "object",

@@ -28,13 +28,27 @@
        "type": "string",
        "description": "Specifies where the internalIdentifier is to be embedded in the MARC record, e.g. '999__$i' to place it in field 999, indicator double space (absent) and subfield i; this field only has effect when internalIdentifier is present"
     },
-    "createJobProfileId": {
+    "defaultCreateJobProfileId": {
        "type": "string",
-       "description": "Job profile to use for create"
+       "description": "Default job profile to use for create"
     },
-    "updateJobProfileId": {
+    "defaultUpdateJobProfileId": {
        "type": "string",
-       "description": "Job profile to use for update"
+       "description": "Default job profile to use for update"
+    },
+    "createJobProfileIds": {
+      "type": "array",
+      "description": "Job profiles to use for create",
+      "items": {
+        "type": "string"
+      }
+    },
+    "updateJobProfileIds": {
+      "type": "array",
+      "description": "Job profiles to use for update",
+      "items": {
+        "type": "string"
+      }
     },
     "targetOptions" : {
        "type":"object",

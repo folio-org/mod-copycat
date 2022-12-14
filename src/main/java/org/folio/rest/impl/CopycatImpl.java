@@ -106,9 +106,20 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               entity.getExternalIdentifier(), vertxContext);
           return fut.compose(marc -> {
             String jobProfile;
+            String selectedJobProfile = entity.getSelectedJobProfileId();
             List<String> instances = new LinkedList<>();
             if (entity.getInternalIdentifier() != null) {
-              jobProfile = targetProfile.getUpdateJobProfileId();
+              if (selectedJobProfile != null) {
+                List<String> updateJobProfileIds = targetProfile.getUpdateJobProfileIds();
+                if (updateJobProfileIds != null
+                    && !updateJobProfileIds.contains(selectedJobProfile)) {
+                  return Future.failedFuture("Invalid job profile id");
+                }
+                jobProfile = selectedJobProfile;
+              } else {
+                jobProfile = targetProfile.getDefaultUpdateJobProfileId();
+              }
+
               String pattern = targetProfile.getInternalIdEmbedPath();
               if (pattern == null) {
                 return Future.failedFuture("Missing internalIdEmbedPath in target profile");
@@ -118,7 +129,16 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
                   entity::getInternalIdentifier, () -> pattern);
               JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
             } else {
-              jobProfile = targetProfile.getCreateJobProfileId();
+              if (selectedJobProfile != null) {
+                List<String> createJobProfileIds = targetProfile.getCreateJobProfileIds();
+                if (createJobProfileIds != null
+                    && !createJobProfileIds.contains(selectedJobProfile)) {
+                  return Future.failedFuture("Invalid job profile id");
+                }
+                jobProfile = selectedJobProfile;
+              } else {
+                jobProfile = targetProfile.getDefaultCreateJobProfileId();
+              }
             }
             log.info("Importing {}", marc::encodePrettily);
             RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
