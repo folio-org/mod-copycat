@@ -18,7 +18,8 @@
     },
     "selectedJobProfileId": {
       "description": "Job profile to be used for importing",
-      "type": "string"
+      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "record": {
       "description" : "local record",

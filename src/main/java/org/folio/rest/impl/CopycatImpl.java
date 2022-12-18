@@ -99,14 +99,14 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
   }
 
   private void validateAllowedJobProfileIds(CopyCatProfile copyCatProfile) {
-    if (copyCatProfile.getAllowedCreateJobProfileIds().size() == 0) {
+    if (copyCatProfile.getAllowedCreateJobProfileIds().isEmpty()) {
       List<String> allowedCreateJobProfileIds = new ArrayList<>();
       allowedCreateJobProfileIds.add(copyCatProfile.getCreateJobProfileId());
 
       copyCatProfile.setAllowedCreateJobProfileIds(allowedCreateJobProfileIds);
     }
 
-    if (copyCatProfile.getAllowedUpdateJobProfileIds().size() == 0) {
+    if (copyCatProfile.getAllowedUpdateJobProfileIds().isEmpty()) {
       List<String> allowedUpdateJobProfileIds = new ArrayList<>();
       allowedUpdateJobProfileIds.add(copyCatProfile.getUpdateJobProfileId());
 
