@@ -7,6 +7,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.folio.copycat.JsonMarc;
 import org.folio.copycat.RecordImporter;
 import org.folio.copycat.RecordRetriever;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.impl.exceptions.UnsupportedJobProfileException;
 import org.folio.rest.jaxrs.model.CopyCatCollection;
 import org.folio.rest.jaxrs.model.CopyCatImports;
 import org.folio.rest.jaxrs.model.CopyCatProfile;
@@ -84,6 +86,34 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
     }
   }
 
+  private String getJobProfileId(String selectedJobProfileId, String defaultJobProfileId,
+                                 List<String> allowedJobProfileIds)
+      throws UnsupportedJobProfileException {
+    if (selectedJobProfileId != null && allowedJobProfileIds != null) {
+      if (!allowedJobProfileIds.contains(selectedJobProfileId)) {
+        throw new UnsupportedJobProfileException("Invalid job profile id");
+      }
+      return selectedJobProfileId;
+    }
+    return defaultJobProfileId;
+  }
+
+  private void validateAllowedJobProfileIds(CopyCatProfile copyCatProfile) {
+    if (copyCatProfile.getAllowedCreateJobProfileIds().size() == 0) {
+      List<String> allowedCreateJobProfileIds = new ArrayList<>();
+      allowedCreateJobProfileIds.add(copyCatProfile.getCreateJobProfileId());
+
+      copyCatProfile.setAllowedCreateJobProfileIds(allowedCreateJobProfileIds);
+    }
+
+    if (copyCatProfile.getAllowedUpdateJobProfileIds().size() == 0) {
+      List<String> allowedUpdateJobProfileIds = new ArrayList<>();
+      allowedUpdateJobProfileIds.add(copyCatProfile.getUpdateJobProfileId());
+
+      copyCatProfile.setAllowedUpdateJobProfileIds(allowedUpdateJobProfileIds);
+    }
+  }
+
   @Validate
   @Override
   public void postCopycatImports(CopyCatImports entity, Map<String, String> okapiHeaders,
@@ -106,18 +136,15 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
               entity.getExternalIdentifier(), vertxContext);
           return fut.compose(marc -> {
             String jobProfile;
-            String selectedJobProfile = entity.getSelectedJobProfileId();
+            String selectedJobProfileId = entity.getSelectedJobProfileId();
             List<String> instances = new LinkedList<>();
             if (entity.getInternalIdentifier() != null) {
-              if (selectedJobProfile != null) {
-                List<String> updateJobProfileIds = targetProfile.getUpdateJobProfileIds();
-                if (updateJobProfileIds != null
-                    && !updateJobProfileIds.contains(selectedJobProfile)) {
-                  return Future.failedFuture("Invalid job profile id");
-                }
-                jobProfile = selectedJobProfile;
-              } else {
-                jobProfile = targetProfile.getDefaultUpdateJobProfileId();
+              List<String> updateJobProfileIds = targetProfile.getAllowedUpdateJobProfileIds();
+              try {
+                jobProfile = getJobProfileId(selectedJobProfileId,
+                    targetProfile.getUpdateJobProfileId(), updateJobProfileIds);
+              } catch (UnsupportedJobProfileException e) {
+                return Future.failedFuture(e.getMessage());
               }
 
               String pattern = targetProfile.getInternalIdEmbedPath();
@@ -129,15 +156,12 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
                   entity::getInternalIdentifier, () -> pattern);
               JsonMarc.embedPath(marc, pattern, entity.getInternalIdentifier());
             } else {
-              if (selectedJobProfile != null) {
-                List<String> createJobProfileIds = targetProfile.getCreateJobProfileIds();
-                if (createJobProfileIds != null
-                    && !createJobProfileIds.contains(selectedJobProfile)) {
-                  return Future.failedFuture("Invalid job profile id");
-                }
-                jobProfile = selectedJobProfile;
-              } else {
-                jobProfile = targetProfile.getDefaultCreateJobProfileId();
+              List<String> createJobProfileIds = targetProfile.getAllowedCreateJobProfileIds();
+              try {
+                jobProfile = getJobProfileId(selectedJobProfileId,
+                    targetProfile.getCreateJobProfileId(), createJobProfileIds);
+              } catch (UnsupportedJobProfileException e) {
+                return Future.failedFuture(e.getMessage());
               }
             }
             log.info("Importing {}", marc::encodePrettily);
@@ -173,6 +197,8 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
                                   Map<String, String> okapiHeaders,
                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                   Context vertxContext) {
+    validateAllowedJobProfileIds(entity);
+
     PgUtil.post(PROFILE_TABLE, entity, okapiHeaders, vertxContext,
         PostCopycatProfilesResponse.class, asyncResultHandler);
   }
