@@ -1,5 +1,11 @@
 {
-  "scripts" : [ ],
+  "scripts" : [
+    {
+    "run": "after",
+    "snippetPath": "update_profile.sql",
+    "fromModuleVersion": "mod-copycat-1.3.2"
+    }
+  ],
   "tables" : [
     {
       "tableName" : "profile",
