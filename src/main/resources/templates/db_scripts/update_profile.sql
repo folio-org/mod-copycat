@@ -10,7 +10,7 @@ begin
 	  input_jsonb = jsonb_set(input_jsonb,'{allowedCreateJobProfileIds}',jsonb_build_array(input_jsonb::jsonb->'createJobProfileId'));
 	END IF;
 	IF(input_jsonb::jsonb->'allowedUpdateJobProfileIds' IS NOT NULL) THEN
-  	input_jsonb = jsonb_set(input_jsonb,'{allowedUpdateJobProfileIds}',input_jsonb::jsonb->'updateJobProfileId');
+  	input_jsonb = jsonb_set(input_jsonb,'{allowedUpdateJobProfileIds}',jsonb_build_array(input_jsonb::jsonb->'updateJobProfileId'));
   END IF;
 
 	return input_jsonb;
