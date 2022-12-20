@@ -6,10 +6,10 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.update_cpct_profile(
     VOLATILE PARALLEL UNSAFE
 AS $BODY$
 begin
-  IF(input_jsonb::jsonb->'allowedCreateJobProfileIds' IS NOT NULL) THEN
+  IF(input_jsonb::jsonb->'allowedCreateJobProfileIds' IS NULL) THEN
 	  input_jsonb = jsonb_set(input_jsonb,'{allowedCreateJobProfileIds}',jsonb_build_array(input_jsonb::jsonb->'createJobProfileId'));
 	END IF;
-	IF(input_jsonb::jsonb->'allowedUpdateJobProfileIds' IS NOT NULL) THEN
+	IF(input_jsonb::jsonb->'allowedUpdateJobProfileIds' IS NULL) THEN
   	input_jsonb = jsonb_set(input_jsonb,'{allowedUpdateJobProfileIds}',jsonb_build_array(input_jsonb::jsonb->'updateJobProfileId'));
   END IF;
 
