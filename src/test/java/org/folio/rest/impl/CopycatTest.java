@@ -10,6 +10,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
@@ -136,6 +137,45 @@ class CopycatTest {
   }
 
   @Test
+  void testAddProfileWithEmptyAllowedJobProfileIds(Vertx vertx, VertxTestContext context) {
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new CaseInsensitiveMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+
+    CopyCatProfile copycatProfile = new CopyCatProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withCreateJobProfileId("createJobProfileId")
+        .withUpdateJobProfileId("updateJobProfileId")
+        .withExternalIdQueryMap("@attr 1=12 $identifier");
+    Context vertxContext = vertx.getOrCreateContext();
+    api.postCopycatProfiles(copycatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
+      String id = responseProfile.getId();
+      api.getCopycatProfiles("auto", 0, 0, null, headers, context.succeeding(res2 -> context.verify(() -> {
+        assertThat(res2.getStatus()).isEqualTo(200);
+        CopyCatCollection col = (CopyCatCollection) res2.getEntity();
+        assertThat(col.getTotalRecords()).isEqualTo(1);
+        api.getCopycatProfilesById(id, headers, context.succeeding(res3 -> context.verify(() -> {
+          assertThat(res3.getStatus()).isEqualTo(200);
+          CopyCatProfile profileResponse = (CopyCatProfile) res3.getEntity();
+          assertThat(profileResponse.getAllowedUpdateJobProfileIds()).isEqualTo(List.of(copycatProfile.getUpdateJobProfileId()));
+          assertThat(profileResponse.getAllowedCreateJobProfileIds()).isEqualTo(List.of(copycatProfile.getCreateJobProfileId()));
+          api.putCopycatProfilesById(id, copycatProfile, headers, context.succeeding(res4 -> context.verify(() -> {
+            assertThat(res4.getStatus()).isEqualTo(204);
+            api.deleteCopycatProfilesById(id, headers, context.succeeding(res5 -> context.verify(() -> {
+              assertThat(res5.getStatus()).isEqualTo(204);
+              context.completeNow();
+            })), vertxContext);
+          })), vertxContext);
+        })), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
   void testImportProfileNoProfile(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
@@ -173,7 +213,8 @@ class CopycatTest {
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
-        .withExternalIdQueryMap("$identifier");
+        .withExternalIdQueryMap("$identifier")
+        .withCreateJobProfileId("defaultCreateJobProfileId");
     api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
       CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
@@ -185,9 +226,127 @@ class CopycatTest {
         assertThat(res.getStatus()).isEqualTo(200);
         CopyCatImports importResposne = (CopyCatImports) res.getEntity();
         assertThat(importResposne.getInternalIdentifier()).isEqualTo(mock.getInstanceId());
+        assertThat(copyCatProfile.getCreateJobProfileId()).isEqualTo(mock.getLastJobProfileJobId());
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
+  void testImportProfileWithSelectedJobProfileFromCreateJobProfileIds(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new CaseInsensitiveMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier")
+        .withAllowedCreateJobProfileIds(List.of("selectedCreateJobProfileId"))
+        .withAllowedUpdateJobProfileIds(List.of("selectedUpdateJobProfileId"));
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withProfileId(targetProfileId)
+          .withExternalIdentifier(EXTERNAL_ID_INDEXDATA)
+          .withSelectedJobProfileId("selectedCreateJobProfileId"); // gets 1 record
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(200);
+        CopyCatImports importResposne = (CopyCatImports) res.getEntity();
+        assertThat(importResposne.getInternalIdentifier()).isEqualTo(mock.getInstanceId());
+        assertThat(copyCatProfile.getAllowedCreateJobProfileIds().get(0)).isEqualTo(mock.getLastJobProfileJobId());
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
+  void testImportProfileWithSelectedJobProfileFromUpdateJobProfileIds(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new CaseInsensitiveMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+    Context vertxContext = vertx.getOrCreateContext();
+
+    // make mock return no source records
+    JsonObject obj = new JsonObject().put("sourceRecords", new JsonArray());
+    mock.setSourceStorageResponse(obj.encode());
+
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier")
+        .withInternalIdEmbedPath("999ff$i")
+        .withAllowedCreateJobProfileIds(List.of("selectedCreateJobProfileId"))
+        .withAllowedUpdateJobProfileIds(List.of("selectedUpdateJobProfileId"));
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withProfileId(targetProfileId)
+          .withInternalIdentifier("1234")
+          .withExternalIdentifier(EXTERNAL_ID_INDEXDATA)
+          .withSelectedJobProfileId("selectedUpdateJobProfileId"); // gets 1 record
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(200);
+        CopyCatImports importsResponse = (CopyCatImports) res.getEntity();
+        assertThat(importsResponse.getInternalIdentifier()).isEqualTo("1234");
+        assertThat(copyCatProfile.getAllowedUpdateJobProfileIds().get(0)).isEqualTo(mock.getLastJobProfileJobId());
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
+            context.completeNow()
+        )), vertxContext);
+      })), vertxContext);
+    })), vertxContext);
+  }
+
+  @Test
+  void testImportProfileWithInvalidSelectedJobProfile(Vertx vertx, VertxTestContext context) {
+    Assumptions.assumeTrue(zServerAvailable);
+    Copycat api = new CopycatImpl();
+
+    Map<String, String> headers = new CaseInsensitiveMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    Context vertxContext = vertx.getOrCreateContext();
+
+    CopyCatProfile copyCatProfile = new CopyCatProfile()
+        .withName("index data")
+        .withUrl(URL_INDEXDATA)
+        .withExternalIdQueryMap("$identifier")
+        .withAllowedCreateJobProfileIds(List.of("selectedJobProfileId"));
+    api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
+      assertThat(res1.getStatus()).isEqualTo(201);
+      CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
+      String targetProfileId = responseProfile.getId();
+      CopyCatImports copyCatImports = new CopyCatImports()
+          .withProfileId(targetProfileId)
+          .withExternalIdentifier(EXTERNAL_ID_INDEXDATA)
+          .withSelectedJobProfileId("invalidJobProfileId"); // gets 1 record
+      api.postCopycatImports(copyCatImports, headers, context.succeeding(res -> context.verify(() -> {
+        assertThat(res.getStatus()).isEqualTo(400);
+        Errors errors = (Errors) res.getEntity();
+        assertThat(errors.getErrors().get(0).getMessage()).isEqualTo("Invalid job profile id");
+        api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 ->
+            context.completeNow()
+        ), vertxContext);
       })), vertxContext);
     })), vertxContext);
   }
@@ -375,7 +534,8 @@ class CopycatTest {
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier")
-        .withInternalIdEmbedPath("999ff$i");
+        .withInternalIdEmbedPath("999ff$i")
+        .withUpdateJobProfileId("defaultUpdateJobProfileId");
     api.postCopycatProfiles(copyCatProfile, headers, context.succeeding(res1 -> context.verify(() -> {
       assertThat(res1.getStatus()).isEqualTo(201);
       CopyCatProfile responseProfile = (CopyCatProfile) res1.getEntity();
@@ -388,6 +548,7 @@ class CopycatTest {
         assertThat(res.getStatus()).isEqualTo(200);
         CopyCatImports importsResponse = (CopyCatImports) res.getEntity();
         assertThat(importsResponse.getInternalIdentifier()).isEqualTo("1234");
+        assertThat(copyCatProfile.getUpdateJobProfileId()).isEqualTo(mock.getLastJobProfileJobId());
         api.deleteCopycatProfilesById(targetProfileId, headers, context.succeeding(res3 -> context.verify(() ->
             context.completeNow()
         )), vertxContext);
