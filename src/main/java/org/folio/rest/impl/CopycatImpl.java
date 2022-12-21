@@ -144,6 +144,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
                 jobProfile = getJobProfileId(selectedJobProfileId,
                     targetProfile.getUpdateJobProfileId(), updateJobProfileIds);
               } catch (UnsupportedJobProfileException e) {
+                log.warn("Invalid job profile id {}", selectedJobProfileId);
                 return Future.failedFuture(e.getMessage());
               }
 
@@ -161,9 +162,11 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
                 jobProfile = getJobProfileId(selectedJobProfileId,
                     targetProfile.getCreateJobProfileId(), createJobProfileIds);
               } catch (UnsupportedJobProfileException e) {
+                log.warn("Invalid job profile id {}", selectedJobProfileId);
                 return Future.failedFuture(e.getMessage());
               }
             }
+            log.info("Importing with job profile {}", jobProfile);
             log.info("Importing {}", marc::encodePrettily);
             RecordImporter importer = new RecordImporter(okapiHeaders, vertxContext);
             return importer.begin(jobProfile)
