@@ -93,13 +93,13 @@
   </dependencies>
 
   <properties>
-    <okapi.version>4.14.5</okapi.version>
-    <vertx.version>4.3.4</vertx.version>
+    <okapi.version>4.14.10</okapi.version>
+    <vertx.version>4.3.8</vertx.version>
     <junit.jupiter.version>5.8.1</junit.jupiter.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>35.0.2</raml-module-builder-version>
+    <raml-module-builder-version>35.0.6</raml-module-builder-version>
     <generate_routing_context />
     <argLine />
   </properties>
