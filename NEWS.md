@@ -1,3 +1,9 @@
+## 1.4.0 2023-20-16
+
+ * [MOCCPCT-74](https://issues.folio.org/browse/MOCCPCT-74) Upgrade to RMB 35.0.6, Vert.x 4.3.8
+ * [MODCPCT-69](https://issues.folio.org/browse/MODCPCT-69) Create an upgrade process for existing Z39.50 target profiles
+ * [MODCPCT-71](https://issues.folio.org/browse/MODCPCT-71) Allow importing single records with selected jobProfile
+
 ## 1.3.1 2022-10-28
 
  * [MODCPCT-68](https://issues.folio.org/browse/MODCPCT-68) Upgrade to RMB 35, Vert.x 4.3.4
