@@ -1,3 +1,7 @@
+## 1.5.0 2023-10-11
+
+* Upgrade mod-copycat to Java 17 (MODCPCT-76)
+
 ## 1.4.0 2023-20-16
 
  * [MOCCPCT-74](https://issues.folio.org/browse/MOCCPCT-74) Upgrade to RMB 35.0.6, Vert.x 4.3.8
