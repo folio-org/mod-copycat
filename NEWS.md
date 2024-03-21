@@ -1,6 +1,12 @@
+## 1.6.0 2024-03-21
+
+* [MOCCPCT-82](https://issues.folio.org/browse/MOCCPCT-82) Upgrade to Vert.x 4.5.4
+* [MOCCPCT-80](https://issues.folio.org/browse/MOCCPCT-80) Upgrade to RMB 35.2.0
+* [MOCCPCT-81](https://issues.folio.org/browse/MOCCPCT-81) Finalize upgrade to Java 17
+
 ## 1.5.0 2023-10-11
 
-* Upgrade mod-copycat to Java 17 (MODCPCT-76)
+* [MOCCPCT-76](https://issues.folio.org/browse/MOCCPCT-76) Upgrade mod-copycat to Java 17
 
 ## 1.4.0 2023-20-16
 
