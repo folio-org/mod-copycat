@@ -32,9 +32,9 @@
           "modulePermissions" : [
             "change-manager.jobexecutions.post",
             "change-manager.jobexecutions.get",
-            "change-manager.jobexecutions.put",
+            "change-manager.jobExecutions.jobProfile.item.put",
             "change-manager.records.post",
-            "source-storage.sourceRecords.get"
+            "source-storage.source-records.collection.get"
           ]
         }
       ]
