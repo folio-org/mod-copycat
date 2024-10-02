@@ -74,7 +74,7 @@
   "requires" : [
     {
       "id" : "source-manager-job-executions",
-      "version" : "2.0 3.0"
+      "version" : "2.0 3.0 3.4"
     },
     {
       "id" : "source-manager-records",
@@ -82,7 +82,7 @@
     },
     {
       "id" : "source-storage-source-records",
-      "version" : "3.0"
+      "version" : "3.2"
     }
   ],
   "permissionSets" : [
