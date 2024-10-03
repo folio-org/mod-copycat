@@ -31,7 +31,8 @@
           "permissionsRequired": [ "copycat.imports.post" ],
           "modulePermissions" : [
             "change-manager.jobexecutions.post",
-            "change-manager.jobexecutions.get",
+            "change-manager.jobExecutions.item.get",
+            "change-manager.jobExecutions.children.collection.get",
             "change-manager.jobExecutions.jobProfile.item.put",
             "change-manager.records.post",
             "source-storage.source-records.collection.get"
