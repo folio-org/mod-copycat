@@ -3,6 +3,7 @@
 * [MOCCPCT-82](https://issues.folio.org/browse/MOCCPCT-82) Upgrade to Vert.x 4.5.4
 * [MOCCPCT-80](https://issues.folio.org/browse/MOCCPCT-80) Upgrade to RMB 35.2.0
 * [MOCCPCT-81](https://issues.folio.org/browse/MOCCPCT-81) Finalize upgrade to Java 17
+* [MODCPCT-87](https://folio-org.atlassian.net/browse/MODCPCT-87) Update `source-manager-job-executions` to `3.4` and `source-storage-source-records `to `3.5`
 
 ## 1.5.0 2023-10-11
 
