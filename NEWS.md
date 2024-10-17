@@ -1,4 +1,4 @@
-## 1.X.X (Unreleased)
+## 1.7.0 2024-10-17
 
 * [MODCPCT-87](https://folio-org.atlassian.net/browse/MODCPCT-87) Update `source-manager-job-executions` to `3.4` and `source-storage-source-records `to `3.5`
 
