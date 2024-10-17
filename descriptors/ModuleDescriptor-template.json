@@ -31,10 +31,11 @@
           "permissionsRequired": [ "copycat.imports.post" ],
           "modulePermissions" : [
             "change-manager.jobexecutions.post",
-            "change-manager.jobexecutions.get",
-            "change-manager.jobexecutions.put",
+            "change-manager.jobExecutions.item.get",
+            "change-manager.jobExecutions.children.collection.get",
+            "change-manager.jobExecutions.jobProfile.item.put",
             "change-manager.records.post",
-            "source-storage.sourceRecords.get"
+            "source-storage.source-records.collection.get"
           ]
         }
       ]
@@ -74,7 +75,7 @@
   "requires" : [
     {
       "id" : "source-manager-job-executions",
-      "version" : "2.0 3.0"
+      "version" : "3.4"
     },
     {
       "id" : "source-manager-records",
@@ -82,7 +83,7 @@
     },
     {
       "id" : "source-storage-source-records",
-      "version" : "3.0"
+      "version" : "3.2"
     }
   ],
   "permissionSets" : [

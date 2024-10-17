@@ -1,3 +1,7 @@
+## 1.X.X (Unreleased)
+
+* [MODCPCT-87](https://folio-org.atlassian.net/browse/MODCPCT-87) Update `source-manager-job-executions` to `3.4` and `source-storage-source-records `to `3.5`
+
 ## 1.6.0 2024-03-21
 
 * [MOCCPCT-82](https://issues.folio.org/browse/MOCCPCT-82) Upgrade to Vert.x 4.5.4
