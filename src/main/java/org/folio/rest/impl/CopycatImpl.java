@@ -33,6 +33,9 @@ import org.marc4j.MarcStreamReader;
 import org.marc4j.converter.impl.AnselToUnicode;
 
 public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
+  private static final String PROFILE_TABLE = "profile";
+  private static final Logger log = LogManager.getLogger(CopycatImpl.class);
+
   static Errors createErrors(String message) {
     List<Error> errors = new LinkedList<>();
     errors.add(new Error().withMessage(message));
@@ -43,9 +46,6 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
     log.warn(throwable.getMessage(), throwable);
     return createErrors(throwable.getMessage());
   }
-
-  private static final String PROFILE_TABLE = "profile";
-  private static final Logger log = LogManager.getLogger(CopycatImpl.class);
 
   static Future<JsonObject> getLocalRecord(Record record) {
 
@@ -191,7 +191,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
             asyncResultHandler.handle(
                 Future.succeededFuture(
                     PostCopycatImportsResponse.respond400WithApplicationJson(createErrors(cause))))
-        );
+      );
   }
 
   @Validate
