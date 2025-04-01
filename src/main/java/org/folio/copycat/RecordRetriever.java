@@ -28,6 +28,7 @@ public final class RecordRetriever {
 
   /**
    * Construct yaz4j Query based on external identifier and query mapping.
+   *
    * @param profile target profile
    * @param externalId Identifier to use within query
    * @return Query RPN Query pattern with $identifier being replaced.
@@ -54,6 +55,7 @@ public final class RecordRetriever {
 
   /**
    * Search and retrieve record.
+   *
    * @param profile Target Profile
    * @param externalId record identifier such as ISBN number, OCLC number.
    * @param type render type ("json", "xml", "raw") . See
@@ -132,6 +134,7 @@ public final class RecordRetriever {
 
   /**
    * Retrieve record as JSON from target.
+   *
    * @param profile target profile
    * @param externalId external identifier (such as ISBN, OCLC number)
    * @param vertxContext Vert.x context
@@ -144,5 +147,4 @@ public final class RecordRetriever {
         getRecordAsJsonObject(profile, externalId)
             .onComplete(promise1), promise0));
   }
-
 }

@@ -18,6 +18,9 @@ and
 [YAZ](https://www.indexdata.com/yaz)
 before you can compile and install mod-copycat.
 
+See GitHub actions workflow [build.yml](../.github/workflows/build.yml) for
+an automated example.
+
 Installing YAZ is easy on Ubuntu:
 
 	term1$ sudo apt install libyaz5
