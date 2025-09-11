@@ -10,6 +10,7 @@ public final class JsonMarc {
 
   /**
    * Embed value (typically identifier) in a MARC field.
+   *
    * @param marc JSON MARC
    * @param marcPath Where to embed.
    * @param value string to embed.
@@ -67,5 +68,4 @@ public final class JsonMarc {
     subAr.add(new JsonObject().put(subFieldPattern, value));
     ar.set(i, new JsonObject().put(tagPattern, jsonField));
   }
-
 }

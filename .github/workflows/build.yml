@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
       with:
@@ -11,17 +11,16 @@ jobs:
     - uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '21'
         cache: maven
     - run: wget -O indexdata.gpg https://ftp.indexdata.com/debian/indexdata.gpg
     - run: sudo mv indexdata.gpg /usr/share/keyrings/indexdata.gpg
     - run: |
         cat << EOF > indexdata.list
-        deb     [signed-by=/usr/share/keyrings/indexdata.gpg] https://ftp.indexdata.com/ubuntu jammy main
-        deb-src [signed-by=/usr/share/keyrings/indexdata.gpg] https://ftp.indexdata.com/ubuntu jammy main
+        deb     [signed-by=/usr/share/keyrings/indexdata.gpg] https://ftp.indexdata.com/ubuntu noble main
+        deb-src [signed-by=/usr/share/keyrings/indexdata.gpg] https://ftp.indexdata.com/ubuntu noble main
         EOF
     - run: sudo mv indexdata.list /etc/apt/sources.list.d/indexdata.list
     - run: sudo apt-get update
     - run: sudo apt-get install libyaz5
-    - run: mvn clean install
-
+    - run: mvn -B install

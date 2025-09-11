@@ -22,7 +22,7 @@ import org.folio.okapi.common.XOkapiHeaders;
 /**
  * Responsible for importing records. Uses mod-record-source-manager for importing.
  *
- * <p><ul>
+ * <ul>
  * <li><a href="https://github.com/folio-org/mod-source-record-manager">mod-record-source-manager</a></li>
  * <li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/descriptors/ModuleDescriptor-template.json">Descriptor</a></li>
  * <li><a href="https://github.com/folio-org/mod-source-record-manager/blob/master/ramls/change-manager.raml">RAML</a></li>
@@ -51,6 +51,7 @@ public class RecordImporter {
 
   /**
    * Constructor for importing (can NOT be shared between users/tenants).
+   *
    * @param okapiHeaders Okapi headers
    * @param context Vert.x. context
    * @param options Options for WebClient used for logic
@@ -80,6 +81,7 @@ public class RecordImporter {
 
   /**
    * Constructor for importing (can NOT be shared between users/tenants).
+   *
    * @param okapiHeaders essential headers for importing
    * @param context Vert.x context
    */
@@ -121,6 +123,7 @@ public class RecordImporter {
 
   /**
    * begin importing for current user/tenant.
+   *
    * @param jobProfileId SRS job profile Id; null for default profile.
    * @return async result.
    */
@@ -286,6 +289,7 @@ public class RecordImporter {
 
   /**
    * end importing.
+   *
    * @param instances known instances (empty for import, non-empty for overlay)
    * @return list updated/imported instances.
    */
