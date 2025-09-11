@@ -9,12 +9,12 @@ RUN apk upgrade \
 
 # Compile yaz (there's no apk package for it)
 USER folio
-RUN wget -O- https://ftp.indexdata.com/pub/yaz/yaz-5.30.3.tar.gz |tar xzf -
-RUN cd yaz-5.30.3 && ./configure --prefix=/usr --disable-static --enable-shared && make
+RUN wget -O- https://ftp.indexdata.com/pub/yaz/yaz-5.35.1.tar.gz |tar xzf -
+RUN cd yaz-5.35.1 && ./configure --prefix=/usr --disable-static --enable-shared && make
 
 # Install yaz
 USER root
-RUN cd yaz-5.30.3 && make install
+RUN cd yaz-5.35.1 && make install
 
 # Compile yaz4j
 USER folio
@@ -26,10 +26,10 @@ RUN cd yaz4j && git checkout v1.6.0 && mvn compile
 USER root
 RUN cp yaz4j/target/native/libyaz4j.so /usr/lib/
 
-ENV VERTICLE_FILE mod-copycat-fat.jar
+ENV VERTICLE_FILE=mod-copycat-fat.jar
 
 # Set the location of the verticles
-ENV VERTICLE_HOME /usr/verticles
+ENV VERTICLE_HOME=/usr/verticles
 
 # Copy your fat jar to the container
 COPY target/${VERTICLE_FILE} ${VERTICLE_HOME}/${VERTICLE_FILE}
