@@ -82,7 +82,17 @@ public class JsonMarcTest {
     JsonMarc.embedPath(marc, "70010$a", "1234");
     JsonArray fields = marc.getJsonArray("fields");
     assertThat(fields.getJsonObject(fields.size() - 3).encode()).isEqualTo(
-        "{\"700\":{\"subfields\":[{\"a\":\"Baird, J. Arthur\"},{\"q\":\"(Joseph Arthur)\"},{\"a\":\"1234\"}],\"ind1\":\"1\",\"ind2\":\"0\"}}");
+        "{\"700\":{\"subfields\":[{\"a\":\"1234\"},{\"q\":\"(Joseph Arthur)\"}],\"ind1\":\"1\",\"ind2\":\"0\"}}");
+  }
+
+  @Test
+  void testEmbedPathAppend() throws IOException {
+    String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
+    JsonObject marc = new JsonObject(file);
+    JsonMarc.embedPath(marc, "70010$b", "1234");
+    JsonArray fields = marc.getJsonArray("fields");
+    assertThat(fields.getJsonObject(fields.size() - 3).encode()).isEqualTo(
+        "{\"700\":{\"subfields\":[{\"a\":\"Baird, J. Arthur\"},{\"q\":\"(Joseph Arthur)\"},{\"b\":\"1234\"}],\"ind1\":\"1\",\"ind2\":\"0\"}}");
   }
 
 }
