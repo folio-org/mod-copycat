@@ -18,7 +18,7 @@ public final class JsonMarc {
    */
   public static void embedPath(JsonObject marc, String marcPath, String value) {
     if (marcPath.length() != 7) {
-      throw new IllegalArgumentException("pattern must be exactly 7 characters (3+2+$+subfield");
+      throw new IllegalArgumentException("pattern must be exactly 7 characters (3+2+$+subfield)");
     }
     if (marcPath.charAt(5) != '$') {
       throw new IllegalArgumentException("Missing $ in marcPath");
@@ -28,6 +28,9 @@ public final class JsonMarc {
     indicatorPattern = indicatorPattern.replace('_', ' ');
     final String subFieldPattern = marcPath.substring(6);
     JsonArray ar = marc.getJsonArray("fields");
+    if (ar == null) {
+      throw new IllegalArgumentException("No fields in marc");
+    }
     int i;
     for (i = 0; i < ar.size(); i++) {
       JsonObject entry = ar.getJsonObject(i);
@@ -39,9 +42,14 @@ public final class JsonMarc {
       if (cmp > 0) {
         break;
       }
-      JsonObject jsonField = entry.getJsonObject(tagPattern);
-      if (jsonField == null) {
+      Object fieldValue = entry.getValue(tagPattern);
+      if (!(fieldValue instanceof JsonObject)) {
         continue;
+      }
+      JsonObject jsonField = (JsonObject) fieldValue;
+      JsonArray subAr = jsonField.getJsonArray("subfields");
+      if (subAr == null) {
+        throw new IllegalArgumentException("No subfields in marc");
       }
       boolean found = true;
       for (int j = 0; j < indicatorPattern.length(); j++) {
@@ -51,10 +59,6 @@ public final class JsonMarc {
       }
       if (!found) {
         continue;
-      }
-      JsonArray subAr = jsonField.getJsonArray("subfields");
-      if (subAr == null) {
-        return;
       }
       for (int k = 0; k < subAr.size(); k++) {
         JsonObject subField = subAr.getJsonObject(k);
