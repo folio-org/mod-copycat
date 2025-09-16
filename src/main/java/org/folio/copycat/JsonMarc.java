@@ -14,7 +14,7 @@ public final class JsonMarc {
    * @param marc JSON MARC
    * @param marcPath Where to embed.
    * @param value string to embed.
-   * @throws IllegalArgumentException for bad syntax of marcPath
+   * @throws IllegalArgumentException for bad syntax of marcPath or if marc does not have fields/subfields
    */
   public static void embedPath(JsonObject marc, String marcPath, String value) {
     if (marcPath.length() != 7) {
