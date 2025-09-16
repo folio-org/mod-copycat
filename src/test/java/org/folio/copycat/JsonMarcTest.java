@@ -7,8 +7,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.io.IOException;
 import java.util.stream.Stream;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.okapi.testing.UtilityClassTester;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,7 +14,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.Arguments;
 
 public class JsonMarcTest {
-  private static final Logger log = LogManager.getLogger(JsonMarcTest.class);
 
   @Test
   void constructor() {
@@ -38,9 +35,10 @@ public class JsonMarcTest {
   }
 
   @Test
-  void testEmbedPathNoFields() throws IOException {
+  void testEmbedPathNoFields() {
+    JsonObject marc = new JsonObject();
     var exception = assertThrows(IllegalArgumentException.class,
-        () ->  JsonMarc.embedPath(new JsonObject(), "12300$a", "id1"));
+        () ->  JsonMarc.embedPath(marc, "12300$a", "id1"));
     assertThat(exception.getMessage()).isEqualTo("No fields in marc");
   }
 
@@ -104,6 +102,8 @@ public class JsonMarcTest {
     String file = new String(getClass().getClassLoader().getResourceAsStream("marc1.json").readAllBytes());
     JsonObject marc = new JsonObject(file);
     JsonMarc.embedPath(marc, "00510$a", "1234");
+    assertThat(marc.getJsonArray("fields").getJsonObject(3).encode()).isEqualTo(
+        "{\"005\":{\"ind1\":\"1\",\"ind2\":\"0\",\"subfields\":[{\"a\":\"1234\"}]}}");
   }
 
 }
