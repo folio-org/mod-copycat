@@ -74,16 +74,18 @@
   ],
   "requires" : [
     {
+      "id" : "source-storage-source-records",
+      "version" : "3.2"
+    }
+  ],
+  "optional": [
+    {
       "id" : "source-manager-job-executions",
       "version" : "3.4"
     },
     {
       "id" : "source-manager-records",
       "version" : "2.0"
-    },
-    {
-      "id" : "source-storage-source-records",
-      "version" : "3.2"
     }
   ],
   "permissionSets" : [
