@@ -14,11 +14,11 @@ public final class JsonMarc {
    * @param marc JSON MARC
    * @param marcPath Where to embed.
    * @param value string to embed.
-   * @throws IllegalArgumentException for bad syntax of marcPath
+   * @throws IllegalArgumentException for bad syntax of marcPath or if marc does not have fields/subfields
    */
   public static void embedPath(JsonObject marc, String marcPath, String value) {
     if (marcPath.length() != 7) {
-      throw new IllegalArgumentException("pattern must be exactly 7 characters (3+2+$+subfield");
+      throw new IllegalArgumentException("pattern must be exactly 7 characters (3+2+$+subfield)");
     }
     if (marcPath.charAt(5) != '$') {
       throw new IllegalArgumentException("Missing $ in marcPath");
@@ -28,6 +28,9 @@ public final class JsonMarc {
     indicatorPattern = indicatorPattern.replace('_', ' ');
     final String subFieldPattern = marcPath.substring(6);
     JsonArray ar = marc.getJsonArray("fields");
+    if (ar == null) {
+      throw new IllegalArgumentException("No fields in marc");
+    }
     int i;
     for (i = 0; i < ar.size(); i++) {
       JsonObject entry = ar.getJsonObject(i);
@@ -39,20 +42,34 @@ public final class JsonMarc {
       if (cmp > 0) {
         break;
       }
-      JsonObject jsonField1 = entry.getJsonObject(tagPattern);
-      if (jsonField1 != null) {
-        boolean found = true;
-        for (int j = 0; j < indicatorPattern.length(); j++) {
-          if (!indicatorPattern.substring(j, j + 1).equals(jsonField1.getString("ind" + (j + 1)))) {
-            found = false;
-          }
+      Object fieldValue = entry.getValue(tagPattern);
+      if (!(fieldValue instanceof JsonObject)) {
+        continue;
+      }
+      JsonObject jsonField = (JsonObject) fieldValue;
+      JsonArray subAr = jsonField.getJsonArray("subfields");
+      if (subAr == null) {
+        throw new IllegalArgumentException("No subfields in marc");
+      }
+      boolean found = true;
+      for (int j = 0; j < indicatorPattern.length(); j++) {
+        if (!indicatorPattern.substring(j, j + 1).equals(jsonField.getString("ind" + (j + 1)))) {
+          found = false;
         }
-        if (found) {
-          JsonArray subAr = jsonField1.getJsonArray("subfields");
-          subAr.add(new JsonObject().put(subFieldPattern, value));
+      }
+      if (!found) {
+        continue;
+      }
+      for (int k = 0; k < subAr.size(); k++) {
+        JsonObject subField = subAr.getJsonObject(k);
+        if (subField.getString(subFieldPattern) != null) {
+          subAr.set(k, new JsonObject().put(subFieldPattern, value));
           return;
         }
       }
+      // add new subfield
+      subAr.add(new JsonObject().put(subFieldPattern, value));
+      return;
     }
     // inserting at position i
     ar.add(new JsonObject()); // expand by one dummy
