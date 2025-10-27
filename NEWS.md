@@ -1,3 +1,7 @@
+## 1.8.1 2025-10-27
+
+* [MODCPCT-94](https://folio-org.atlassian.net/browse/MODCPCT-94) replace value in idembedpath if already present
+
 ## 1.8.0 2025-03-10
 
 * [MODCPCT-91](https://folio-org.atlassian.net/browse/MODCPCT-91) Java 21.
