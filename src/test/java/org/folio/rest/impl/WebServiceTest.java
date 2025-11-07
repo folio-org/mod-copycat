@@ -57,10 +57,10 @@ class WebServiceTest {
   @AfterAll
   static void afterAll(Vertx vertx, VertxTestContext context) {
     webClient.close();
-    vertx.close(context.succeeding(x -> {
+    vertx.close().onComplete(x -> {
       log.debug("afterAll completed");
       context.completeNow();
-    }));
+    });
   }
 
   @Test

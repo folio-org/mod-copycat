@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.yaz4j.Connection;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(VertxExtension.class)
 public class RecordRetrieverTest {
@@ -43,7 +44,7 @@ public class RecordRetrieverTest {
   }
 
   @Test
-  void getJsonMarcOK(Vertx vertx, VertxTestContext context) {
+  void getJsonMarcOK() {
     Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
@@ -52,16 +53,13 @@ public class RecordRetrieverTest {
         .withTargetOptions(new TargetOptions()
             .withAdditionalProperty("preferredRecordSyntax", "usmarc"));
 
-    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA)
-        .onComplete(context.succeeding(marc -> context.verify(() -> {
-          assertThat(marc.getJsonArray("fields").getJsonObject(3)
-              .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
-          context.completeNow();
-        })));
+    var rec = RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA);
+    assertThat(rec.getJsonArray("fields").getJsonObject(3)
+        .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
   }
 
   @Test
-  void getJsonMarcOKMarcEncoding(Vertx vertx, VertxTestContext context) {
+  void getJsonMarcOKMarcEncoding() {
     Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
@@ -71,16 +69,13 @@ public class RecordRetrieverTest {
             .withAdditionalProperty("preferredRecordSyntax", "usmarc")
             .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, "iso-8859-1"));
 
-    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA)
-        .onComplete(context.succeeding(marc -> context.verify(() -> {
-          assertThat(marc.getJsonArray("fields").getJsonObject(3)
-              .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
-          context.completeNow();
-        })));
+    var rec = RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA);
+    assertThat(rec.getJsonArray("fields").getJsonObject(3)
+        .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
   }
 
   @Test
-  void getJsonMarcMarcEncodingNumeric(Vertx vertx, VertxTestContext context) {
+  void getJsonMarcMarcEncodingNumeric() {
     Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
@@ -89,32 +84,26 @@ public class RecordRetrieverTest {
         .withTargetOptions(new TargetOptions()
             .withAdditionalProperty(RecordRetriever.MARCENCODING_PROPERTY, 865));
 
-    RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA)
-        .onComplete(context.succeeding(marc -> context.verify(() -> {
-          assertThat(marc.getJsonArray("fields").getJsonObject(3)
-              .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
-          context.completeNow();
-        })));
+    var rec = RecordRetriever.getRecordAsJsonObject(copyCatProfile, EXTERNAL_ID_INDEXDATA);
+    assertThat(rec.getJsonArray("fields").getJsonObject(3)
+        .getString("008")).startsWith(EXTERNAL_ID_INDEXDATA);
   }
 
   @Test
-  void getLineMarcOK(Vertx vertx, VertxTestContext context) {
+  void getLineMarcOK() {
     Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
         .withExternalIdQueryMap("$identifier");
 
-    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
-        .onComplete(context.succeeding(res -> context.verify(() -> {
-          String line = new String(res);
-          assertThat(line).contains("008 " + EXTERNAL_ID_INDEXDATA);
-          context.completeNow();
-        })));
+    var rec = RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render");
+    String line = new String(rec);
+    assertThat(line).contains("008 " + EXTERNAL_ID_INDEXDATA);
   }
 
   @Test
-  void getSutrsOK(Vertx vertx, VertxTestContext context) {
+  void getSutrsOK() {
     Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
@@ -124,16 +113,13 @@ public class RecordRetrieverTest {
             .withAdditionalProperty("preferredRecordSyntax", "sutrs")
             .withAdditionalProperty("timeout", 10));
 
-    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
-        .onComplete(context.succeeding(res -> context.verify(() -> {
-          String sutrs = new String(res);
-          assertThat(sutrs).contains(EXTERNAL_ID_INDEXDATA);
-          context.completeNow();
-        })));
+    var rec = RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render");
+    String sutrs = new String(rec);
+    assertThat(sutrs).contains(EXTERNAL_ID_INDEXDATA);
   }
 
   @Test
-  void getBadOption(Vertx vertx, VertxTestContext context) {
+  void getBadOption() {
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_INDEXDATA)
@@ -141,34 +127,32 @@ public class RecordRetrieverTest {
         .withTargetOptions(new TargetOptions()
             .withAdditionalProperty("structure", Boolean.TRUE));
 
-    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render")
-        .onComplete(context.failing(cause -> context.verify(() -> {
-          assertThat(cause.getMessage()).isEqualTo("Illegal options type for key structure: class java.lang.Boolean");
-          context.completeNow();
-        })));
+    Exception exception = assertThrows(RecordRetrieverException.class, () -> {
+      RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render");
+    }, "Expected getRecordAsBytes to throw, but it didn't");
+    assertThat(exception.getMessage()).isEqualTo("Illegal options type for key structure: class java.lang.Boolean");
   }
 
   @Test
-  void getMarcBadUseAttribute(Vertx vertx, VertxTestContext context) {
+  void getMarcBadUseAttribute() {
     Assumptions.assumeTrue(zServerAvailable);
     CopyCatProfile copyCatProfile = new CopyCatProfile()
       .withName("index data")
       .withUrl(URL_INDEXDATA)
       .withExternalIdQueryMap("@attr 1=1211 $identifier");
 
-    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json")
-      .onComplete(context.failing(cause -> context.verify(() -> {
-        assertThat(cause.getMessage())
-          .isEqualTo(
-            "Z39.50 error: server z3950.indexdata.com/marc returned diagnostic:"
+    Exception exception = assertThrows(RecordRetrieverException.class, () -> {
+      RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json");
+    }, "Expected getRecordAsBytes to throw, but it didn't");
+    assertThat(exception.getMessage())
+      .isEqualTo(
+          "Z39.50 error: server z3950.indexdata.com/marc returned diagnostic:"
               + " Bib1Exception: Error Code = 114 (UnsupportedUseAttribute)."
               + " Perhaps the copycat profile is incorrectly configured for this server");
-        context.completeNow();
-      })));
   }
 
   @Test
-  void getMarcBadTarget(Vertx vertx, VertxTestContext context) {
+  void getMarcBadTarget() {
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("index data")
         .withUrl(URL_BAD_TARGET)
@@ -176,30 +160,27 @@ public class RecordRetrieverTest {
         .withTargetOptions(new TargetOptions()
             .withAdditionalProperty("timeout", 1)); // low timeout so we it's not taking too long
 
-    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json")
-        .onComplete(context.failing(cause -> context.verify(() -> {
-          assertThat(cause.getMessage())
-              .contains("Z39.50 error:");
-          context.completeNow();
-        })));
+    Exception exception = assertThrows(RecordRetrieverException.class, () -> {
+      RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json");
+    }, "Expected getRecordAsBytes to throw, but it didn't");
+    assertThat(exception.getMessage())
+      .contains("Z39.50 error: ");
   }
 
   @Test
-  void getMarcBadCredentials(Vertx vertx, VertxTestContext context) {
+  void getMarcBadCredentials() {
     CopyCatProfile copyCatProfile = new CopyCatProfile()
         .withName("OLUCWorldCat")
         .withAuthentication("foo bar")
         .withUrl(URL_WORLDCAT)
         .withExternalIdQueryMap("@attr 1=1211 $identifier");
 
-    RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_WORLDCAT, "json")
-        .onComplete(context.failing(cause -> context.verify(() -> {
-          assertThat(cause.getMessage())
+    Exception exception = assertThrows(RecordRetrieverException.class, () -> {
+      RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_WORLDCAT, "json");
+    }, "Expected getRecordAsBytes to throw, but it didn't");
+    assertThat(exception.getMessage())
               .isEqualTo("Z39.50 error: server " + URL_WORLDCAT + " rejected init."
-                + " This may be due to missing or incorrect authentication for the copycat profile"
-              );
-          context.completeNow();
-        })));
+                + " This may be due to missing or incorrect authentication for the copycat profile");
   }
 
   static void testAuth(String auth, String user, String group, String password) {

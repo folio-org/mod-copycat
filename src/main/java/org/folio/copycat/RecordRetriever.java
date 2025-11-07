@@ -62,12 +62,12 @@ public final class RecordRetriever {
    *             <a href="https://software.indexdata.com/yaz/doc/zoom.records.html">ZOOM_record_get</a>
    * @return record content
    */
-  static Future<byte[]> getRecordAsBytes(CopyCatProfile profile, String externalId, String type) {
+  static byte[] getRecordAsBytes(CopyCatProfile profile, String externalId, String type) {
     if (profile.getUrl() == null) {
-      return Future.failedFuture("url missing in target profile");
+      throw new RecordRetrieverException("url missing in target profile");
     }
     if (profile.getExternalIdQueryMap() == null) {
-      return Future.failedFuture("externalIdQueryMap missing in target profile");
+      throw new RecordRetrieverException("externalIdQueryMap missing in target profile");
     }
     Connection conn = new Connection(profile.getUrl(), 0);
     conn.option("timeout", "15");
@@ -82,7 +82,7 @@ public final class RecordRetriever {
         } else if (entry.getValue() instanceof Integer) {
           conn.option(entry.getKey(), Integer.toString((Integer) entry.getValue()));
         } else {
-          return Future.failedFuture("Illegal options type for key " + entry.getKey()
+          throw new RecordRetrieverException("Illegal options type for key " + entry.getKey()
             + ": " + entry.getValue().getClass());
         }
       }
@@ -95,26 +95,26 @@ public final class RecordRetriever {
       ResultSet search = conn.search(query);
       Record record = search.getRecord(0);
       if (record == null) {
-        return Future.failedFuture("No record found when searching "
+        throw new RecordRetrieverException("No record found when searching "
           + profile.getUrl() + " for identifier " + externalId);
       }
-      return Future.succeededFuture(record.get(type));
+      return record.get(type);
     } catch (InitRejectedException e) {
-      return Future.failedFuture("Z39.50 error: server " + profile.getUrl() + " rejected init."
-        + " This may be due to missing or incorrect authentication for the copycat profile");
+      throw new RecordRetrieverException("Z39.50 error: server " + profile.getUrl() + " rejected init."
+        + " This may be due to missing or incorrect authentication for the copycat profile", e);
     } catch (Bib1Exception e) {
-      return Future.failedFuture("Z39.50 error: server " + profile.getUrl()
+      throw new RecordRetrieverException("Z39.50 error: server " + profile.getUrl()
         + " returned diagnostic: " + e.getMessage()
-        + ". Perhaps the copycat profile is incorrectly configured for this server");
+        + ". Perhaps the copycat profile is incorrectly configured for this server", e);
     } catch (ZoomException e) {
-      return Future.failedFuture("Z39.50 error: " + e.getMessage());
+      throw new RecordRetrieverException("Z39.50 error: " + e.getMessage(), e);
     } finally {
       log.info("Z39.50 retrieval completed in {} milliseconds", System.currentTimeMillis() - start);
       conn.close();
     }
   }
 
-  static Future<JsonObject> getRecordAsJsonObject(CopyCatProfile profile, String externalId) {
+  static JsonObject getRecordAsJsonObject(CopyCatProfile profile, String externalId) {
     // for YAZ, specifying marc8 here really means that it will use either UTF-8 or MARC-8
     // depending on the leader of the MARC record.
 
@@ -128,8 +128,8 @@ public final class RecordRetriever {
         encoding = Integer.toString((Integer) marcencoding);
       }
     }
-    return getRecordAsBytes(profile, externalId, "json;charset=" + encoding)
-        .map(buf -> new JsonObject(new String(buf)));
+    var buf = getRecordAsBytes(profile, externalId, "json;charset=" + encoding);
+    return new JsonObject(new String(buf));
   }
 
   /**
@@ -141,10 +141,8 @@ public final class RecordRetriever {
    * @return async result with record (failure if no record is found)
    */
   public static Future<JsonObject> getRecordAsJsonObject(CopyCatProfile profile,
-      String externalId, Context vertxContext) {
+    String externalId, Context vertxContext) {
     // execute in separate thread, because getRecordAsJsonObject is a blocking function.
-    return Future.future(promise0 -> vertxContext.owner().executeBlocking(promise1 ->
-        getRecordAsJsonObject(profile, externalId)
-            .onComplete(promise1), promise0));
+    return vertxContext.owner().executeBlocking(() -> getRecordAsJsonObject(profile, externalId));
   }
 }

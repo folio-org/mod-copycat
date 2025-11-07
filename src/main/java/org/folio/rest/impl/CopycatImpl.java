@@ -122,8 +122,7 @@ public class CopycatImpl implements org.folio.rest.jaxrs.resource.Copycat {
 
     String profileId = entity.getProfileId();
     PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
-    Future.<JsonObject>future(
-        promise -> postgresClient.getById(PROFILE_TABLE, profileId, promise))
+    postgresClient.getById(PROFILE_TABLE, profileId)
         .compose(res -> {
           if (res == null) {
             return Future.failedFuture("No such profileId " + profileId);

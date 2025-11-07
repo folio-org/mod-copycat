@@ -47,6 +47,7 @@ class CopycatTest {
 
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext context) {
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     Future<Void> f = vertx.createNetClient()
         .connect(210, HOST_INDEXDATA)
         .compose(x -> {
@@ -54,10 +55,10 @@ class CopycatTest {
           return x.close();
         }, e -> Future.succeededFuture());
 
-    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     mock = new ImporterMock(vertx);
     f.compose(x -> mock.start(MOCK_PORT))
-        .compose(x -> tenantInit(vertx, context)).onComplete(context.succeeding(res -> context.completeNow()));
+        .compose(x -> tenantInit(vertx))
+        .onComplete(context.succeeding(res -> context.completeNow()));
   }
 
   @AfterAll
@@ -65,16 +66,23 @@ class CopycatTest {
     mock.stop().onComplete(context.succeeding(res -> context.completeNow()));
   }
 
-  static Future<Void> tenantInit(Vertx vertx, VertxTestContext context) {
+  static Future<Void> tenantInit(Vertx vertx) {
     TenantAPI tenantAPI = new CopyCatInit();
-    Map<String, String> headers = new CaseInsensitiveMap();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
     Promise<Void> promise = Promise.promise();
-    tenantAPI.postTenantSync(new TenantAttributes(), headers, context.succeeding(res1 -> context.verify(() -> {
-      assertThat(res1.getStatus()).isEqualTo(204);
+    tenantAPI.postTenantSync(new TenantAttributes(), headers, res -> {
+      if (res.failed()) {
+        promise.fail(res.cause());
+        return;
+      }
+      if (res.result().getStatus() != 204) {
+        promise.fail(new IOException("Tenant init failed: " + res.result().getStatus()));
+        return;
+      }
       promise.complete();
-    })), vertx.getOrCreateContext());
+  }, vertx.getOrCreateContext());
     return promise.future();
   }
 
@@ -82,7 +90,7 @@ class CopycatTest {
   void testEmptyProfile(Vertx vertx, VertxTestContext context) {
     Copycat api = new CopycatImpl();
 
-    Map<String, String> headers = new CaseInsensitiveMap();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
 
     api.getCopycatProfiles("auto", 0, 0, null, headers, context.succeeding(res -> context.verify(() -> {

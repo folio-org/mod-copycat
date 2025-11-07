@@ -73,7 +73,7 @@ public class ImporterMock {
 
   public void createJob(RoutingContext ctx) {
     try {
-      JsonObject requestBody = ctx.getBodyAsJson();
+      JsonObject requestBody = ctx.body().asJsonObject();
       String userId = requestBody.getString("userId");
       UUID uuid = UUID.fromString(userId);
 
@@ -118,7 +118,7 @@ public class ImporterMock {
         ctx.response().end();
         return;
       }
-      requestBody = ctx.getBodyAsJson();
+      requestBody = ctx.body().asJsonObject();
       if (!requestBody.containsKey("id")) {
         ctx.response().setStatusCode(400);
         ctx.response().end("Missing id");
@@ -146,7 +146,7 @@ public class ImporterMock {
         ctx.response().end("Job not found " + id);
         return;
       }
-      JsonObject requestBody = ctx.getBodyAsJson();
+      JsonObject requestBody = ctx.body().asJsonObject();
       if (!requestBody.containsKey("initialRecords")) {
         ctx.response().setStatusCode(400);
         ctx.response().end("Missing initialRecords");
