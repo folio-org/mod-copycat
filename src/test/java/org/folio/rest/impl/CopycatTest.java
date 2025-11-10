@@ -62,7 +62,7 @@ class CopycatTest {
   }
 
   @AfterAll
-  static void afterAll(Vertx vertx, VertxTestContext context) {
+  static void afterAll(VertxTestContext context) {
     mock.stop().onComplete(context.succeedingThenComplete());
   }
 
