@@ -129,7 +129,7 @@ public class RecordRetrieverTest {
 
     Exception exception = assertThrows(RecordRetrieverException.class, () -> {
       RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "render");
-    }, "Expected getRecordAsBytes to throw, but it didn't");
+    });
     assertThat(exception.getMessage()).isEqualTo("Illegal options type for key structure: class java.lang.Boolean");
   }
 
@@ -143,7 +143,7 @@ public class RecordRetrieverTest {
 
     Exception exception = assertThrows(RecordRetrieverException.class, () -> {
       RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json");
-    }, "Expected getRecordAsBytes to throw, but it didn't");
+    });
     assertThat(exception.getMessage())
       .isEqualTo(
           "Z39.50 error: server z3950.indexdata.com/marc returned diagnostic:"
@@ -162,7 +162,7 @@ public class RecordRetrieverTest {
 
     Exception exception = assertThrows(RecordRetrieverException.class, () -> {
       RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_INDEXDATA, "json");
-    }, "Expected getRecordAsBytes to throw, but it didn't");
+    });
     assertThat(exception.getMessage())
       .contains("Z39.50 error: ");
   }
@@ -177,7 +177,7 @@ public class RecordRetrieverTest {
 
     Exception exception = assertThrows(RecordRetrieverException.class, () -> {
       RecordRetriever.getRecordAsBytes(copyCatProfile, EXTERNAL_ID_WORLDCAT, "json");
-    }, "Expected getRecordAsBytes to throw, but it didn't");
+    });
     assertThat(exception.getMessage())
               .isEqualTo("Z39.50 error: server " + URL_WORLDCAT + " rejected init."
                 + " This may be due to missing or incorrect authentication for the copycat profile");

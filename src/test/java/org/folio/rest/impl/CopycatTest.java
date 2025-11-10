@@ -58,12 +58,12 @@ class CopycatTest {
     mock = new ImporterMock(vertx);
     f.compose(x -> mock.start(MOCK_PORT))
         .compose(x -> tenantInit(vertx))
-        .onComplete(context.succeeding(res -> context.completeNow()));
+        .onComplete(context.succeedingThenComplete());
   }
 
   @AfterAll
   static void afterAll(Vertx vertx, VertxTestContext context) {
-    mock.stop().onComplete(context.succeeding(res -> context.completeNow()));
+    mock.stop().onComplete(context.succeedingThenComplete());
   }
 
   static Future<Void> tenantInit(Vertx vertx) {
