@@ -2,7 +2,6 @@ package org.folio.rest.impl;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -71,19 +70,11 @@ class CopycatTest {
     Map<String, String> headers = new CaseInsensitiveMap<>();
     headers.put(XOkapiHeaders.TENANT, tenant);
     headers.put(XOkapiHeaders.URL, "http://localhost:" + MOCK_PORT);
-    Promise<Void> promise = Promise.promise();
-    tenantAPI.postTenantSync(new TenantAttributes(), headers, res -> {
-      if (res.failed()) {
-        promise.fail(res.cause());
-        return;
-      }
-      if (res.result().getStatus() != 204) {
-        promise.fail(new IOException("Tenant init failed: " + res.result().getStatus()));
-        return;
-      }
-      promise.complete();
-  }, vertx.getOrCreateContext());
-    return promise.future();
+    return tenantAPI.postTenantSync(new TenantAttributes(), headers, vertx.getOrCreateContext())
+      .map(result -> {
+        assertThat(result.getStatus()).isEqualTo(204);
+        return null;
+      });
   }
 
   @Test
