@@ -8,8 +8,6 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.util.Collections;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
@@ -18,7 +16,6 @@ import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantInit;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,8 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(VertxExtension.class)
 class WebServiceTest {
-  private static final Logger log = LogManager.getLogger(CopycatImpl.class);
-
   private static final String OCLC_WORLDCAT_ID = "f26df83c-aa25-40b6-876e-96852c3d4fd4";
   private static final String TENANT = "tenant";
   private static final int MOCK_PORT = 9231;
@@ -48,19 +43,7 @@ class WebServiceTest {
     mock = new ImporterMock(vertx);
     vertx.deployVerticle(RestVerticle.class.getName(), options)
       .compose(a -> mock.start(MOCK_PORT))
-      .onComplete(context.succeeding(x -> {
-        log.debug("beforeAll completed");
-        context.completeNow();
-      }));
-  }
-
-  @AfterAll
-  static void afterAll(Vertx vertx, VertxTestContext context) {
-    webClient.close();
-    vertx.close(context.succeeding(x -> {
-      log.debug("afterAll completed");
-      context.completeNow();
-    }));
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
