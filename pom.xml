@@ -101,12 +101,12 @@
 
   <properties>
     <okapi.version>6.2.1</okapi.version>
-    <vertx.version>4.5.13</vertx.version>
+    <vertx.version>4.5.22</vertx.version>
     <junit.jupiter.version>5.12.0</junit.jupiter.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>35.4.0</raml-module-builder-version>
+    <raml-module-builder-version>35.4.1</raml-module-builder-version>
     <generate_routing_context />
     <argLine />
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
