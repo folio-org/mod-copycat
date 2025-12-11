@@ -1,3 +1,8 @@
+## 1.8.1 2025-12-11
+
+* [MODCPCT-103](https://folio-org.atlassian.net/browse/MODCPCT-103) Update to RMB 35.4.1, Vert.x 4.5.22
+* [MODCPCT-98](https://folio-org.atlassian.net/browse/MODCPCT-98) fix Docker build
+
 ## 1.8.0 2025-03-10
 
 * [MODCPCT-91](https://folio-org.atlassian.net/browse/MODCPCT-91) Java 21.
