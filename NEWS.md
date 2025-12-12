@@ -1,3 +1,8 @@
+## 1.7.1 2025-12-11
+
+ [MODCPCT-102](https://folio-org.atlassian.net/browse/MODCPCT-102) Update to RMB 35.3.1, Vert.x 4.5.22
+ [MODCPCT-98](https://folio-org.atlassian.net/browse/MODCPCT-98) fix Docker build
+
 ## 1.7.0 2024-10-17
 
 * [MODCPCT-87](https://folio-org.atlassian.net/browse/MODCPCT-87) Update `source-manager-job-executions` to `3.4` and `source-storage-source-records `to `3.5`
