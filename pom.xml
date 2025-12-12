@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"> <modelVersion>4.0.0</modelVersion>
   <artifactId>mod-copycat</artifactId>
   <groupId>org.folio</groupId>
-  <version>1.8.1-SNAPSHOT</version>
+  <version>1.8.2-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
@@ -101,12 +101,12 @@
 
   <properties>
     <okapi.version>6.2.1</okapi.version>
-    <vertx.version>4.5.13</vertx.version>
+    <vertx.version>4.5.22</vertx.version>
     <junit.jupiter.version>5.12.0</junit.jupiter.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>35.4.0</raml-module-builder-version>
+    <raml-module-builder-version>35.4.1</raml-module-builder-version>
     <generate_routing_context />
     <argLine />
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
