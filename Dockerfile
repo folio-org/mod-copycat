@@ -9,12 +9,12 @@ RUN apk upgrade \
 
 # Compile yaz (there's no apk package for it)
 USER folio
-RUN wget -O- https://ftp.indexdata.com/pub/yaz/yaz-5.35.1.tar.gz |tar xzf -
-RUN cd yaz-5.35.1 && ./configure --prefix=/usr --disable-static --enable-shared && make
+RUN wget -O- https://ftp.indexdata.com/pub/yaz/yaz-5.37.0.tar.gz |tar xzf -
+RUN cd yaz-5.37.0 && ./configure --prefix=/usr --disable-static --enable-shared && make
 
 # Install yaz
 USER root
-RUN cd yaz-5.35.1 && make install
+RUN cd yaz-5.37.0 && make install
 
 # Compile yaz4j
 USER folio
