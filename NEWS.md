@@ -1,3 +1,9 @@
+## 1.9.0 2026-04-10
+
+* [MODCPCT-97](https://folio-org.atlassian.net/browse/MODCPCT-97) Vert.x 5.0.10, RMB 36.0.0
+* [MODCPCT-94](https://folio-org.atlassian.net/browse/MODCPCT-94) replace value in idembedpath if already present
+* [MODDATAIMP-1225](https://folio-org.atlassian.net/browse/MODDATAIMP-1225) Change dependencies on SRM interfaces to optional
+
 ## 1.8.0 2025-03-10
 
 * [MODCPCT-91](https://folio-org.atlassian.net/browse/MODCPCT-91) Java 21.
