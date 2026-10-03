@@ -96,20 +96,6 @@
         "essential": false
       },
       {
-        "name": "DB_HOST_READER_ASYNC",
-        "value": null,
-        "description": "Optional asynchronous reader hostname supported by RMB. Leave unset: mod-copycat does not use PostgresClientWithAsyncReadConn.",
-        "type": "DB",
-        "essential": false
-      },
-      {
-        "name": "DB_PORT_READER_ASYNC",
-        "value": null,
-        "description": "Optional asynchronous reader port supported by RMB. Leave unset: mod-copycat does not use PostgresClientWithAsyncReadConn.",
-        "type": "DB",
-        "essential": false
-      },
-      {
         "name": "DB_SERVER_PEM",
         "value": null,
         "description": "PEM certificate or certificate chain used to verify the PostgreSQL server. When set, RMB requires TLSv1.3 and hostname verification; when unset, RMB uses an unencrypted connection.",
