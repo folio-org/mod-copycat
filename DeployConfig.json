@@ -157,13 +157,6 @@
         "description": "Threshold in milliseconds for EXPLAIN ANALYZE diagnostics on supported RMB query methods, matching RMB's default. Diagnostics execute the query again; a high threshold effectively disables them.",
         "type": "DB",
         "essential": false
-      },
-      {
-        "name": "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING",
-        "value": null,
-        "description": "Optional expiry timestamp for optimistic-lock suppression in RMB. Leave unset: mod-copycat's profile table does not enable failOnConflictUnlessSuppressed.",
-        "type": "DB",
-        "essential": false
       }
     ]
   }
