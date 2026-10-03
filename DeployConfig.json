@@ -110,13 +110,6 @@
         "essential": false
       },
       {
-        "name": "DB_CHARSET",
-        "value": "UTF-8",
-        "description": "Legacy charset setting retained from the existing ModuleDescriptor. Accepted by RMB's environment parser, but not applied by its PostgreSQL connection initializer in RMB 36.0.0.",
-        "type": "DB",
-        "essential": false
-      },
-      {
         "name": "DB_MAXPOOLSIZE",
         "value": "5",
         "description": "Maximum connections per tenant per database pool in each module instance. Matches the existing ModuleDescriptor; RMB's default is 4.",
