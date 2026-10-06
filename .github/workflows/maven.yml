@@ -16,5 +16,5 @@ jobs:
     secrets: inherit
     with: 
       java-version: '25'
-      docker-health-command: 'wget --no-verbose --tries=1 --spider http://localhost:8081/admin/health || exit 1'
+      # CopyCatIT checks HTTP health; the runtime image has no shell or wget.
       apt-packages: 'libyaz5'
