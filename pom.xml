@@ -32,6 +32,11 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.aspectj</groupId>
+        <artifactId>aspectjrt</artifactId>
+        <version>${aspectj.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-bom</artifactId>
         <version>2.25.4</version>
@@ -49,6 +54,23 @@
   </dependencyManagement>
 
   <dependencies>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j2-impl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>rest-assured</artifactId>
+      <version>5.5.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
+      <version>2.0.4</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.yaz4j</groupId>
       <artifactId>yaz4j</artifactId>
@@ -103,6 +125,7 @@
     <okapi.version>7.0.3</okapi.version>
     <vertx.version>5.0.10</vertx.version>
     <junit.jupiter.version>6.0.2</junit.jupiter.version>
+    <aspectj.version>1.9.25.1</aspectj.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
@@ -143,7 +166,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.14.0</version>
         <configuration>
-          <release>21</release>
+          <release>25</release>
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
@@ -155,6 +178,8 @@
         <executions>
           <execution>
             <id>generate_interfaces</id>
+            <!-- Generate RAML sources when the IDE imports or refreshes the project. -->
+            <?m2e execute onConfiguration?>
             <goals>
               <goal>java</goal>
             </goals>
@@ -197,11 +222,11 @@
       <plugin>
         <groupId>dev.aspectj</groupId>
         <artifactId>aspectj-maven-plugin</artifactId>
-        <version>1.14</version>
+        <version>1.14.1</version>
         <configuration>
           <verbose>true</verbose>
           <showWeaveInfo>false</showWeaveInfo>
-          <complianceLevel>21</complianceLevel>
+          <complianceLevel>25</complianceLevel>
           <XaddSerialVersionUID>true</XaddSerialVersionUID>
           <showWeaveInfo>true</showWeaveInfo>
           <aspectLibraries>
@@ -222,12 +247,12 @@
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
-            <version>1.9.22.1</version>
+            <version>${aspectj.version}</version>
           </dependency>
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
-            <version>1.9.22.1</version>
+            <version>${aspectj.version}</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -392,6 +417,19 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.2</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.5.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

@@ -6,6 +6,7 @@ mike@indexdata.com
 <!-- md2toc -l 2 getting-started.md -->
 * [Prerequisites](#prerequisites)
 * [To build](#to-build)
+* [Integration tests](#integration-tests)
 * [To run](#to-run)
 * [To initialize](#to-initialize)
 * [To use](#to-use)
@@ -50,6 +51,24 @@ Once the yaz4j library is available, mod-copycat itself can be built:
 
 	term1$ cd mod-copycat
 	term1$ mvn install
+
+## Integration tests
+
+`mvn verify` runs `CopyCatIT` after building the fat jar. It builds the repository's
+Dockerfile and starts mod-copycat and PostgreSQL using Testcontainers. Docker must
+be available. The tests check health, tenant installation and upgrade, profile
+persistence, and native yaz4j connection handling without an external Z39.50 server.
+
+To run only the container integration tests (without the unit tests or a local
+YAZ/yaz4j native installation):
+
+```sh
+mvn -DskipTests package
+mvn -Dit.test=CopyCatIT failsafe:integration-test failsafe:verify
+```
+
+Set `TESTCONTAINERS_POSTGRES_IMAGE` to override the default `postgres:16-alpine`.
+Use `mvn verify -DskipITs` to skip the container integration tests.
 
 ## To run
 
