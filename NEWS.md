@@ -1,3 +1,11 @@
+## 1.9.1 2026-11-03
+
+* [MODCPCT-105](https://folio-org.atlassian.net/browse/MODCPCT-105) Add GA maven-based workflow
+* [MODCPCT-107](https://folio-org.atlassian.net/browse/MODCPCT-107) Add DeployConfig.json
+* [MODCPCT-108](https://folio-org.atlassian.net/browse/MODCPCT-108) Update to Java 25.
+  Rework Docker image. Size reduced from ~1.3 GB to 400 MB
+* [MODCPCT-109](https://folio-org.atlassian.net/browse/MODCPCT-109) Vert.x 5.2.2, RMB 36.0.1
+
 ## 1.9.0 2026-04-10
 
 * [MODCPCT-97](https://folio-org.atlassian.net/browse/MODCPCT-97) Vert.x 5.0.10, RMB 36.0.0
