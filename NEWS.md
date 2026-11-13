@@ -1,3 +1,7 @@
+## 1.9.2 2026-11-13
+
+* Revert [MODCPCT-108](https://folio-org.atlassian.net/browse/MODCPCT-108) . Downgrade to Java 21. Docker image increased from 400 MB to ~ 1.3 GB.
+
 ## 1.9.1 2026-11-03
 
 * [MODCPCT-105](https://folio-org.atlassian.net/browse/MODCPCT-105) Add GA maven-based workflow
